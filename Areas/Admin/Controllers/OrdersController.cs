@@ -29,6 +29,10 @@ public class OrdersController(
         // Total count query (simplified)
         var allOrders = await orderRepository.GetAllOrdersAsync(status, day, month, year, 1, 10000);
 
+        var shippingOrders = await orderRepository.CountShippingOrdersAsync();
+        var completionRate = await orderRepository.CalculateCompletionRateAsync();
+        var totalProductsSold = await orderRepository.TotalProductsSoldAsync();
+
         var vm = new AdminOrderListViewModel
         {
             StatusFilter = status,
@@ -37,6 +41,9 @@ public class OrdersController(
             FilterYear   = year,
             Page         = page,
             TotalCount   = allOrders.Count,
+            ShippingOrders = shippingOrders,
+            CompletionRate = completionRate,
+            TotalProductsSold = totalProductsSold,
             Orders = orders.Select(o => new AdminOrderSummaryViewModel
             {
                 OrderID       = o.OrderID,

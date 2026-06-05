@@ -4,9 +4,10 @@
     Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
 
     string paymentColor = Model.PaymentStatus switch {
-        "Paid" => "bg-secondary-container text-on-secondary-fixed-variant",
-        "Pending" => "bg-surface-variant text-on-surface-variant",
-        "Failed" => "bg-error-container text-error",
+        "Paid" => "bg-green-100 text-green-700",
+        "Unpaid" => "bg-surface-variant text-on-surface-variant",
+        "Refunded" => "bg-red-100 text-red-700",
+        "PartialRefund" => "bg-orange-100 text-orange-700",
         _ => "bg-surface-variant text-on-surface-variant"
     };
 
@@ -32,8 +33,9 @@
 
     string paymentLabel = Model.PaymentStatus switch {
         "Paid" => "ĐÃ THANH TOÁN",
-        "Pending" => "CHỜ THANH TOÁN",
-        "Failed" => "THẤT BẠI",
+        "Unpaid" => "CHƯA THANH TOÁN",
+        "Refunded" => "ĐÃ HOÀN TIỀN",
+        "PartialRefund" => "HOÀN 1 PHẦN",
         _ => Model.PaymentStatus.ToUpper()
     };
 }

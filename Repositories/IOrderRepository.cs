@@ -17,4 +17,9 @@ public interface IOrderRepository
     Task<int> CountLowStockVariantsAsync(int threshold = 5);
     Task<List<RecentOrderPoint>> GetRecentOrdersAsync(int count = 8);
     Task<List<LowStockPoint>> GetLowStockItemsAsync(int threshold = 5, int count = 8);
+    Task<int> CountShippingOrdersAsync();
+    Task<double> CalculateCompletionRateAsync();
+    Task<int> TotalProductsSoldAsync();
+    Task<List<LowStockProductPoint>> GetLowStockProductsAsync(int threshold = 5);
+    Task<List<CategorySalesPoint>> GetSalesByCategoryAsync(int year);
 }

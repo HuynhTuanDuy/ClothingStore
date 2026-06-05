@@ -13,6 +13,10 @@ public record RecentOrderPoint(
 public record LowStockPoint(
     string SKU, string ProductName,
     string SizeCode, string ColorName, int StockQuantity);
+public record LowStockProductPoint(
+    int ProductID, string ProductName, string ThumbnailUrl, 
+    int TotalStock, List<LowStockPoint> Variants);
+public record CategorySalesPoint(string CategoryName, int TotalSold);
 
 public class OrderRepository(StoreDbContext dbContext) : IOrderRepository
 {
@@ -108,7 +112,7 @@ public class OrderRepository(StoreDbContext dbContext) : IOrderRepository
         var rows = await dbContext.Orders
             .AsNoTracking()
             .Where(x => x.OrderDate >= start && x.OrderDate < end
-                     && x.OrderStatus != OrderStatus.Cancelled)
+                     && x.PaymentStatus == PaymentStatus.Paid)
             .Select(x => new { x.OrderDate.Month, x.FinalAmount })
             .ToListAsync();
 
@@ -127,7 +131,7 @@ public class OrderRepository(StoreDbContext dbContext) : IOrderRepository
         var rows = await dbContext.OrderDetails
             .AsNoTracking()
             .Where(x => x.Order.OrderDate >= start && x.Order.OrderDate < end
-                     && x.Order.OrderStatus != OrderStatus.Cancelled)
+                     && x.Order.PaymentStatus == PaymentStatus.Paid)
             .Select(x => new
             {
                 // Use snapshot name — won't break even if product is deleted
@@ -206,6 +210,88 @@ public class OrderRepository(StoreDbContext dbContext) : IOrderRepository
 
         return rows.Select(r => new LowStockPoint(
             r.SKU, r.ProductName, r.SizeCode, r.ColorName, r.StockQuantity))
+            .ToList();
+    }
+    public Task<int> CountShippingOrdersAsync()
+    {
+        return dbContext.Orders
+            .AsNoTracking()
+            .CountAsync(x => x.OrderStatus == OrderStatus.Shipping);
+    }
+
+    public async Task<double> CalculateCompletionRateAsync()
+    {
+        var total = await dbContext.Orders.AsNoTracking().CountAsync();
+        if (total == 0) return 0;
+        var delivered = await dbContext.Orders.AsNoTracking().CountAsync(x => x.OrderStatus == OrderStatus.Delivered);
+        return Math.Round((double)delivered / total * 100, 1);
+    }
+
+    public Task<int> TotalProductsSoldAsync()
+    {
+        return dbContext.OrderDetails
+            .AsNoTracking()
+            .Where(x => x.Order.OrderStatus != OrderStatus.Cancelled)
+            .SumAsync(x => x.Quantity);
+    }
+
+    public async Task<List<LowStockProductPoint>> GetLowStockProductsAsync(int threshold = 5)
+    {
+        var lowStockVariants = await dbContext.ProductVariants
+            .AsNoTracking()
+            .Where(v => v.IsActive && v.StockQuantity <= threshold)
+            .Select(v => v.ProductID)
+            .Distinct()
+            .ToListAsync();
+
+        var products = await dbContext.Products
+            .AsNoTracking()
+            .Include(p => p.ProductVariants)
+                .ThenInclude(v => v.Size)
+            .Include(p => p.ProductVariants)
+                .ThenInclude(v => v.Color)
+            .Include(p => p.ProductVariants)
+                .ThenInclude(v => v.ProductImages)
+            .Where(p => lowStockVariants.Contains(p.ProductID))
+            .ToListAsync();
+
+        return products.Select(p => {
+            var mainImage = p.ProductVariants.SelectMany(v => v.ProductImages).FirstOrDefault(i => i.IsMain)?.ImageURL;
+            var thumb = !string.IsNullOrEmpty(p.ThumbnailUrl) ? p.ThumbnailUrl : (mainImage ?? "");
+            
+            return new LowStockProductPoint(
+                p.ProductID,
+                p.ProductName,
+                thumb,
+                p.ProductVariants.Where(v => v.IsActive).Sum(v => v.StockQuantity),
+                p.ProductVariants
+                    .Where(v => v.IsActive)
+                    .Select(v => new LowStockPoint(v.SKU, p.ProductName, v.Size.SizeCode, v.Color.ColorName, v.StockQuantity))
+                    .OrderBy(v => v.StockQuantity)
+                    .ToList()
+            );
+        }).OrderBy(p => p.TotalStock).ToList();
+    }
+    public async Task<List<CategorySalesPoint>> GetSalesByCategoryAsync(int year)
+    {
+        var start = new DateTime(year, 1, 1);
+        var end = start.AddYears(1);
+
+        var rows = await dbContext.OrderDetails
+            .AsNoTracking()
+            .Where(x => x.Order.OrderDate >= start && x.Order.OrderDate < end
+                     && x.Order.PaymentStatus == PaymentStatus.Paid)
+            .Select(x => new
+            {
+                CategoryName = x.ProductVariant.Product.Category.CategoryName,
+                x.Quantity
+            })
+            .ToListAsync();
+
+        return rows
+            .GroupBy(x => x.CategoryName)
+            .Select(g => new CategorySalesPoint(g.Key, g.Sum(x => x.Quantity)))
+            .OrderByDescending(x => x.TotalSold)
             .ToList();
     }
 }

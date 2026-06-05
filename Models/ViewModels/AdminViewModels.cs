@@ -147,11 +147,20 @@ public class DashboardViewModel
     public int PendingOrders { get; set; }
     public int LowStockVariants { get; set; }
     public int TotalCustomers { get; set; }
+    
+    // New dynamic stats
+    public int ShippingOrders { get; set; }
+    public double CompletionRate { get; set; }
+    public int TotalProductsSold { get; set; }
+
     public IReadOnlyList<string> RevenueLabels { get; set; } = [];
     public IReadOnlyList<decimal> RevenueValues { get; set; } = [];
+    public IReadOnlyList<string> CategorySalesLabels { get; set; } = [];
+    public IReadOnlyList<int> CategorySalesValues { get; set; } = [];
     public IReadOnlyList<TopProductViewModel> TopProducts { get; set; } = [];
     public IReadOnlyList<RecentOrderViewModel> RecentOrders { get; set; } = [];
     public IReadOnlyList<LowStockItemViewModel> LowStockItems { get; set; } = [];
+    public IReadOnlyList<LowStockProductViewModel> LowStockProducts { get; set; } = [];
 }
 
 public class TopProductViewModel
@@ -181,6 +190,23 @@ public class LowStockItemViewModel
     public int StockQuantity { get; set; }
 }
 
+public class LowStockProductViewModel
+{
+    public int ProductID { get; set; }
+    public string ProductName { get; set; } = string.Empty;
+    public string? ThumbnailUrl { get; set; }
+    public int TotalStock { get; set; }
+    public List<LowStockVariantViewModel> Variants { get; set; } = [];
+}
+
+public class LowStockVariantViewModel
+{
+    public string SKU { get; set; } = string.Empty;
+    public string SizeCode { get; set; } = string.Empty;
+    public string ColorName { get; set; } = string.Empty;
+    public int StockQuantity { get; set; }
+}
+
 // ─────────────────────────────────────────────────────────────
 // ADMIN — ORDERS
 // ─────────────────────────────────────────────────────────────
@@ -195,6 +221,10 @@ public class AdminOrderListViewModel
     public int TotalCount { get; set; }
     public int PageSize { get; set; } = 20;
     public int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
+
+    public int ShippingOrders { get; set; }
+    public double CompletionRate { get; set; }
+    public int TotalProductsSold { get; set; }
 }
 
 public class AdminOrderSummaryViewModel

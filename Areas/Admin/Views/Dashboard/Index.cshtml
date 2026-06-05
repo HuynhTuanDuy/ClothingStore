@@ -47,10 +47,12 @@
     </div>
 </div>
 
-<!-- Revenue Chart + Top Products -->
+<!-- Main Charts & Top Products -->
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-    <!-- Bar Chart -->
-    <div class="lg:col-span-2 bg-surface border border-outline-variant p-6">
+    <!-- Left Column (Charts) -->
+    <div class="lg:col-span-2 flex flex-col gap-6">
+        <!-- Revenue Chart -->
+        <div class="bg-surface border border-outline-variant p-6">
         <div class="flex justify-between items-center mb-5">
             <h3 class="text-lg font-semibold text-on-background">Doanh thu theo tháng</h3>
             <form method="get" class="flex gap-2 items-center">
@@ -110,9 +112,33 @@
                         plugins: {
                             legend: { display: false },
                             tooltip: {
+                                displayColors: false,
                                 callbacks: {
                                     label: function(context) {
-                                        return context.raw.toLocaleString('vi-VN') + 'đ';
+                                        const currentValue = context.raw;
+                                        let lines = ['Doanh thu: ' + currentValue.toLocaleString('vi-VN') + 'đ'];
+                                        
+                                        if (context.dataIndex > 0) {
+                                            const prevValue = context.dataset.data[context.dataIndex - 1];
+                                            const diff = currentValue - prevValue;
+                                            if (diff > 0) {
+                                                lines.push('▲ Tăng ' + diff.toLocaleString('vi-VN') + 'đ so với tháng trước');
+                                            } else if (diff < 0) {
+                                                lines.push('▼ Giảm ' + Math.abs(diff).toLocaleString('vi-VN') + 'đ so với tháng trước');
+                                            } else {
+                                                lines.push('▬ Doanh thu bằng tháng trước');
+                                            }
+                                        }
+                                        return lines;
+                                    },
+                                    labelTextColor: function(context) {
+                                        if (context.dataIndex > 0) {
+                                            const prevValue = context.dataset.data[context.dataIndex - 1];
+                                            const diff = context.raw - prevValue;
+                                            if (diff > 0) return '#4ade80'; // Tailwind green-400
+                                            if (diff < 0) return '#f87171'; // Tailwind red-400
+                                        }
+                                        return '#ffffff';
                                     }
                                 }
                             }
@@ -141,21 +167,97 @@
         </script>
     </div>
 
-    <!-- Top Products -->
+    <!-- Category Sales Pie Chart -->
     <div class="bg-surface border border-outline-variant p-6">
+        <h3 class="text-lg font-semibold text-on-background mb-4">Sản phẩm theo danh mục</h3>
+        @if (Model.CategorySalesValues.Any() && Model.CategorySalesValues.Sum() > 0)
+        {
+            <div class="h-64 relative mt-4">
+                <canvas id="categorySalesChart"></canvas>
+            </div>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const ctxPie = document.getElementById('categorySalesChart');
+                    if (!ctxPie) return;
+                    
+                    new Chart(ctxPie, {
+                        type: 'pie',
+                        data: {
+                            labels: @Html.Raw(JsonSerializer.Serialize(Model.CategorySalesLabels)),
+                            datasets: [{
+                                data: @Html.Raw(JsonSerializer.Serialize(Model.CategorySalesValues)),
+                                backgroundColor: [
+                                    '#553722', '#8c6b5d', '#d9c5b2', '#f2e8dc', '#4ade80', '#f87171', '#fbbf24', '#60a5fa'
+                                ],
+                                borderWidth: 1,
+                                borderColor: '#ffffff'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'right',
+                                    labels: {
+                                        boxWidth: 12,
+                                        font: { size: 12 }
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const label = context.label || '';
+                                            const value = context.raw || 0;
+                                            return `${label}: ${value} sản phẩm`;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                });
+            </script>
+        }
+        else
+        {
+            <div class="flex flex-col items-center justify-center h-40 text-on-surface-variant">
+                <span class="material-symbols-outlined text-4xl mb-2 opacity-30">pie_chart</span>
+                <p class="text-sm">Chưa có dữ liệu năm @Model.Year</p>
+            </div>
+        }
+    </div>
+    </div> <!-- Close left column -->
+
+    <!-- Top Products -->
+    <div class="lg:col-span-1 bg-surface border border-outline-variant p-6">
         <h3 class="text-lg font-semibold text-on-background mb-4">Top sản phẩm bán chạy</h3>
         @if (Model.TopProducts.Any())
         {
             <div class="space-y-2.5">
+                @{ var rank = 1; }
                 @foreach (var p in Model.TopProducts.Take(6))
                 {
+                    var rankColor = rank == 1 ? "text-yellow-600" :
+                                    rank == 2 ? "text-slate-400" :
+                                    rank == 3 ? "text-amber-800" : "text-on-surface-variant";
+                    var rankBg = rank == 1 ? "bg-yellow-500/10" :
+                                 rank == 2 ? "bg-slate-400/10" :
+                                 rank == 3 ? "bg-amber-800/10" : "bg-surface-variant";
+                                 
                     <div class="flex justify-between items-center py-2 border-b border-outline-variant last:border-0">
-                        <div class="min-w-0 flex-1 mr-2">
-                            <p class="text-base font-medium text-on-background truncate">@p.ProductName</p>
-                            <p class="text-sm text-on-surface-variant">@p.TotalSold sản phẩm đã bán</p>
+                        <div class="flex items-center min-w-0 flex-1 mr-2">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold mr-3 shrink-0 @rankColor @rankBg">
+                                @rank
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-base font-medium text-on-background truncate">@p.ProductName</p>
+                                <p class="text-sm text-on-surface-variant">@p.TotalSold sản phẩm đã bán</p>
+                            </div>
                         </div>
                         <span class="text-base font-bold text-primary whitespace-nowrap flex-shrink-0">@p.Revenue.ToString("N0")đ</span>
                     </div>
+                    rank++;
                 }
             </div>
         }
@@ -247,23 +349,52 @@
             <h3 class="text-lg font-semibold text-on-background">Sắp hết hàng</h3>
             <span class="text-sm bg-error/10 text-error px-3 py-1 rounded-full font-medium">≤ 5 sản phẩm</span>
         </div>
-        @if (Model.LowStockItems.Any())
+        @if (Model.LowStockProducts.Any())
         {
-            <ul class="space-y-0 divide-y divide-outline-variant">
-                @foreach (var item in Model.LowStockItems)
+            <div class="space-y-3">
+                @foreach (var product in Model.LowStockProducts)
                 {
-                    var stockColor = item.StockQuantity == 0 ? "text-error font-bold" :
-                                     item.StockQuantity <= 2 ? "text-error" : "text-amber-600";
-                    <li class="py-3 hover:bg-surface-container-low -mx-2 px-2 rounded transition-colors">
-                        <div class="flex justify-between items-start">
-                            <span class="text-[11px] text-on-surface-variant font-mono uppercase">@item.SKU</span>
-                            <span class="text-sm @stockColor">@item.StockQuantity còn lại</span>
-                        </div>
-                        <p class="text-base font-medium text-on-background truncate mt-0.5">@item.ProductName</p>
-                        <p class="text-sm text-on-surface-variant">@item.SizeCode · @item.ColorName</p>
-                    </li>
+                    <div class="border border-outline-variant rounded-lg overflow-hidden group">
+                        <details class="group">
+                            <summary class="flex items-center gap-3 p-3 bg-surface-container-low cursor-pointer hover:bg-surface-container transition-colors">
+                                <div class="w-10 h-10 rounded bg-surface-variant flex items-center justify-center shrink-0 overflow-hidden">
+                                    @if (!string.IsNullOrEmpty(product.ThumbnailUrl))
+                                    {
+                                        <img src="@product.ThumbnailUrl" alt="@product.ProductName" class="w-full h-full object-cover" />
+                                    }
+                                    else
+                                    {
+                                        <span class="material-symbols-outlined text-on-surface-variant opacity-50">image</span>
+                                    }
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <p class="text-sm font-medium text-on-background truncate">@product.ProductName</p>
+                                    <p class="text-xs text-on-surface-variant">Tổng tồn các biến thể: @product.TotalStock</p>
+                                </div>
+                                <span class="material-symbols-outlined text-on-surface-variant transition-transform group-open:rotate-180">expand_more</span>
+                            </summary>
+                            <div class="p-3 bg-surface border-t border-outline-variant">
+                                <ul class="space-y-2">
+                                    @foreach(var variant in product.Variants)
+                                    {
+                                        var stockColor = variant.StockQuantity == 0 ? "text-error font-bold" :
+                                                         variant.StockQuantity <= 5 ? "text-amber-600" : "text-green-600";
+                                        var stockBg = variant.StockQuantity == 0 ? "bg-error/10" :
+                                                         variant.StockQuantity <= 5 ? "bg-amber-500/10" : "bg-green-500/10";
+                                        <li class="flex justify-between items-center text-sm p-2 rounded @stockBg">
+                                            <div>
+                                                <p class="font-medium text-on-background">@variant.ColorName - @variant.SizeCode</p>
+                                                <p class="text-[11px] text-on-surface-variant font-mono">@variant.SKU</p>
+                                            </div>
+                                            <span class="@stockColor font-medium">@variant.StockQuantity còn lại</span>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </details>
+                    </div>
                 }
-            </ul>
+            </div>
         }
         else
         {
