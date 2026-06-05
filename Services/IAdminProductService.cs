@@ -21,4 +21,11 @@ public interface IAdminProductService
     Task<string?> UploadImageAsync(ProductImageUploadViewModel model);
     Task<(bool Succeeded, int? ProductID)> DeleteImageAsync(int imageId);
     Task<bool> SetThumbnailAsync(int productId, string imageUrl);
+
+    // New Advanced Admin Methods
+    Task<AdminProductPageViewModel> GetProductsFilteredAsync(AdminProductFilter filter);
+    Task<int> DuplicateProductAsync(int productId);
+    Task<(int SuccessCount, int FailCount)> BulkUpdateStatusAsync(List<int> productIds, bool isActive);
+    Task<(int SuccessCount, int FailCount)> BulkDeleteAsync(List<int> productIds);
+    Task<(int SuccessCount, int FailCount)> BulkUpdateCategoryAsync(List<int> productIds, int newCategoryId);
 }

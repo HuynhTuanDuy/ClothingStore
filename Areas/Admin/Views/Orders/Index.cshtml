@@ -11,9 +11,7 @@
         <p class="font-body-md text-body-md text-on-surface-variant max-w-xl">Kiểm soát và quản lý hành trình của các sản phẩm từ WearWhatever đến tay khách hàng.</p>
     </div>
     <div class="flex items-center gap-3">
-        <a asp-action="ExportCsv" class="text-primary font-label-caps text-label-caps flex items-center gap-1 hover:underline mr-4">
-            Tải xuống báo cáo CSV <span class="material-symbols-outlined text-sm" data-icon="download">download</span>
-        </a>
+
         <form method="get" class="flex items-center gap-2">
             <input type="hidden" name="status" value="@Model.StatusFilter" />
             
@@ -49,10 +47,10 @@
             </a>
         </form>
         
-        <button class="bg-primary text-on-primary px-6 py-2 font-label-caps text-label-caps rounded flex items-center gap-2 hover:opacity-90 transition-all active:scale-95">
+        <a asp-action="ExportCsv" class="bg-primary text-on-primary px-6 py-2 font-label-caps text-label-caps rounded flex items-center gap-2 hover:opacity-90 transition-all active:scale-95">
             <span class="material-symbols-outlined text-[18px]">download</span>
             Xuất CSV
-        </button>
+        </a>
     </div>
 </div>
 

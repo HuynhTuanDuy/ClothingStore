@@ -10,20 +10,52 @@ public class AdminProductListItemViewModel
 {
     public int ProductID { get; set; }
     public string ProductName { get; set; } = string.Empty;
+    public string SKU { get; set; } = string.Empty;
     public string CategoryName { get; set; } = string.Empty;
     public string? ThumbnailUrl { get; set; }
     public int VariantCount { get; set; }
     public int TotalStock { get; set; }
+    public int TotalSold { get; set; }
+    public decimal MinPrice { get; set; }
+    public decimal MaxPrice { get; set; }
     public bool IsActive { get; set; }
+    public DateTime? CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+}
+
+public class AdminProductFilter
+{
+    public string? Search { get; set; }
+    public int? CategoryId { get; set; }
+    public string? Status { get; set; } // active, inactive
+    public string? StockStatus { get; set; } // instock, outofstock, lowstock
+    public decimal? MinPrice { get; set; }
+    public decimal? MaxPrice { get; set; }
+    public string? HasDiscount { get; set; } // yes, no
+    public DateTime? DateFrom { get; set; }
+    public DateTime? DateTo { get; set; }
+    public string? SortBy { get; set; } // name, price, stock, sold, category, status, created, updated
+    public bool SortDesc { get; set; } = true;
+    public int Page { get; set; } = 1;
+    public int PageSize { get; set; } = 10;
+}
+
+public class ProductDashboardStatsViewModel
+{
+    public int TotalProducts { get; set; }
+    public int ActiveProducts { get; set; }
+    public int InactiveProducts { get; set; }
+    public int OutOfStockProducts { get; set; }
+    public int LowStockProducts { get; set; }
 }
 
 public class AdminProductPageViewModel
 {
     public List<AdminProductListItemViewModel> Products { get; set; } = [];
-    public int Page { get; set; }
-    public int PageSize { get; set; }
+    public AdminProductFilter Filter { get; set; } = new();
+    public ProductDashboardStatsViewModel Stats { get; set; } = new();
     public int TotalCount { get; set; }
-    public int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
+    public int TotalPages => Filter.PageSize > 0 ? (int)Math.Ceiling((double)TotalCount / Filter.PageSize) : 0;
 }
 
 public class ProductEditViewModel

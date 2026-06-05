@@ -14,6 +14,11 @@ public interface IProductRepository
     Task<Product?> GetProductForAdminAsync(int productId);
     Task<List<Product>> GetAdminProductsAsync(int page = 1, int pageSize = 20);
     Task<int> CountAdminProductsAsync();
+    
+    // New Advanced Admin Methods
+    Task<(List<Product> Products, int TotalCount)> GetAdminProductsFilteredAsync(ClothingStore.Models.ViewModels.AdminProductFilter filter);
+    Task<ClothingStore.Models.ViewModels.ProductDashboardStatsViewModel> GetAdminProductStatsAsync();
+    Task<Dictionary<int, int>> GetTotalSoldForProductsAsync(List<int> productIds);
     Task<List<Category>> GetActiveCategoriesAsync();
     Task<List<Category>> GetCategoriesWithChildrenAsync();
     Task<List<DiscountProgram>> GetActiveDiscountProgramsAsync();

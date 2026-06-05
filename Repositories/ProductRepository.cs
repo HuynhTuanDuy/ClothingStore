@@ -223,6 +223,162 @@ public class ProductRepository(StoreDbContext dbContext) : IProductRepository
         return dbContext.Products.AsNoTracking().CountAsync();
     }
 
+    public async Task<(List<Product> Products, int TotalCount)> GetAdminProductsFilteredAsync(ClothingStore.Models.ViewModels.AdminProductFilter filter)
+    {
+        var query = dbContext.Products
+            .AsNoTracking()
+            .Include(x => x.Category)
+            .Include(x => x.DiscountProgram)
+            .Include(x => x.ProductVariants)
+            .AsQueryable();
+
+        // 1. Filter
+        if (!string.IsNullOrWhiteSpace(filter.Search))
+        {
+            var kw = filter.Search.Trim().ToLower();
+            query = query.Where(x => 
+                x.ProductName.ToLower().Contains(kw) || 
+                x.Slug.ToLower().Contains(kw) || 
+                x.ProductVariants.Any(v => v.SKU.ToLower().Contains(kw)));
+        }
+
+        if (filter.CategoryId.HasValue)
+        {
+            query = query.Where(x => x.CategoryID == filter.CategoryId.Value || x.Category.ParentCategoryID == filter.CategoryId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(filter.Status))
+        {
+            if (filter.Status == "active") query = query.Where(x => x.IsActive);
+            else if (filter.Status == "inactive") query = query.Where(x => !x.IsActive);
+        }
+
+        if (filter.MinPrice.HasValue)
+        {
+            query = query.Where(x => x.ProductVariants.Any(v => v.SellingPrice >= filter.MinPrice.Value));
+        }
+
+        if (filter.MaxPrice.HasValue)
+        {
+            query = query.Where(x => x.ProductVariants.Any(v => v.SellingPrice <= filter.MaxPrice.Value));
+        }
+
+        if (!string.IsNullOrWhiteSpace(filter.HasDiscount))
+        {
+            if (filter.HasDiscount == "yes") query = query.Where(x => x.ProgramID != null && x.DiscountProgram != null && x.DiscountProgram.IsActive);
+            else if (filter.HasDiscount == "no") query = query.Where(x => x.ProgramID == null || x.DiscountProgram == null || !x.DiscountProgram.IsActive);
+        }
+
+        if (filter.DateFrom.HasValue)
+        {
+            query = query.Where(x => x.CreatedAt >= filter.DateFrom.Value);
+        }
+
+        if (filter.DateTo.HasValue)
+        {
+            query = query.Where(x => x.CreatedAt <= filter.DateTo.Value.AddDays(1).AddTicks(-1));
+        }
+
+        if (!string.IsNullOrWhiteSpace(filter.StockStatus))
+        {
+            if (filter.StockStatus == "instock") 
+                query = query.Where(x => x.ProductVariants.Any(v => v.StockQuantity > 0));
+            else if (filter.StockStatus == "outofstock") 
+                query = query.Where(x => !x.ProductVariants.Any(v => v.StockQuantity > 0));
+            else if (filter.StockStatus == "lowstock") 
+                query = query.Where(x => x.ProductVariants.Any(v => v.StockQuantity > 0 && v.StockQuantity <= 5));
+        }
+
+        // 2. Count Total BEFORE Pagination
+        var totalCount = await query.CountAsync();
+
+        // 3. Sort
+        var isDesc = filter.SortDesc;
+        switch (filter.SortBy?.ToLower())
+        {
+            case "name":
+                query = isDesc ? query.OrderByDescending(x => x.ProductName) : query.OrderBy(x => x.ProductName);
+                break;
+            case "price":
+                query = isDesc 
+                    ? query.OrderByDescending(x => x.ProductVariants.Max(v => (decimal?)v.SellingPrice) ?? 0) 
+                    : query.OrderBy(x => x.ProductVariants.Min(v => (decimal?)v.SellingPrice) ?? 0);
+                break;
+            case "stock":
+                query = isDesc 
+                    ? query.OrderByDescending(x => x.ProductVariants.Sum(v => v.StockQuantity)) 
+                    : query.OrderBy(x => x.ProductVariants.Sum(v => v.StockQuantity));
+                break;
+            case "sold":
+                // This is a bit tricky via LINQ. We will join with OrderDetails.
+                // Or simply default to CreatedAt if not easily sorted in DB without large join.
+                // Let's do a subquery sum
+                query = isDesc
+                    ? query.OrderByDescending(x => dbContext.OrderDetails.Where(od => od.ProductVariant.ProductID == x.ProductID && od.Order.OrderStatus != "Cancelled").Sum(od => (int?)od.Quantity) ?? 0)
+                    : query.OrderBy(x => dbContext.OrderDetails.Where(od => od.ProductVariant.ProductID == x.ProductID && od.Order.OrderStatus != "Cancelled").Sum(od => (int?)od.Quantity) ?? 0);
+                break;
+            case "category":
+                query = isDesc ? query.OrderByDescending(x => x.Category.CategoryName) : query.OrderBy(x => x.Category.CategoryName);
+                break;
+            case "status":
+                query = isDesc ? query.OrderByDescending(x => x.IsActive) : query.OrderBy(x => x.IsActive);
+                break;
+            case "updated":
+                query = isDesc ? query.OrderByDescending(x => x.UpdatedAt) : query.OrderBy(x => x.UpdatedAt);
+                break;
+            case "created":
+            default:
+                query = isDesc ? query.OrderByDescending(x => x.CreatedAt) : query.OrderBy(x => x.CreatedAt);
+                break;
+        }
+
+        // 4. Paginate
+        if (filter.PageSize > 0) // if PageSize is 0, fetch all (for export)
+        {
+            var page = filter.Page < 1 ? 1 : filter.Page;
+            query = query.Skip((page - 1) * filter.PageSize).Take(filter.PageSize);
+        }
+
+        var products = await query.ToListAsync();
+        return (products, totalCount);
+    }
+
+    public async Task<ClothingStore.Models.ViewModels.ProductDashboardStatsViewModel> GetAdminProductStatsAsync()
+    {
+        var total = await dbContext.Products.CountAsync();
+        var active = await dbContext.Products.CountAsync(x => x.IsActive);
+        var inactive = total - active;
+
+        // Products with total stock <= 0
+        var outOfStock = await dbContext.Products.CountAsync(x => x.IsActive && !x.ProductVariants.Any(v => v.StockQuantity > 0));
+        
+        // Products with any variant between 1 and 5
+        var lowStock = await dbContext.Products.CountAsync(x => x.IsActive && x.ProductVariants.Any(v => v.StockQuantity > 0 && v.StockQuantity <= 5));
+
+        return new ClothingStore.Models.ViewModels.ProductDashboardStatsViewModel
+        {
+            TotalProducts = total,
+            ActiveProducts = active,
+            InactiveProducts = inactive,
+            OutOfStockProducts = outOfStock,
+            LowStockProducts = lowStock
+        };
+    }
+
+    public async Task<Dictionary<int, int>> GetTotalSoldForProductsAsync(List<int> productIds)
+    {
+        if (productIds == null || !productIds.Any()) return new Dictionary<int, int>();
+        
+        var sales = await dbContext.OrderDetails
+            .AsNoTracking()
+            .Where(od => productIds.Contains(od.ProductVariant.ProductID) && od.Order.OrderStatus != "Cancelled")
+            .GroupBy(od => od.ProductVariant.ProductID)
+            .Select(g => new { ProductId = g.Key, Sold = g.Sum(od => od.Quantity) })
+            .ToDictionaryAsync(x => x.ProductId, x => x.Sold);
+
+        return sales;
+    }
+
     public async Task<List<Category>> GetActiveCategoriesAsync()
     {
         return await dbContext.Categories

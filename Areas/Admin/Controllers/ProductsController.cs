@@ -7,46 +7,129 @@ namespace ClothingStore.Areas.Admin.Controllers;
 [Area("Admin")]
 public class ProductsController(IAdminProductService productService) : Controller
 {
-    public async Task<IActionResult> Index(string status = null)
+    public async Task<IActionResult> Index([FromQuery] AdminProductFilter filter)
     {
-        var products = await productService.GetProductsAsync();
-        
-        if (status == "active") 
-        {
-            products = products.Where(p => p.IsActive).ToList();
-        } 
-        else if (status == "hidden") 
-        {
-            products = products.Where(p => !p.IsActive).ToList();
-        }
-        
-        return View(products);
+        var model = await productService.GetProductsFilteredAsync(filter);
+        ViewBag.ParentCategories = (await (HttpContext.RequestServices.GetRequiredService<ClothingStore.Repositories.IProductRepository>()).GetActiveCategoriesAsync())
+            .Select(c => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem { Value = c.CategoryID.ToString(), Text = c.CategoryName })
+            .ToList();
+        return View(model);
     }
 
-    public async Task<IActionResult> ExportCsv([FromServices] ClothingStore.Data.StoreDbContext context)
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> BulkAction(string actionType, List<int> productIds, int? categoryId)
     {
-        var products = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(
-            Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.Include(context.Products, p => p.Category)
-        );
+        if (productIds == null || !productIds.Any()) return RedirectToAction(nameof(Index));
+
+        switch (actionType)
+        {
+            case "activate":
+                await productService.BulkUpdateStatusAsync(productIds, true);
+                TempData["Success"] = $"Đã kích hoạt {productIds.Count} sản phẩm.";
+                break;
+            case "deactivate":
+                await productService.BulkUpdateStatusAsync(productIds, false);
+                TempData["Success"] = $"Đã vô hiệu hóa {productIds.Count} sản phẩm.";
+                break;
+            case "delete":
+                await productService.BulkDeleteAsync(productIds);
+                TempData["Success"] = $"Đã xóa (mềm) {productIds.Count} sản phẩm.";
+                break;
+            case "changeCategory":
+                if (categoryId.HasValue)
+                {
+                    await productService.BulkUpdateCategoryAsync(productIds, categoryId.Value);
+                    TempData["Success"] = $"Đã cập nhật danh mục cho {productIds.Count} sản phẩm.";
+                }
+                break;
+        }
+
+        // Keep current url params if possible, but simplest is redirect to index.
+        // We will just return to Index. A better UX would use AJAX.
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Duplicate(int id)
+    {
+        var newId = await productService.DuplicateProductAsync(id);
+        if (newId > 0)
+        {
+            TempData["Success"] = "Đã nhân bản sản phẩm thành công.";
+            return RedirectToAction(nameof(Edit), new { id = newId });
+        }
+        TempData["Error"] = "Lỗi nhân bản sản phẩm.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    public async Task<IActionResult> ExportCsv([FromQuery] AdminProductFilter filter)
+    {
+        // Ignore pagination for export
+        filter.PageSize = 0; 
+        var model = await productService.GetProductsFilteredAsync(filter);
 
         var sb = new System.Text.StringBuilder();
-        sb.AppendLine("ProductID,ProductName,Slug,Category,TotalStock,Status,CreatedAt");
+        sb.AppendLine("ProductID,SKU,ProductName,Category,MinPrice,MaxPrice,TotalStock,TotalSold,Status,CreatedAt");
 
-        foreach (var p in products)
+        foreach (var p in model.Products)
         {
-            var catName = $"\"{p.Category?.CategoryName?.Replace("\"", "\"\"")}\"";
-            var pName = $"\"{p.ProductName?.Replace("\"", "\"\"")}\"";
+            var pName = $"\"{p.ProductName.Replace("\"", "\"\"")}\"";
             var status = p.IsActive ? "Active" : "Hidden";
             var createdAt = p.CreatedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? "";
             
-            // Note: If you need to count total stock from variants, it would require including Variants.
-            // For simplicity, we just export the base product info if variants are not eagerly loaded.
-            
-            sb.AppendLine($"{p.ProductID},{pName},\"{p.Slug}\",{catName},,{status},{createdAt}");
+            sb.AppendLine($"{p.ProductID},{p.SKU},{pName},\"{p.CategoryName}\",{p.MinPrice},{p.MaxPrice},{p.TotalStock},{p.TotalSold},{status},{createdAt}");
         }
 
         var bytes = System.Text.Encoding.UTF8.GetPreamble().Concat(System.Text.Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
         return File(bytes, "text/csv", "ProductsReport.csv");
+    }
+
+    public async Task<IActionResult> ExportExcel([FromQuery] AdminProductFilter filter)
+    {
+        filter.PageSize = 0; 
+        var model = await productService.GetProductsFilteredAsync(filter);
+
+        using var workbook = new ClosedXML.Excel.XLWorkbook();
+        var worksheet = workbook.Worksheets.Add("Products");
+        
+        // Headers
+        worksheet.Cell(1, 1).Value = "ProductID";
+        worksheet.Cell(1, 2).Value = "SKU";
+        worksheet.Cell(1, 3).Value = "ProductName";
+        worksheet.Cell(1, 4).Value = "Category";
+        worksheet.Cell(1, 5).Value = "MinPrice";
+        worksheet.Cell(1, 6).Value = "MaxPrice";
+        worksheet.Cell(1, 7).Value = "TotalStock";
+        worksheet.Cell(1, 8).Value = "TotalSold";
+        worksheet.Cell(1, 9).Value = "Status";
+        worksheet.Cell(1, 10).Value = "CreatedAt";
+
+        // Data
+        var row = 2;
+        foreach (var p in model.Products)
+        {
+            worksheet.Cell(row, 1).Value = p.ProductID;
+            worksheet.Cell(row, 2).Value = p.SKU;
+            worksheet.Cell(row, 3).Value = p.ProductName;
+            worksheet.Cell(row, 4).Value = p.CategoryName;
+            worksheet.Cell(row, 5).Value = p.MinPrice;
+            worksheet.Cell(row, 6).Value = p.MaxPrice;
+            worksheet.Cell(row, 7).Value = p.TotalStock;
+            worksheet.Cell(row, 8).Value = p.TotalSold;
+            worksheet.Cell(row, 9).Value = p.IsActive ? "Active" : "Hidden";
+            worksheet.Cell(row, 10).Value = p.CreatedAt?.ToString("yyyy-MM-dd HH:mm:ss");
+            row++;
+        }
+
+        worksheet.Columns().AdjustToContents();
+
+        using var stream = new System.IO.MemoryStream();
+        workbook.SaveAs(stream);
+        var content = stream.ToArray();
+
+        return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ProductsReport.xlsx");
     }
 
     public async Task<IActionResult> Create()

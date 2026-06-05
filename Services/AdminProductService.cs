@@ -29,8 +29,7 @@ public class AdminProductService(
         return new AdminProductPageViewModel
         {
             Products   = productList.Select(MapListItem).ToList(),
-            Page       = page,
-            PageSize   = pageSize,
+            Filter     = new AdminProductFilter { Page = page, PageSize = pageSize },
             TotalCount = total
         };
     }
@@ -39,11 +38,16 @@ public class AdminProductService(
     {
         ProductID    = x.ProductID,
         ProductName  = x.ProductName,
-        CategoryName = x.Category.CategoryName,
+        SKU          = x.ProductVariants.FirstOrDefault()?.SKU ?? "",
+        CategoryName = x.Category?.CategoryName ?? "",
         ThumbnailUrl = x.ThumbnailUrl,
-        VariantCount = x.ProductVariants.Count,
-        TotalStock   = x.ProductVariants.Sum(v => v.StockQuantity),
-        IsActive     = x.IsActive
+        VariantCount = x.ProductVariants?.Count ?? 0,
+        TotalStock   = x.ProductVariants?.Sum(v => v.StockQuantity) ?? 0,
+        MinPrice     = x.ProductVariants?.Any() == true ? x.ProductVariants.Min(v => v.SellingPrice) : 0,
+        MaxPrice     = x.ProductVariants?.Any() == true ? x.ProductVariants.Max(v => v.SellingPrice) : 0,
+        IsActive     = x.IsActive,
+        CreatedAt    = x.CreatedAt,
+        UpdatedAt    = x.UpdatedAt
     };
 
     public async Task<ProductEditViewModel> CreateProductModelAsync()
@@ -549,5 +553,149 @@ public class AdminProductService(
         products.Update(product);
         await unitOfWork.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<AdminProductPageViewModel> GetProductsFilteredAsync(AdminProductFilter filter)
+    {
+        var (productList, total) = await productRepository.GetAdminProductsFilteredAsync(filter);
+        var stats = await productRepository.GetAdminProductStatsAsync();
+
+        var productIds = productList.Select(x => x.ProductID).ToList();
+        var salesDict = await productRepository.GetTotalSoldForProductsAsync(productIds);
+
+        var viewModels = productList.Select(x => {
+            var minP = x.ProductVariants.Any() ? x.ProductVariants.Min(v => v.SellingPrice) : 0;
+            var maxP = x.ProductVariants.Any() ? x.ProductVariants.Max(v => v.SellingPrice) : 0;
+            var totalStock = x.ProductVariants.Sum(v => v.StockQuantity);
+            var totalSold = salesDict.GetValueOrDefault(x.ProductID, 0);
+
+            return new AdminProductListItemViewModel
+            {
+                ProductID    = x.ProductID,
+                ProductName  = x.ProductName,
+                SKU          = x.ProductVariants.FirstOrDefault()?.SKU ?? "",
+                CategoryName = x.Category?.CategoryName ?? "",
+                ThumbnailUrl = x.ThumbnailUrl,
+                VariantCount = x.ProductVariants?.Count ?? 0,
+                TotalStock   = totalStock,
+                MinPrice     = minP,
+                MaxPrice     = maxP,
+                TotalSold    = totalSold,
+                IsActive     = x.IsActive,
+                CreatedAt    = x.CreatedAt,
+                UpdatedAt    = x.UpdatedAt
+            };
+        }).ToList();
+
+        return new AdminProductPageViewModel
+        {
+            Products   = viewModels,
+            Filter     = filter,
+            Stats      = stats,
+            TotalCount = total
+        };
+    }
+
+    public async Task<int> DuplicateProductAsync(int productId)
+    {
+        var original = await productRepository.GetProductForAdminAsync(productId);
+        if (original == null) return 0;
+
+        var now = DateTime.UtcNow;
+        var copySlug = $"{original.Slug}-copy-{Guid.NewGuid().ToString("N")[..6]}";
+
+        var copy = new Product
+        {
+            ProductName = $"{original.ProductName} (Copy)",
+            Slug = copySlug,
+            ThumbnailUrl = original.ThumbnailUrl,
+            Description = original.Description,
+            Gender = original.Gender,
+            Material = original.Material,
+            FitType = original.FitType,
+            CareInstructions = original.CareInstructions,
+            CategoryID = original.CategoryID,
+            ProgramID = original.ProgramID,
+            IsActive = false, // Automatically hidden
+            IsBestSeller = false,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        await products.AddAsync(copy);
+        await unitOfWork.SaveChangesAsync(); // save to get ID
+
+        // Duplicate variants and images
+        foreach (var v in original.ProductVariants)
+        {
+            var vCopy = new ProductVariant
+            {
+                ProductID = copy.ProductID,
+                SKU = $"{v.SKU}-COPY",
+                SellingPrice = v.SellingPrice,
+                StockQuantity = v.StockQuantity,
+                SizeID = v.SizeID,
+                ColorID = v.ColorID,
+                IsActive = v.IsActive,
+                CreatedAt = now,
+                UpdatedAt = now
+            };
+            await variants.AddAsync(vCopy);
+            await unitOfWork.SaveChangesAsync(); // save to get variant ID
+
+            foreach (var img in v.ProductImages)
+            {
+                await images.AddAsync(new ProductImage
+                {
+                    VariantID = vCopy.VariantID,
+                    DisplayOrder = img.DisplayOrder,
+                    ImageURL = img.ImageURL
+                });
+            }
+        }
+
+        await unitOfWork.SaveChangesAsync();
+        return copy.ProductID;
+    }
+
+    public async Task<(int SuccessCount, int FailCount)> BulkUpdateStatusAsync(List<int> productIds, bool isActive)
+    {
+        int success = 0;
+        foreach (var id in productIds)
+        {
+            var p = await products.FindAsync(id);
+            if (p != null)
+            {
+                p.IsActive = isActive;
+                p.UpdatedAt = DateTime.UtcNow;
+                products.Update(p);
+                success++;
+            }
+        }
+        await unitOfWork.SaveChangesAsync();
+        return (success, productIds.Count - success);
+    }
+
+    public async Task<(int SuccessCount, int FailCount)> BulkDeleteAsync(List<int> productIds)
+    {
+        return await BulkUpdateStatusAsync(productIds, false);
+    }
+
+    public async Task<(int SuccessCount, int FailCount)> BulkUpdateCategoryAsync(List<int> productIds, int newCategoryId)
+    {
+        int success = 0;
+        foreach (var id in productIds)
+        {
+            var p = await products.FindAsync(id);
+            if (p != null)
+            {
+                p.CategoryID = newCategoryId;
+                p.UpdatedAt = DateTime.UtcNow;
+                products.Update(p);
+                success++;
+            }
+        }
+        await unitOfWork.SaveChangesAsync();
+        return (success, productIds.Count - success);
     }
 }
