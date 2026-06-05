@@ -139,6 +139,10 @@ public class OrdersController(
         if (order is null) return NotFound();
 
         var oldStatus   = order.OrderStatus;
+        var oldPaymentStatus = order.PaymentStatus;
+        var oldPaymentMethod = order.PaymentMethod;
+        var oldTrackingNumber = order.TrackingNumber;
+
         order.OrderStatus = input.NewStatus;
 
         if (!string.IsNullOrWhiteSpace(input.TrackingNumber))
@@ -154,14 +158,54 @@ public class OrdersController(
         var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         int.TryParse(userIdStr, out var adminUserId);
 
-        order.StatusHistory.Add(new Models.Entities.OrderStatusHistory
+        var notes = new List<string>();
+        if (oldPaymentStatus != order.PaymentStatus)
         {
-            OldStatus = oldStatus,
-            NewStatus = input.NewStatus,
-            Note      = input.Note?.Trim(),
-            ChangedAt = DateTime.UtcNow,
-            ChangedBy = adminUserId > 0 ? adminUserId : null
-        });
+            string vnLabel = order.PaymentStatus switch {
+                "Unpaid" => "Chưa thanh toán",
+                "Paid" => "Đã thanh toán",
+                "Refunded" => "Đã hoàn tiền",
+                "PartialRefund" => "Hoàn tiền một phần",
+                _ => order.PaymentStatus
+            };
+            notes.Add($"Cập nhật trạng thái thanh toán thành '{vnLabel}'");
+        }
+        
+        if (oldPaymentMethod != order.PaymentMethod)
+        {
+            string vnLabel = order.PaymentMethod switch {
+                "COD" => "COD (Nhận hàng thanh toán)",
+                "BankTransfer" => "Chuyển khoản ngân hàng",
+                "MoMo" => "Ví MoMo",
+                "ZaloPay" => "Ví ZaloPay",
+                "Online" => "Thanh toán Online",
+                _ => order.PaymentMethod
+            };
+            notes.Add($"Cập nhật hình thức thanh toán thành '{vnLabel}'");
+        }
+
+        if (oldTrackingNumber != order.TrackingNumber)
+        {
+            notes.Add($"Cập nhật mã vận đơn thành '{order.TrackingNumber}'");
+        }
+
+        if (!string.IsNullOrWhiteSpace(input.Note))
+        {
+            notes.Add(input.Note.Trim());
+        }
+
+        bool isStatusChanged = oldStatus != order.OrderStatus;
+        if (isStatusChanged || notes.Count > 0)
+        {
+            order.StatusHistory.Add(new Models.Entities.OrderStatusHistory
+            {
+                OldStatus = oldStatus,
+                NewStatus = order.OrderStatus,
+                Note      = notes.Count > 0 ? string.Join("\n", notes) : null,
+                ChangedAt = DateTime.UtcNow,
+                ChangedBy = adminUserId > 0 ? adminUserId : null
+            });
+        }
 
         await unitOfWork.SaveChangesAsync();
 
