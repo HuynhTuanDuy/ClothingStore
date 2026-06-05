@@ -11,6 +11,9 @@
         <p class="font-body-md text-body-md text-on-surface-variant max-w-xl">Kiểm soát và quản lý hành trình của các sản phẩm từ WearWhatever đến tay khách hàng.</p>
     </div>
     <div class="flex items-center gap-3">
+        <a asp-action="ExportCsv" class="text-primary font-label-caps text-label-caps flex items-center gap-1 hover:underline mr-4">
+            Tải xuống báo cáo CSV <span class="material-symbols-outlined text-sm" data-icon="download">download</span>
+        </a>
         <form method="get" class="flex items-center gap-2">
             <input type="hidden" name="status" value="@Model.StatusFilter" />
             

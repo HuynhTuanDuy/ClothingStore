@@ -63,6 +63,28 @@ public class OrdersController(
         return View(vm);
     }
 
+    public async Task<IActionResult> ExportCsv([FromServices] ClothingStore.Data.StoreDbContext context)
+    {
+        var orders = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(
+            Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.Include(context.Orders, o => o.Customer)
+        );
+
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("OrderID,OrderCode,CustomerName,OrderStatus,TotalAmount,OrderDate");
+
+        foreach (var o in orders)
+        {
+            var customerName = $"\"{o.Customer?.FullName?.Replace("\"", "\"\"")}\"";
+            var totalAmount = o.TotalAmount.ToString("N0").Replace(",", "");
+            var orderDate = o.OrderDate.ToString("yyyy-MM-dd HH:mm:ss");
+
+            sb.AppendLine($"{o.OrderID},{o.OrderCode},{customerName},{o.OrderStatus},{totalAmount},{orderDate}");
+        }
+
+        var bytes = System.Text.Encoding.UTF8.GetPreamble().Concat(System.Text.Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
+        return File(bytes, "text/csv", "OrdersReport.csv");
+    }
+
     // ── GET /Admin/Orders/Detail/{id} ───────────────────────────
     public async Task<IActionResult> Detail(int id)
     {

@@ -44,6 +44,14 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
 
         // ── CATEGORIES ──────────────────────────────────────────────
         modelBuilder.Entity<Category>()
+            .HasIndex(x => x.CategoryName)
+            .HasDatabaseName("IX_Categories_CategoryName");
+
+        modelBuilder.Entity<Category>()
+            .HasIndex(x => x.ParentCategoryID)
+            .HasDatabaseName("IX_Categories_ParentCategoryId");
+
+        modelBuilder.Entity<Category>()
             .HasOne(x => x.ParentCategory)
             .WithMany(x => x.ChildCategories)
             .HasForeignKey(x => x.ParentCategoryID);

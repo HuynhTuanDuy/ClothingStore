@@ -2,199 +2,284 @@
 @{
     ViewData["Title"] = "Quản lý Danh mục";
     Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    var parentCategories = ViewBag.ParentCategories as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>;
 }
 
 <!-- Page Action Header -->
 <div class="flex justify-between items-end mb-12">
     <div>
-        <h3 class="font-headline-lg text-headline-lg text-primary">Cấu trúc danh mục sản phẩm</h3>
-        <p class="font-body-md text-on-surface-variant mt-2 max-w-lg">Quản lý cấu trúc phân loại của cửa hàng. Sắp xếp các danh mục phản ánh sự chuyển giao mùa và chất lượng thủ công.</p>
+        <h3 class="font-headline-lg text-headline-lg text-primary">Danh mục</h3>
+        <p class="font-body-md text-on-surface-variant mt-2 max-w-lg">Quản lý cấu trúc phân loại của cửa hàng.</p>
     </div>
-    <button class="bg-primary text-white px-8 py-4 font-label-caps text-label-caps flex items-center gap-2 hover:opacity-90 transition-opacity">
-        <span class="material-symbols-outlined" data-icon="add">add</span>
-        Tạo danh mục mới
-    </button>
-</div>
-
-<!-- Category Grid (Bento/Editorial Style) -->
-<div class="grid grid-cols-12 gap-6">
-    @{
-        var topCategories = Model.Take(5).ToList();
-        var defaultImages = new[] {
-            "https://lh3.googleusercontent.com/aida-public/AB6AXuAiBs0IaAkobmrfJ2gu8otVXGxRheuSsv4qw-ceSGxNoccgnh1I7WOnUUF9NfXi2Dit_B-IIvWW22ZbWQ1OHT4rwBPnvL7hxQ3GvtuC2oWUq3SrV3JEtOtintkLlLbZlD4bScaQwcUshL46nm8gTBZzJSz5W4SLyjKUNZAkdItuKlAq9zl25g_3tJ34oIkbvqITdBIxyKSS0TQ0lrpoBBH_jZbk9MxvVfLhbAKuzOpMCY4D3Z4XgStrAXeFBdHq9lH4eDjG-ZlKNyg",
-            "https://lh3.googleusercontent.com/aida-public/AB6AXuBvaZK4eU7Gc7ziSRyWXlHY-QKA7mfET46sNYDZdeVYTXZXmTBB1Hzn5raBZz38GN9AUi2vi9XOuh16lJf33Y44ci8jSVt2f-7jOjJ09mpfx9SkjUKHDlOUM6H23omEWNEh2NlZWWQot-MvpOlSqeDxjDgn1zhEjfYgxHgxtv5Oy-Zuoot1--oL9YMoj_nYaPvPXMSYs1Z5AQZlWLZ6B0MigXggOMRVdnO2LS1ts_YU7wypr3oSXBWk2IEYoDKUA7FRbdggRY2kt2s",
-            "https://lh3.googleusercontent.com/aida-public/AB6AXuAAizcTN8Ixkb4yZlj8kHbUipBy1gY6yMUmfQuykD01n1A49AUKOaorx_UbbK_hhvAtLCZkSSTbVa0oMjByTpmELPArdpz5uk9-a_y3MnX_JTVsGJiHPOH7AUWHzEQS06B_A1D5JeWOvHxBQ_7toXkA1lsuozMItvoTIxlTUDtItrUS7YPFW1tbm9XDjnI9vBFSArCdacMle1twoDYBZ7m631I0MKfJ5IWLNjEojT4m5BhWy2f5R9DbsbVa6bO3TomZpsurpfgQ-Us",
-            "https://lh3.googleusercontent.com/aida-public/AB6AXuCZbQgqexzVuF4kVPOgNOhZ7JSWkM6ZLY75VTvZnl4h29uXC0b_vyFag_HnOiyYgDY5h_Ix-8s23Gwumfnq2MLZHTcQGeT0DwHn9Sb7Z4SjFf9YsKU6sf8JS5-9Va4vEcOti9hCnD6aMVBUpMh6K8lZfRpMgljHebzUB_xXg-5RafOldEmBZ5Z46hmhvd0GQ6wcuuqt_TWS8RvJIOv8NkuJ1f-fhs1es1OO1M0BfurreB0Vwzw9omLpRY53sGZxOUiKE26l4uPhuhM",
-            "https://lh3.googleusercontent.com/aida-public/AB6AXuCETkTnTNClvj1xscWapvpAU1BcTBwndVTM3eQpMz8nO5IZgcSBmzp05Xn40Ju7hq_HTelQATMxSfcjgp68FdtOrmKZvQGBFyrv1cTiQH6lESzUf6uhYXtu9yZho6YoIixN9HRWU_7VlAXN_3clXpH1FI3aPQWQuJeNEIYNsYxi6qevTFGnQfGW4KfOatLgCJ_9Gd4o0EAaRbywLnlkxkoh8W3RFtxOSl8Sw8nRspuBTqf6ib90HFCyWEC4GnhxaSIFjS2OHvKzbZY"
-        };
-        var defaultDescs = new[] {
-            "Dệt may thủ công, len nguồn gốc đạo đức và thiết kế vượt thời gian cho sự chuyển giao nhẹ nhàng sang những tháng mát mẻ.",
-            "Các chi tiết hoàn thiện thủ công giúp nâng tầm phong cách hàng ngày.",
-            "Các lớp bảo vệ được thiết kế để mang lại sự bền bỉ và thanh lịch.",
-            "Được chế tác tỉ mỉ từ bông hữu cơ và sợi tái chế. Một tiêu chuẩn mới về độ bền có ý thức.",
-            "Sự thoải mái được điêu khắc cho mọi hành trình."
-        };
-    }
-
-    @for (int i = 0; i < topCategories.Count; i++)
-    {
-        var category = topCategories[i];
-        var imgUrl = defaultImages[i];
-        var desc = defaultDescs[i];
-        var count = category.Products?.Count ?? 0;
-        var statusClass = category.IsActive ? "bg-secondary-container text-on-secondary-container" : "bg-tertiary-container text-on-tertiary-container";
-        var statusText = category.IsActive ? "Đang hoạt động" : "Bản nháp";
-
-        if (i == 0)
-        {
-            <div class="col-span-12 md:col-span-8 bg-surface-container-low border border-outline-variant group overflow-hidden flex transition-all duration-500 hover:border-primary">
-                <div class="w-1/2 h-[400px] overflow-hidden">
-                    <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" src="@imgUrl" />
-                </div>
-                <div class="w-1/2 p-8 flex flex-col justify-between">
-                    <div>
-                        <div class="flex justify-between items-start">
-                            <span class="@statusClass px-3 py-1 font-label-caps text-[10px] rounded-full uppercase tracking-tighter">@statusText</span>
-                            <span class="text-on-surface-variant font-label-caps text-[10px]">ID: CAT-@category.CategoryID.ToString("D3")</span>
-                        </div>
-                        <h4 class="font-headline-md text-headline-md text-primary mt-6">@category.CategoryName</h4>
-                        <p class="font-body-sm text-on-surface-variant mt-4 leading-relaxed">@desc</p>
-                    </div>
-                    <div class="flex justify-between items-end border-t border-outline-variant pt-6">
-                        <div>
-                            <p class="font-label-caps text-[10px] text-outline uppercase">Số lượng sản phẩm</p>
-                            <p class="font-headline-md text-primary">@count</p>
-                        </div>
-                        <button class="w-10 h-10 flex items-center justify-center border border-primary text-primary hover:bg-primary hover:text-on-primary transition-all">
-                            <span class="material-symbols-outlined" data-icon="edit">edit</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        }
-        else if (i == 1 || i == 2 || i == 4)
-        {
-            <div class="col-span-12 md:col-span-4 bg-surface-container-low border border-outline-variant group overflow-hidden flex flex-col transition-all duration-500 hover:border-primary">
-                <div class="h-64 overflow-hidden">
-                    <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" src="@imgUrl" />
-                </div>
-                <div class="p-6 flex-1 flex flex-col">
-                    <div class="flex justify-between items-start mb-4">
-                        <span class="@statusClass px-3 py-1 font-label-caps text-[10px] rounded-full uppercase">@statusText</span>
-                        <h4 class="font-headline-md text-headline-md text-primary truncate max-w-[150px]">@category.CategoryName</h4>
-                    </div>
-                    <p class="font-body-sm text-on-surface-variant flex-1">@desc</p>
-                    <div class="mt-6 flex justify-between items-center">
-                        <span class="font-label-caps text-label-caps text-outline">@count Sản phẩm</span>
-                        <span class="material-symbols-outlined text-primary cursor-pointer" data-icon="arrow_forward">arrow_forward</span>
-                    </div>
-                </div>
-            </div>
-        }
-        else if (i == 3)
-        {
-            <div class="col-span-12 md:col-span-8 bg-surface-container-low border border-outline-variant group overflow-hidden flex transition-all duration-500 hover:border-primary">
-                <div class="w-1/2 p-8 flex flex-col justify-between order-2">
-                    <div>
-                        <div class="flex justify-between items-start">
-                            <span class="@statusClass px-3 py-1 font-label-caps text-[10px] rounded-full uppercase">@statusText</span>
-                            <span class="text-on-surface-variant font-label-caps text-[10px]">ID: CAT-@category.CategoryID.ToString("D3")</span>
-                        </div>
-                        <h4 class="font-headline-md text-headline-md text-primary mt-6">@category.CategoryName</h4>
-                        <p class="font-body-sm text-on-surface-variant mt-4 leading-relaxed">@desc</p>
-                    </div>
-                    <div class="flex justify-between items-end border-t border-outline-variant pt-6">
-                        <div>
-                            <p class="font-label-caps text-[10px] text-outline uppercase">Số lượng sản phẩm</p>
-                            <p class="font-headline-md text-primary">@count</p>
-                        </div>
-                        <button class="w-10 h-10 flex items-center justify-center border border-primary text-primary hover:bg-primary hover:text-on-primary transition-all">
-                            <span class="material-symbols-outlined" data-icon="edit">edit</span>
-                        </button>
-                    </div>
-                </div>
-                <div class="w-1/2 h-[400px] overflow-hidden order-1">
-                    <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 grayscale-[30%]" src="@imgUrl" />
-                </div>
-            </div>
-        }
-    }
-
-    <!-- Create Category Placeholder -->
-    <div class="col-span-12 md:col-span-4 border-2 border-dashed border-outline-variant flex flex-col items-center justify-center p-12 group cursor-pointer hover:border-primary transition-colors">
-        <div class="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center group-hover:bg-primary transition-colors mb-4">
-            <span class="material-symbols-outlined text-primary group-hover:text-on-primary text-3xl" data-icon="add">add</span>
-        </div>
-        <p class="font-label-caps text-label-caps text-outline group-hover:text-primary">Thêm danh mục phụ</p>
-    </div>
-</div>
-
-<!-- Table-style List for Detailed Review -->
-<section class="mt-12 mb-24">
-    <div class="flex items-center justify-between mb-8">
-        <h4 class="font-headline-md text-headline-md text-primary">Thư mục đầy đủ</h4>
-        <button class="text-primary font-label-caps text-label-caps flex items-center gap-1 hover:underline">
+    <div class="flex items-center gap-4">
+        <a asp-action="ExportCsv" class="text-primary font-label-caps text-label-caps flex items-center gap-1 hover:underline">
             Tải xuống báo cáo CSV <span class="material-symbols-outlined text-sm" data-icon="download">download</span>
-        </button>
+        </a>
+        <a asp-action="Create" class="bg-primary text-white px-8 py-4 font-label-caps text-label-caps flex items-center gap-2 hover:opacity-90 transition-opacity">
+            <span class="material-symbols-outlined" data-icon="add">add</span>
+            Tạo danh mục mới
+        </a>
     </div>
-    <div class="border border-outline-variant overflow-hidden">
-        <table class="w-full border-collapse">
-            <thead class="bg-surface-container">
-                <tr>
-                    <th class="px-6 py-4 text-left font-label-caps text-[10px] text-outline uppercase tracking-widest">Tên danh mục</th>
-                    <th class="px-6 py-4 text-left font-label-caps text-[10px] text-outline uppercase tracking-widest">Sản phẩm kích hoạt</th>
-                    <th class="px-6 py-4 text-left font-label-caps text-[10px] text-outline uppercase tracking-widest">Trạng thái</th>
-                    <th class="px-6 py-4 text-left font-label-caps text-[10px] text-outline uppercase tracking-widest">Cập nhật lần cuối</th>
-                    <th class="px-6 py-4 text-right font-label-caps text-[10px] text-outline uppercase tracking-widest">Hành động</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-outline-variant">
-                @foreach (var cat in Model)
-                {
-                    <tr class="hover:bg-surface-container-lowest transition-colors group">
-                        <td class="px-6 py-5">
-                            <div class="flex items-center gap-4">
-                                <div class="w-10 h-10 bg-surface-container-high rounded flex items-center justify-center text-on-surface-variant font-bold text-xs">
-                                    @cat.CategoryName.Substring(0, Math.Min(cat.CategoryName.Length, 2)).ToUpper()
-                                </div>
-                                <span class="font-label-caps text-label-caps text-primary">@cat.CategoryName</span>
-                            </div>
-                        </td>
-                        <td class="px-6 py-5 font-body-sm text-on-surface">@(cat.Products?.Count ?? 0)</td>
-                        <td class="px-6 py-5">
-                            @if (cat.IsActive)
+</div>
+
+<!-- Category Card Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+    @foreach (var category in Model)
+    {
+        var count = category.Products?.Count ?? 0;
+        var isRoot = !category.ParentCategoryID.HasValue;
+        var badgeColor = isRoot ? "bg-blue-100 text-blue-800 border-blue-200" : "bg-purple-100 text-purple-800 border-purple-200";
+        var statusColor = category.IsActive ? "bg-green-100 text-green-800 border-green-200" : "bg-gray-100 text-gray-800 border-gray-200";
+        var statusText = category.IsActive ? "Hoạt động" : "Không hoạt động";
+        var parentText = isRoot ? "Danh mục gốc" : $"Thuộc: {category.ParentCategory?.CategoryName}";
+        var createdAt = category.CreatedAt?.ToString("dd/MM/yyyy") ?? "N/A";
+
+        <div class="category-card bg-surface border border-outline-variant rounded-lg p-6 hover:border-primary transition-all duration-300 relative overflow-hidden group flex flex-col" data-id="@category.CategoryID" data-parent-id="@(category.ParentCategoryID?.ToString() ?? "")" data-active="@(category.IsActive ? "true" : "false")">
+            
+            <!-- View Mode -->
+            <div class="view-mode flex-1 flex flex-col">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="flex flex-col gap-1">
+                        <span class="status-badge px-2 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wider border inline-block w-max @statusColor">@statusText</span>
+                        <span class="parent-badge px-2 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wider border inline-block w-max @badgeColor">@parentText</span>
+                    </div>
+                    <span class="text-on-surface-variant font-label-caps text-[10px]">CAT-@category.CategoryID.ToString("D3")</span>
+                </div>
+                
+                <h4 class="category-name-display font-headline-md text-xl text-primary font-semibold mb-2 truncate" title="@category.CategoryName">@category.CategoryName</h4>
+                
+                <div class="mt-auto pt-4 border-t border-outline-variant/50">
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <p class="font-body-sm text-on-surface-variant"><strong>@count</strong> sản phẩm</p>
+                            <p class="font-body-sm text-on-surface-variant text-[11px] mt-1">Tạo: @createdAt</p>
+                        </div>
+                        <button type="button" class="btn-edit w-8 h-8 flex items-center justify-center rounded-full bg-surface-container hover:bg-primary hover:text-on-primary transition-colors text-primary" title="Chỉnh sửa">
+                            <span class="material-symbols-outlined text-[16px]">edit</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Mode -->
+            <div class="edit-mode hidden flex-1 flex flex-col">
+                <form class="edit-form flex-1 flex flex-col" method="post" action="/Admin/Categories/EditAjax/@category.CategoryID">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="CategoryID" value="@category.CategoryID" />
+                    
+                    <div class="mb-3">
+                        <label class="block text-xs text-on-surface-variant uppercase tracking-wider mb-1">Tên danh mục</label>
+                        <input type="text" name="CategoryName" class="w-full bg-surface-container-low border border-outline-variant focus:border-primary rounded px-3 py-2 text-sm" value="@category.CategoryName" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="block text-xs text-on-surface-variant uppercase tracking-wider mb-1">Danh mục cha</label>
+                        <select name="ParentCategoryID" class="w-full bg-surface-container-low border border-outline-variant focus:border-primary rounded px-3 py-2 text-sm parent-select">
+                            <option value="">-- Trở thành Danh mục gốc --</option>
+                            @if (parentCategories != null)
                             {
-                                <span class="text-[10px] font-label-caps bg-secondary-container/30 text-on-secondary-container border border-secondary/20 px-2 py-0.5 rounded">Hoạt động</span>
+                                foreach (var opt in parentCategories)
+                                {
+                                    // Bỏ qua chính nó trong danh sách để chống lỗi cơ bản
+                                    if (opt.Value != category.CategoryID.ToString())
+                                    {
+                                        if (category.ParentCategoryID?.ToString() == opt.Value) { <option value="@opt.Value" selected>@opt.Text</option> }
+                                        else { <option value="@opt.Value">@opt.Text</option> }
+                                    }
+                                }
                             }
-                            else
-                            {
-                                <span class="text-[10px] font-label-caps bg-tertiary-container/10 text-on-tertiary-fixed-variant border border-outline px-2 py-0.5 rounded">Đã lưu trữ</span>
-                            }
-                        </td>
-                        <td class="px-6 py-5 font-body-sm text-on-surface-variant">@(cat.UpdatedAt?.ToString("dd/MM/yyyy") ?? cat.CreatedAt?.ToString("dd/MM/yyyy") ?? "N/A")</td>
-                        <td class="px-6 py-5 text-right">
-                            <button class="text-outline hover:text-primary px-2"><span class="material-symbols-outlined text-lg" data-icon="visibility">visibility</span></button>
-                            <button class="text-outline hover:text-primary px-2"><span class="material-symbols-outlined text-lg" data-icon="more_vert">more_vert</span></button>
-                        </td>
-                    </tr>
-                }
-                @if (!Model.Any())
-                {
-                    <tr>
-                        <td colspan="5" class="px-6 py-10 text-center text-on-surface-variant font-body-md">
-                            Chưa có danh mục nào.
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-    <div class="flex justify-between items-center mt-6">
-        <p class="font-body-sm text-on-surface-variant">Hiển thị @Model.Count danh mục</p>
-        <div class="flex gap-2">
-            <button class="px-3 py-1 border border-outline-variant text-outline hover:border-primary hover:text-primary transition-all">Trước</button>
-            <button class="px-3 py-1 border border-primary text-on-primary bg-primary transition-all">1</button>
-            <button class="px-3 py-1 border border-outline-variant text-outline hover:border-primary hover:text-primary transition-all">Sau</button>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-xs text-on-surface-variant uppercase tracking-wider mb-1">Trạng thái</label>
+                        <select name="IsActive" class="w-full bg-surface-container-low border border-outline-variant focus:border-primary rounded px-3 py-2 text-sm">
+                            <option value="true" selected="@(category.IsActive)">Hoạt động</option>
+                            <option value="false" selected="@(!category.IsActive)">Không hoạt động</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mt-auto pt-3 flex gap-2 justify-end border-t border-outline-variant/50">
+                        <button type="button" class="btn-cancel px-3 py-1.5 text-xs font-semibold uppercase rounded hover:bg-surface-container text-on-surface-variant transition-colors">Hủy</button>
+                        <button type="submit" class="btn-save px-3 py-1.5 text-xs font-semibold uppercase rounded bg-primary text-white hover:bg-primary/90 transition-colors flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[14px]">save</span> Lưu
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
+    }
+
+    <!-- Create Category Card -->
+    <a asp-action="Create" class="bg-surface-container-lowest border-2 border-dashed border-outline-variant rounded-lg p-6 hover:border-primary hover:bg-surface-container-low transition-all duration-300 flex flex-col items-center justify-center min-h-[200px] group cursor-pointer">
+        <div class="w-14 h-14 rounded-full bg-surface-container-high flex items-center justify-center group-hover:bg-primary transition-colors mb-3">
+            <span class="material-symbols-outlined text-primary group-hover:text-on-primary text-2xl">add</span>
+        </div>
+        <p class="font-label-caps text-sm text-outline group-hover:text-primary font-medium">Tạo danh mục mới</p>
+    </a>
+</div>
+
+<!-- Pagination -->
+<div class="flex justify-between items-center mt-6 mb-24">
+    <div class="flex items-center gap-4">
+        <p class="font-body-sm text-on-surface-variant">Hiển thị @Model.Count trên tổng số @ViewBag.TotalItems danh mục</p>
+        <form method="get" asp-action="Index" class="flex items-center gap-2">
+            <span class="text-sm text-on-surface-variant">Hiển thị:</span>
+            <select name="pageSize" onchange="this.form.submit()" class="bg-surface border border-outline-variant rounded py-1 px-2 text-sm focus:outline-none focus:border-primary">
+                <option value="10" selected="@(ViewBag.PageSize == 10)">10</option>
+                <option value="25" selected="@(ViewBag.PageSize == 25)">25</option>
+                <option value="50" selected="@(ViewBag.PageSize == 50)">50</option>
+                <option value="100" selected="@(ViewBag.PageSize == 100)">100</option>
+            </select>
+        </form>
     </div>
-</section>
+    <div class="flex gap-2">
+        @if (ViewBag.CurrentPage > 1)
+        {
+            <a href="@Url.Action("Index", new { page = ViewBag.CurrentPage - 1, pageSize = ViewBag.PageSize })" class="px-3 py-1 border border-outline-variant text-outline hover:border-primary hover:text-primary transition-all rounded">Trước</a>
+        }
+        else
+        {
+            <span class="px-3 py-1 border border-outline-variant text-outline opacity-50 cursor-not-allowed rounded">Trước</span>
+        }
+
+        <span class="px-3 py-1 border border-primary text-on-primary bg-primary transition-all rounded">@ViewBag.CurrentPage / @ViewBag.TotalPages</span>
+
+        @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+        {
+            <a href="@Url.Action("Index", new { page = ViewBag.CurrentPage + 1, pageSize = ViewBag.PageSize })" class="px-3 py-1 border border-outline-variant text-outline hover:border-primary hover:text-primary transition-all rounded">Sau</a>
+        }
+        else
+        {
+            <span class="px-3 py-1 border border-outline-variant text-outline opacity-50 cursor-not-allowed rounded">Sau</span>
+        }
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
+
+@section Scripts {
+    <script>
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            const bgClass = type === 'success' ? 'bg-green-600' : 'bg-red-600';
+            const icon = type === 'success' ? 'check_circle' : 'error';
+            
+            toast.className = `${bgClass} text-white px-4 py-3 rounded shadow-lg flex items-center gap-2 transform transition-all duration-300 translate-y-10 opacity-0`;
+            toast.innerHTML = `<span class="material-symbols-outlined text-sm">${icon}</span> <span class="text-sm font-medium">${message}</span>`;
+            
+            document.getElementById('toast-container').appendChild(toast);
+            
+            // Animate in
+            setTimeout(() => {
+                toast.classList.remove('translate-y-10', 'opacity-0');
+            }, 10);
+            
+            // Remove after 3s
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Edit Button Toggle
+            document.querySelectorAll('.btn-edit').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const card = this.closest('.category-card');
+                    card.querySelector('.view-mode').classList.add('hidden');
+                    card.querySelector('.edit-mode').classList.remove('hidden');
+                });
+            });
+
+            // Cancel Button Toggle
+            document.querySelectorAll('.btn-cancel').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const card = this.closest('.category-card');
+                    card.querySelector('.edit-mode').classList.add('hidden');
+                    card.querySelector('.view-mode').classList.remove('hidden');
+                    // Reset form by calling form.reset()
+                    card.querySelector('.edit-form').reset();
+                });
+            });
+
+            // AJAX Form Submit
+            document.querySelectorAll('.edit-form').forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const btnSave = this.querySelector('.btn-save');
+                    const originalBtnHtml = btnSave.innerHTML;
+                    btnSave.innerHTML = '<span class="material-symbols-outlined text-[14px] animate-spin">refresh</span> Đang lưu...';
+                    btnSave.disabled = true;
+
+                    const formData = new FormData(this);
+                    
+                    fetch(this.action, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        btnSave.innerHTML = originalBtnHtml;
+                        btnSave.disabled = false;
+
+                        if (data.success) {
+                            showToast(data.message, 'success');
+                            
+                            // Update View Mode DOM elements
+                            const card = this.closest('.category-card');
+                            
+                            // Update Title
+                            card.querySelector('.category-name-display').textContent = data.data.categoryName;
+                            
+                            // Update Status Badge
+                            const statusBadge = card.querySelector('.status-badge');
+                            if (data.data.isActive) {
+                                statusBadge.textContent = "Hoạt động";
+                                statusBadge.className = "status-badge px-2 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wider border inline-block w-max bg-green-100 text-green-800 border-green-200";
+                            } else {
+                                statusBadge.textContent = "Không hoạt động";
+                                statusBadge.className = "status-badge px-2 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wider border inline-block w-max bg-gray-100 text-gray-800 border-gray-200";
+                            }
+
+                            // Update Parent Badge
+                            const parentBadge = card.querySelector('.parent-badge');
+                            if (data.data.parentCategoryId === null || data.data.parentCategoryId === "") {
+                                parentBadge.textContent = "Danh mục gốc";
+                                parentBadge.className = "parent-badge px-2 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wider border inline-block w-max bg-blue-100 text-blue-800 border-blue-200";
+                            } else {
+                                parentBadge.textContent = "Thuộc: " + data.data.parentName;
+                                parentBadge.className = "parent-badge px-2 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wider border inline-block w-max bg-purple-100 text-purple-800 border-purple-200";
+                            }
+
+                            // Update data attributes
+                            card.setAttribute('data-parent-id', data.data.parentCategoryId || "");
+                            card.setAttribute('data-active', data.data.isActive);
+                            
+                            // Switch back to view mode
+                            card.querySelector('.edit-mode').classList.add('hidden');
+                            card.querySelector('.view-mode').classList.remove('hidden');
+
+                            // Update all other dropdowns in the grid to reflect name change if needed
+                            const categoryId = card.getAttribute('data-id');
+                            document.querySelectorAll(`.parent-select option[value="${categoryId}"]`).forEach(opt => {
+                                opt.textContent = data.data.categoryName;
+                            });
+
+                        } else {
+                            showToast(data.message, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        btnSave.innerHTML = originalBtnHtml;
+                        btnSave.disabled = false;
+                        showToast('Đã xảy ra lỗi hệ thống.', 'error');
+                        console.error('Error:', error);
+                    });
+                });
+            });
+        });
+    </script>
+}

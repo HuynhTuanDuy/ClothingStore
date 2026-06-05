@@ -23,6 +23,32 @@ public class ProductsController(IAdminProductService productService) : Controlle
         return View(products);
     }
 
+    public async Task<IActionResult> ExportCsv([FromServices] ClothingStore.Data.StoreDbContext context)
+    {
+        var products = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(
+            Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.Include(context.Products, p => p.Category)
+        );
+
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("ProductID,ProductName,Slug,Category,TotalStock,Status,CreatedAt");
+
+        foreach (var p in products)
+        {
+            var catName = $"\"{p.Category?.CategoryName?.Replace("\"", "\"\"")}\"";
+            var pName = $"\"{p.ProductName?.Replace("\"", "\"\"")}\"";
+            var status = p.IsActive ? "Active" : "Hidden";
+            var createdAt = p.CreatedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? "";
+            
+            // Note: If you need to count total stock from variants, it would require including Variants.
+            // For simplicity, we just export the base product info if variants are not eagerly loaded.
+            
+            sb.AppendLine($"{p.ProductID},{pName},\"{p.Slug}\",{catName},,{status},{createdAt}");
+        }
+
+        var bytes = System.Text.Encoding.UTF8.GetPreamble().Concat(System.Text.Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
+        return File(bytes, "text/csv", "ProductsReport.csv");
+    }
+
     public async Task<IActionResult> Create()
     {
         return View(await productService.CreateProductModelAsync());

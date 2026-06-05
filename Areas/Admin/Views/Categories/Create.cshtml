@@ -1,0 +1,56 @@
+@model ClothingStore.Models.ViewModels.CategoryFormViewModel
+@{
+    ViewData["Title"] = "Tạo Danh mục mới";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="max-w-3xl mx-auto">
+    <div class="flex items-center gap-4 mb-8">
+        <a asp-action="Index" class="text-outline hover:text-primary transition-colors">
+            <span class="material-symbols-outlined">arrow_back</span>
+        </a>
+        <h2 class="text-2xl font-bold text-primary">Tạo danh mục mới</h2>
+    </div>
+
+    <div class="bg-surface border border-outline-variant p-8 rounded-lg">
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-error mb-6 text-sm"></div>
+
+            <!-- Tên danh mục -->
+            <div class="mb-6">
+                <label asp-for="CategoryName" class="block text-sm font-medium text-on-background mb-2"></label>
+                <input asp-for="CategoryName" class="w-full bg-surface-container-low border border-outline-variant rounded py-2 px-4 focus:outline-none focus:border-primary text-sm" placeholder="Nhập tên danh mục..." />
+                <span asp-validation-for="CategoryName" class="text-error text-xs mt-1 block"></span>
+            </div>
+
+            <!-- Danh mục cha -->
+            <div class="mb-6">
+                <label asp-for="ParentCategoryID" class="block text-sm font-medium text-on-background mb-2"></label>
+                <select asp-for="ParentCategoryID" asp-items="Model.ParentCategories" class="w-full bg-surface-container-low border border-outline-variant rounded py-2 px-4 focus:outline-none focus:border-primary text-sm">
+                    <option value="">-- Không có (Danh mục gốc) --</option>
+                </select>
+                <span asp-validation-for="ParentCategoryID" class="text-error text-xs mt-1 block"></span>
+            </div>
+
+            <!-- Trạng thái -->
+            <div class="mb-8 flex items-center gap-3">
+                <input asp-for="IsActive" type="checkbox" class="w-4 h-4 text-primary bg-surface-container-low border-outline-variant rounded focus:ring-primary focus:ring-2" />
+                <label asp-for="IsActive" class="text-sm font-medium text-on-background cursor-pointer">Đang hoạt động</label>
+            </div>
+
+            <div class="flex justify-end gap-4 border-t border-outline-variant pt-6">
+                <a asp-action="Index" class="px-6 py-2 border border-outline-variant text-outline hover:bg-surface-container-high hover:text-primary transition-colors rounded text-sm font-medium">
+                    Hủy bỏ
+                </a>
+                <button type="submit" class="px-6 py-2 bg-primary text-on-primary hover:bg-primary/90 transition-colors rounded text-sm font-medium flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[18px]">save</span>
+                    Lưu danh mục
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
