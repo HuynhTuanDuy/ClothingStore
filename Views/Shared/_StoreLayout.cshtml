@@ -172,12 +172,23 @@
     <!-- BEGIN: Footer -->
     <footer class="bg-brand-dark-brown text-brand-cream py-12">
         <div class="container mx-auto px-4 flex flex-col md:flex-row justify-between items-start md:items-end">
-            <!-- Footer Left Links -->
-            <div class="flex flex-col space-y-2 mb-8 md:mb-0">
-                <a class="text-sm hover:underline" href="#">Sơ đồ trang</a>
-                <a class="text-sm hover:underline" href="#">Về chúng tôi</a>
-                <a class="text-sm hover:underline" href="#">Liên hệ</a>
+            <!-- Footer Links Area -->
+            <div class="flex flex-col md:flex-row gap-8 mb-8 md:mb-0">
+                <!-- Footer Left Links -->
+                <div class="flex flex-col space-y-2">
+                    <span class="text-lg font-bold mb-2">Về chúng tôi</span>
+                    <a class="text-sm hover:underline" href="#">Sơ đồ trang</a>
+                    <a class="text-sm hover:underline" href="#">Giới thiệu</a>
+                    <a class="text-sm hover:underline" href="#">Liên hệ</a>
+                </div>
+                
+                <!-- Footer Support Links -->
+                <div class="flex flex-col space-y-2">
+                    <span class="text-lg font-bold mb-2">Hỗ trợ khách hàng</span>
+                    <a class="text-sm hover:underline" asp-controller="OrderTracking" asp-action="Index">Tra cứu đơn hàng</a>
+                </div>
             </div>
+
             <!-- Footer Right Socials -->
             <div class="flex space-x-6">
                 <a aria-label="Facebook" class="hover:opacity-75" href="#">
