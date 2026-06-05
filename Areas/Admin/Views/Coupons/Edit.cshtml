@@ -1,0 +1,93 @@
+@using ClothingStore.Models.ViewModels
+@model CouponEditViewModel
+@{
+    ViewData["Title"] = "Cập nhật mã giảm giá";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0 text-gray-800">Cập nhật mã giảm giá: <span class="text-primary">@Model.CouponCode</span></h2>
+    <a asp-action="Index" class="btn btn-secondary shadow-sm">
+        <i class="fas fa-arrow-left fa-sm text-white-50"></i> Quay lại
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-7">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Thông tin mã giảm giá</h6>
+            </div>
+            <div class="card-body">
+                <form asp-action="Edit" method="post">
+                    <input type="hidden" asp-for="CouponID" />
+                    <partial name="_CouponForm" model="Model" />
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Lưu thay đổi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-12 mt-4">
+        <div class="card shadow mb-4 border-left-info">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-info">Lịch sử sử dụng</h6>
+                <span class="badge badge-info">@Model.UsageHistory.Count lượt</span>
+            </div>
+            <div class="card-body">
+                @if (Model.UsageHistory.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Mã đơn</th>
+                                    <th>Khách hàng</th>
+                                    <th>Giá trị giảm</th>
+                                    <th>Ngày sử dụng</th>
+                                    <th>Trạng thái đơn</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var usage in Model.UsageHistory)
+                                {
+                                    <tr>
+                                        <td><a asp-controller="Orders" asp-action="Detail" asp-route-id="@usage.OrderCode" class="font-weight-bold text-primary">@usage.OrderCode</a></td>
+                                        <td>
+                                            @usage.CustomerName
+                                            @if(usage.CustomerId.HasValue) { <small class="d-block text-muted">ID: @usage.CustomerId</small> }
+                                        </td>
+                                        <td class="text-success font-weight-bold">@usage.DiscountAmount.ToString("N0")đ</td>
+                                        <td>@usage.UsedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>
+                                            @if (usage.OrderStatus == "Cancelled" || usage.OrderStatus == "Returned")
+                                            {
+                                                <span class="badge badge-danger">@usage.OrderStatus</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge-success">@usage.OrderStatus</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <a asp-controller="Orders" asp-action="Detail" asp-route-id="@usage.OrderCode" class="btn btn-sm btn-outline-info">Xem đơn hàng</a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center text-muted my-4">
+                        <i class="fas fa-history fa-3x mb-3 opacity-50"></i>
+                        <p>Mã này chưa được ai sử dụng.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

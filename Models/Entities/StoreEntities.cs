@@ -343,6 +343,9 @@ public class Coupon
     public bool IsActive { get; set; } = true;
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
+    
+    [Timestamp]
+    public byte[]? RowVersion { get; set; }
 
     // Navigation
     public ICollection<CouponUsage> CouponUsages { get; set; } = new List<CouponUsage>();

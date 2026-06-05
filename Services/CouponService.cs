@@ -4,15 +4,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ClothingStore.Services;
 
-public interface ICouponService
-{
-    Task<CouponValidationResult> ValidateAsync(string couponCode, decimal orderSubTotal, int? customerId = null);
-    Task<List<Coupon>> GetAllCouponsAsync();
-    Task<Coupon?> GetCouponByIdAsync(int couponId);
-    Task<bool> SaveCouponAsync(Coupon coupon);
-    Task<bool> ToggleCouponAsync(int couponId);
-}
-
 public record CouponValidationResult(
     bool IsValid,
     string? ErrorMessage,
@@ -20,6 +11,29 @@ public record CouponValidationResult(
     decimal DiscountAmount = 0m,
     string CouponCode = ""
 );
+
+public class CouponFilter
+{
+    public string? SearchKeyword { get; set; }
+    public string? Status { get; set; } // "Active", "Inactive", "Expired", "Valid", "UsedUp"
+}
+
+public class CouponDashboardStats
+{
+    public int TotalCoupons { get; set; }
+    public int ActiveCoupons { get; set; }
+    public int ExpiredCoupons { get; set; }
+    public int UsedUpCoupons { get; set; }
+}
+
+public interface ICouponService
+{
+    Task<CouponValidationResult> ValidateAsync(string couponCode, decimal orderSubTotal, int? customerId = null);
+    Task<(List<Coupon> Coupons, CouponDashboardStats Stats)> GetCouponsFilteredAsync(CouponFilter filter);
+    Task<Coupon?> GetCouponByIdAsync(int couponId);
+    Task<bool> SaveCouponAsync(Coupon coupon);
+    Task<bool> ToggleCouponAsync(int couponId);
+}
 
 public class CouponService(StoreDbContext dbContext) : ICouponService
 {
@@ -60,17 +74,63 @@ public class CouponService(StoreDbContext dbContext) : ICouponService
         return new CouponValidationResult(true, null, coupon.CouponID, discountAmount, coupon.CouponCode);
     }
 
-    public async Task<List<Coupon>> GetAllCouponsAsync()
+    public async Task<(List<Coupon> Coupons, CouponDashboardStats Stats)> GetCouponsFilteredAsync(CouponFilter filter)
     {
-        return await dbContext.Coupons
-            .AsNoTracking()
-            .OrderByDescending(x => x.CreatedAt)
-            .ToListAsync();
+        var query = dbContext.Coupons.AsNoTracking().AsQueryable();
+
+        // Calculate stats before applying search filters (but we can do it on the whole set)
+        var allCoupons = await query.ToListAsync();
+        var now = DateTime.UtcNow;
+
+        var stats = new CouponDashboardStats
+        {
+            TotalCoupons = allCoupons.Count,
+            ActiveCoupons = allCoupons.Count(c => c.IsActive),
+            ExpiredCoupons = allCoupons.Count(c => c.ValidTo < now),
+            UsedUpCoupons = allCoupons.Count(c => c.UsageLimit.HasValue && c.UsedCount >= c.UsageLimit.Value)
+        };
+
+        // Filter
+        if (!string.IsNullOrWhiteSpace(filter.SearchKeyword))
+        {
+            var kw = filter.SearchKeyword.Trim().ToLower();
+            query = query.Where(c => c.CouponCode.ToLower().Contains(kw));
+        }
+
+        if (!string.IsNullOrWhiteSpace(filter.Status))
+        {
+            switch (filter.Status)
+            {
+                case "Active":
+                    query = query.Where(c => c.IsActive);
+                    break;
+                case "Inactive":
+                    query = query.Where(c => !c.IsActive);
+                    break;
+                case "Expired":
+                    query = query.Where(c => c.ValidTo < now);
+                    break;
+                case "Valid":
+                    query = query.Where(c => c.IsActive && c.ValidFrom <= now && c.ValidTo >= now && (c.UsageLimit == null || c.UsedCount < c.UsageLimit));
+                    break;
+                case "UsedUp":
+                    query = query.Where(c => c.UsageLimit != null && c.UsedCount >= c.UsageLimit);
+                    break;
+            }
+        }
+
+        var coupons = await query.OrderByDescending(x => x.CreatedAt).ToListAsync();
+        return (coupons, stats);
     }
 
     public Task<Coupon?> GetCouponByIdAsync(int couponId)
     {
-        return dbContext.Coupons.FindAsync(couponId).AsTask();
+        return dbContext.Coupons
+            .Include(c => c.CouponUsages)
+                .ThenInclude(u => u.Customer)
+            .Include(c => c.CouponUsages)
+                .ThenInclude(u => u.Order)
+            .FirstOrDefaultAsync(c => c.CouponID == couponId);
     }
 
     public async Task<bool> SaveCouponAsync(Coupon coupon)

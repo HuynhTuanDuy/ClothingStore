@@ -1,10 +1,13 @@
+using ClothingStore.Data;
 using ClothingStore.Models.Entities;
 using ClothingStore.Models.ViewModels;
 using ClothingStore.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace ClothingStore.Services;
 
 public class CheckoutService(
+    StoreDbContext dbContext,
     ICartService cartService,
     ICouponService couponService,
     IOrderRepository orderRepository,
@@ -137,6 +140,18 @@ public class CheckoutService(
                 CustomerId = customerId,
                 UsedAt     = DateTime.UtcNow
             });
+
+            // Increment UsedCount safely
+            var couponToUpdate = await dbContext.Coupons.FindAsync(couponId.Value);
+            if (couponToUpdate != null)
+            {
+                if (couponToUpdate.UsageLimit.HasValue && couponToUpdate.UsedCount >= couponToUpdate.UsageLimit.Value)
+                {
+                    return PlaceOrderResult.Failure("Mã giảm giá đã hết lượt sử dụng trong khi bạn đang thanh toán.");
+                }
+                couponToUpdate.UsedCount += 1;
+                couponToUpdate.UpdatedAt = DateTime.UtcNow;
+            }
         }
 
         // ── Initial status history ────────────────────────────────────
@@ -158,11 +173,18 @@ public class CheckoutService(
             httpContextAccessor.HttpContext?.Session.Remove(CartService.SessionCartKey);
         }
 
-        await orderRepository.AddOrderAsync(order);
-        await unitOfWork.SaveChangesAsync();
-        await transaction.CommitAsync();
-
-        return PlaceOrderResult.Success(orderCode);
+        try
+        {
+            await orderRepository.AddOrderAsync(order);
+            await unitOfWork.SaveChangesAsync();
+            await transaction.CommitAsync();
+            return PlaceOrderResult.Success(orderCode);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            await transaction.RollbackAsync();
+            return PlaceOrderResult.Failure("Có lỗi xảy ra do nhiều người đặt hàng cùng lúc hoặc mã giảm giá vừa hết lượt. Vui lòng thử lại.");
+        }
     }
 
     public async Task<OrderSuccessViewModel?> GetOrderSuccessAsync(string orderCode)

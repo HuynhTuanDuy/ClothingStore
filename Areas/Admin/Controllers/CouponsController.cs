@@ -11,9 +11,12 @@ namespace ClothingStore.Areas.Admin.Controllers;
 public class CouponsController(ICouponService couponService) : Controller
 {
     // ── GET /Admin/Coupons ──────────────────────────────────────
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index([FromQuery] CouponFilter filter)
     {
-        return View(await couponService.GetAllCouponsAsync());
+        var (coupons, stats) = await couponService.GetCouponsFilteredAsync(filter);
+        ViewBag.Stats = stats;
+        ViewBag.CurrentFilter = filter;
+        return View(coupons);
     }
 
     // ── GET /Admin/Coupons/Create ───────────────────────────────
@@ -113,6 +116,17 @@ public class CouponsController(ICouponService couponService) : Controller
         UsageLimit    = c.UsageLimit,
         ValidFrom     = c.ValidFrom.ToLocalTime(),
         ValidTo       = c.ValidTo.ToLocalTime(),
-        IsActive      = c.IsActive
+        IsActive      = c.IsActive,
+        UsedCount     = c.UsedCount,
+        UsageHistory  = c.CouponUsages.OrderByDescending(u => u.UsedAt).Select(u => new CouponUsageHistoryViewModel
+        {
+            UsageID = u.UsageID,
+            UsedAt = u.UsedAt.ToLocalTime(),
+            CustomerId = u.CustomerId,
+            CustomerName = u.Customer?.FullName ?? (u.Order != null ? u.Order.ShippingRecipientName : "Guest"),
+            OrderCode = u.Order?.OrderCode ?? string.Empty,
+            OrderStatus = u.Order?.OrderStatus ?? string.Empty,
+            DiscountAmount = u.Order?.DiscountAmount ?? 0m
+        }).ToList()
     };
 }

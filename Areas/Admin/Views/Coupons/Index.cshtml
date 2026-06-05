@@ -1,0 +1,189 @@
+@using ClothingStore.Models.Entities
+@using ClothingStore.Services
+@model IEnumerable<Coupon>
+@{
+    ViewData["Title"] = "Quản lý Mã giảm giá";
+    var stats = ViewBag.Stats as CouponDashboardStats;
+    var filter = ViewBag.CurrentFilter as CouponFilter;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0 text-gray-800">Mã giảm giá (Coupons)</h2>
+    <a asp-action="Create" class="btn btn-primary shadow-sm">
+        <i class="fas fa-plus fa-sm text-white-50"></i> Thêm mã mới
+    </a>
+</div>
+
+<!-- Dashboard Stats -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Tổng số mã</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@(stats?.TotalCoupons ?? 0)</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-tags fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Đang hoạt động</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@(stats?.ActiveCoupons ?? 0)</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-danger shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Đã hết hạn</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@(stats?.ExpiredCoupons ?? 0)</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-clock fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Hết lượt dùng</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@(stats?.UsedUpCoupons ?? 0)</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-exclamation-circle fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Bộ lọc & Tìm kiếm</h6>
+    </div>
+    <div class="card-body">
+        <form method="get" class="form-inline">
+            <div class="form-group mr-2 mb-2">
+                <input type="text" name="SearchKeyword" value="@filter?.SearchKeyword" class="form-control" placeholder="Mã Coupon..." />
+            </div>
+            <div class="form-group mr-2 mb-2">
+                <select name="Status" class="form-control">
+                    <option value="">-- Tất cả trạng thái --</option>
+                    <option value="Active" selected="@(filter?.Status == "Active")">Đang hoạt động</option>
+                    <option value="Inactive" selected="@(filter?.Status == "Inactive")">Không hoạt động</option>
+                    <option value="Expired" selected="@(filter?.Status == "Expired")">Đã hết hạn</option>
+                    <option value="Valid" selected="@(filter?.Status == "Valid")">Còn hiệu lực (Chưa hết hạn/lượt)</option>
+                    <option value="UsedUp" selected="@(filter?.Status == "UsedUp")">Đã dùng hết lượt</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary mb-2">Lọc</button>
+            <a asp-action="Index" class="btn btn-secondary mb-2 ml-2">Xóa lọc</a>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Mã Coupon</th>
+                        <th>Loại / Giá trị giảm</th>
+                        <th>Đơn tối thiểu</th>
+                        <th>Lượt dùng</th>
+                        <th>Hiệu lực</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        var isExpired = DateTime.UtcNow > item.ValidTo;
+                        var isUsedUp = item.UsageLimit.HasValue && item.UsedCount >= item.UsageLimit.Value;
+                        <tr>
+                            <td class="font-weight-bold text-primary">@item.CouponCode</td>
+                            <td>
+                                @if (item.DiscountType == "Percentage")
+                                {
+                                    <span class="badge badge-info">Giảm @item.DiscountValue.ToString("0.##")%</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-success">Giảm @item.DiscountValue.ToString("N0")đ</span>
+                                }
+                            </td>
+                            <td>@item.MinOrderValue.ToString("N0")đ</td>
+                            <td>
+                                @item.UsedCount / @(item.UsageLimit.HasValue ? item.UsageLimit.ToString() : "∞")
+                                @if (isUsedUp)
+                                {
+                                    <span class="badge badge-danger">Hết lượt</span>
+                                }
+                            </td>
+                            <td>
+                                <small>
+                                    Từ: @item.ValidFrom.ToLocalTime().ToString("dd/MM/yyyy")<br />
+                                    Đến: @item.ValidTo.ToLocalTime().ToString("dd/MM/yyyy")
+                                </small>
+                                @if (isExpired)
+                                {
+                                    <br /><span class="badge badge-warning">Hết hạn</span>
+                                }
+                            </td>
+                            <td>
+                                @if (item.IsActive)
+                                {
+                                    <span class="badge badge-success">Hoạt động</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-secondary">Tạm khóa</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a asp-action="Edit" asp-route-id="@item.CouponID" class="btn btn-sm btn-outline-primary">Sửa</a>
+                                    <form asp-action="Toggle" asp-route-id="@item.CouponID" method="post" class="d-inline">
+                                        <button type="submit" class="btn btn-sm @(item.IsActive ? "btn-outline-warning" : "btn-outline-success")">
+                                            @(item.IsActive ? "Khóa" : "Mở khóa")
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center">Chưa có mã giảm giá nào.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

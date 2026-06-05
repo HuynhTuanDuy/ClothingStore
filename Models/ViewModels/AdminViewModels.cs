@@ -339,6 +339,22 @@ public class CouponEditViewModel
     public DateTime ValidTo { get; set; } = DateTime.Today.AddMonths(1);
 
     public bool IsActive { get; set; } = true;
+
+    public int UsedCount { get; set; }
+
+    // History
+    public List<CouponUsageHistoryViewModel> UsageHistory { get; set; } = new();
+}
+
+public class CouponUsageHistoryViewModel
+{
+    public int UsageID { get; set; }
+    public DateTime UsedAt { get; set; }
+    public int? CustomerId { get; set; }
+    public string? CustomerName { get; set; }
+    public string OrderCode { get; set; } = string.Empty;
+    public string OrderStatus { get; set; } = string.Empty;
+    public decimal DiscountAmount { get; set; }
 }
 
 // ─────────────────────────────────────────────────────────────
