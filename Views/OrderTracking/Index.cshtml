@@ -85,13 +85,9 @@
                 @if (result.Histories.Any())
                 {
                     <div class="mb-12 relative">
-                        <div class="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200 z-0 hidden md:block"></div>
                         <h3 class="font-semibold text-lg mb-6 hidden md:block">Tiến độ giao hàng</h3>
                         
-                        <div class="space-y-6 md:space-y-0 md:flex md:justify-between md:items-start relative z-10">
-                            <!-- Horizontal Line cho Desktop -->
-                            <div class="absolute left-0 right-0 top-4 h-0.5 bg-gray-200 -z-10 hidden md:block"></div>
-                            
+                        <div class="space-y-6 md:space-y-0 flex flex-col md:flex-row relative z-10">
                             @{
                                 var statuses = new[] { "Pending", "Confirmed", "Shipped", "Delivered" };
                                 var currentStatusIndex = Array.IndexOf(statuses, result.OrderStatus);
@@ -106,7 +102,18 @@
                                 var isActive = result.OrderStatus == status;
                                 var isCancelled = result.OrderStatus == "Cancelled" || result.OrderStatus == "Returned";
                                 
-                                <div class="flex md:flex-col items-center gap-4 md:gap-2">
+                                <div class="flex-1 relative flex md:flex-col items-start md:items-center gap-4 md:gap-2 group">
+                                    <!-- Horizontal Line (chỉ hiện ở desktop, bắt đầu từ giữa node hiện tại đến node tiếp theo) -->
+                                    @if (i < statuses.Length - 1)
+                                    {
+                                        <div class="hidden md:block absolute left-1/2 w-full top-4 h-0.5 bg-gray-200 -z-10"></div>
+                                    }
+                                    <!-- Vertical Line cho Mobile -->
+                                    @if (i < statuses.Length - 1)
+                                    {
+                                        <div class="md:hidden absolute left-4 top-8 bottom-[-24px] w-0.5 bg-gray-200 -z-10"></div>
+                                    }
+
                                     <!-- Node -->
                                     <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 
                                                 @(isCancelled && i > 0 ? "bg-gray-100 text-gray-300" : 
@@ -114,11 +121,11 @@
                                                   isCompleted ? "bg-gray-800 text-white" : "bg-white border-2 border-gray-200 text-gray-300")">
                                         @if (isCompleted && !isCancelled) { <span class="material-symbols-outlined text-[16px]">check</span> }
                                         else if (isCancelled && isActive) { <span class="material-symbols-outlined text-[16px]">close</span> }
-                                        else { <span>@(i+1)</span> }
+                                        else { <span class="text-sm">@(i+1)</span> }
                                     </div>
                                     
                                     <!-- Text -->
-                                    <div class="md:text-center">
+                                    <div class="md:text-center mt-1 md:mt-0">
                                         <p class="text-sm font-medium @(isActive || isCompleted ? "text-gray-900" : "text-gray-400")">@status</p>
                                         @if (history != null)
                                         {
