@@ -22,4 +22,5 @@ public interface IOrderRepository
     Task<int> TotalProductsSoldAsync();
     Task<List<LowStockProductPoint>> GetLowStockProductsAsync(int threshold = 5);
     Task<List<CategorySalesPoint>> GetSalesByCategoryAsync(int year);
+    Task<Order?> GetOrderForGuestTrackingAsync(string orderCode, string phone);
 }

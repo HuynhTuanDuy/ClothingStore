@@ -294,4 +294,24 @@ public class OrderRepository(StoreDbContext dbContext) : IOrderRepository
             .OrderByDescending(x => x.TotalSold)
             .ToList();
     }
+
+    public async Task<Order?> GetOrderForGuestTrackingAsync(string orderCode, string phone)
+    {
+        return await dbContext.Orders
+            .Include(o => o.StatusHistory.OrderByDescending(sh => sh.ChangedAt))
+            .Include(o => o.OrderDetails)
+                .ThenInclude(od => od.ProductVariant)
+                    .ThenInclude(pv => pv.Product)
+            .Include(o => o.OrderDetails)
+                .ThenInclude(od => od.ProductVariant)
+                    .ThenInclude(pv => pv.Color)
+            .Include(o => o.OrderDetails)
+                .ThenInclude(od => od.ProductVariant)
+                    .ThenInclude(pv => pv.Size)
+            .Include(o => o.OrderDetails)
+                .ThenInclude(od => od.ProductVariant)
+                    .ThenInclude(pv => pv.ProductImages)
+            .AsSplitQuery()
+            .FirstOrDefaultAsync(o => o.OrderCode == orderCode && o.ShippingPhone == phone);
+    }
 }

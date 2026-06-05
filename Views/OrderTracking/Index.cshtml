@@ -1,0 +1,198 @@
+@model ClothingStore.Models.ViewModels.GuestOrderTrackingForm
+@{
+    ViewData["Title"] = "Tra cứu đơn hàng";
+    Layout = "_StoreLayout";
+    var result = ViewBag.Result as ClothingStore.Models.ViewModels.GuestOrderTrackingResult;
+}
+
+<div class="max-w-4xl mx-auto px-4 py-12">
+    <div class="text-center mb-10">
+        <h1 class="text-3xl font-bold font-serif text-gray-900 mb-2">Tra Cứu Đơn Hàng</h1>
+        <p class="text-gray-500">Kiểm tra trạng thái đơn hàng của bạn mọi lúc, mọi nơi.</p>
+    </div>
+
+    <!-- TÌM KIẾM FORM -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8 mb-8">
+        <form asp-action="Index" method="post" class="grid grid-cols-1 md:grid-cols-12 gap-4">
+            <div class="md:col-span-5">
+                <label asp-for="OrderCode" class="block text-sm font-medium text-gray-700 mb-1">Mã Đơn Hàng *</label>
+                <input asp-for="OrderCode" placeholder="VD: ORD-123456" class="w-full rounded-lg border-gray-300 focus:ring-black focus:border-black py-2.5" />
+                <span asp-validation-for="OrderCode" class="text-red-500 text-xs mt-1"></span>
+            </div>
+            <div class="md:col-span-5">
+                <label asp-for="PhoneNumber" class="block text-sm font-medium text-gray-700 mb-1">Số Điện Thoại Nhận Hàng *</label>
+                <input asp-for="PhoneNumber" placeholder="VD: 0987654321" class="w-full rounded-lg border-gray-300 focus:ring-black focus:border-black py-2.5" />
+                <span asp-validation-for="PhoneNumber" class="text-red-500 text-xs mt-1"></span>
+            </div>
+            <div class="md:col-span-2 flex items-end">
+                <button type="submit" class="w-full bg-black text-white font-medium py-2.5 rounded-lg hover:bg-gray-800 transition-colors">
+                    Tra Cứu
+                </button>
+            </div>
+        </form>
+        
+        @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+        {
+            <div class="mt-4 p-4 bg-red-50 text-red-600 rounded-lg text-sm border border-red-100">
+                <div asp-validation-summary="ModelOnly"></div>
+            </div>
+        }
+        
+        @if (TempData["Error"] != null)
+        {
+            <div class="mt-4 p-4 bg-red-50 text-red-600 rounded-lg text-sm border border-red-100">
+                @TempData["Error"]
+            </div>
+        }
+        @if (TempData["Warning"] != null)
+        {
+            <div class="mt-4 p-4 bg-yellow-50 text-yellow-700 rounded-lg text-sm border border-yellow-100">
+                @TempData["Warning"]
+            </div>
+        }
+    </div>
+
+    <!-- KẾT QUẢ TRA CỨU -->
+    @if (result != null)
+    {
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <!-- Header kết quả -->
+            <div class="bg-gray-50 border-b border-gray-100 p-6 flex flex-wrap justify-between items-center gap-4">
+                <div>
+                    <p class="text-sm text-gray-500">Đơn hàng <span class="font-bold text-gray-900">#@result.OrderCode</span></p>
+                    <p class="text-xs text-gray-400 mt-1">Đặt ngày: @result.OrderDate.ToString("dd/MM/yyyy HH:mm")</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-black text-white">
+                        @result.OrderStatus
+                    </span>
+                    @if (result.CanReorder)
+                    {
+                        <form asp-action="Reorder" method="post" class="m-0">
+                            <input type="hidden" name="orderCode" value="@result.OrderCode" />
+                            <input type="hidden" name="phone" value="@Model.PhoneNumber" />
+                            <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 border border-black text-black bg-white hover:bg-gray-50 font-medium rounded-lg text-sm transition-colors">
+                                <span class="material-symbols-outlined text-[18px]">shopping_bag</span>
+                                Mua Lại
+                            </button>
+                        </form>
+                    }
+                </div>
+            </div>
+
+            <div class="p-6 md:p-8">
+                <!-- Timeline (chỉ hiện nếu có History) -->
+                @if (result.Histories.Any())
+                {
+                    <div class="mb-12 relative">
+                        <div class="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200 z-0 hidden md:block"></div>
+                        <h3 class="font-semibold text-lg mb-6 hidden md:block">Tiến độ giao hàng</h3>
+                        
+                        <div class="space-y-6 md:space-y-0 md:flex md:justify-between md:items-start relative z-10">
+                            <!-- Horizontal Line cho Desktop -->
+                            <div class="absolute left-0 right-0 top-4 h-0.5 bg-gray-200 -z-10 hidden md:block"></div>
+                            
+                            @{
+                                var statuses = new[] { "Pending", "Confirmed", "Shipped", "Delivered" };
+                                var currentStatusIndex = Array.IndexOf(statuses, result.OrderStatus);
+                                if (currentStatusIndex == -1) currentStatusIndex = statuses.Length; // For Cancelled/Returned
+                            }
+
+                            @for (int i = 0; i < statuses.Length; i++)
+                            {
+                                var status = statuses[i];
+                                var history = result.Histories.FirstOrDefault(h => h.Status == status);
+                                var isCompleted = history != null || i <= currentStatusIndex;
+                                var isActive = result.OrderStatus == status;
+                                var isCancelled = result.OrderStatus == "Cancelled" || result.OrderStatus == "Returned";
+                                
+                                <div class="flex md:flex-col items-center gap-4 md:gap-2">
+                                    <!-- Node -->
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 
+                                                @(isCancelled && i > 0 ? "bg-gray-100 text-gray-300" : 
+                                                  isActive ? "bg-black text-white ring-4 ring-gray-100" : 
+                                                  isCompleted ? "bg-gray-800 text-white" : "bg-white border-2 border-gray-200 text-gray-300")">
+                                        @if (isCompleted && !isCancelled) { <span class="material-symbols-outlined text-[16px]">check</span> }
+                                        else if (isCancelled && isActive) { <span class="material-symbols-outlined text-[16px]">close</span> }
+                                        else { <span>@(i+1)</span> }
+                                    </div>
+                                    
+                                    <!-- Text -->
+                                    <div class="md:text-center">
+                                        <p class="text-sm font-medium @(isActive || isCompleted ? "text-gray-900" : "text-gray-400")">@status</p>
+                                        @if (history != null)
+                                        {
+                                            <p class="text-xs text-gray-500 mt-0.5">@history.ChangedAt.ToString("dd/MM HH:mm")</p>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <!-- Info -->
+                    <div>
+                        <h3 class="text-gray-900 font-semibold mb-4 pb-2 border-b border-gray-100">Thông Tin Nhận Hàng</h3>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex text-gray-600"><span class="w-24 text-gray-400">Người nhận:</span> <span class="font-medium text-gray-900">@result.MaskedRecipientName</span></div>
+                            <div class="flex text-gray-600"><span class="w-24 text-gray-400">Điện thoại:</span> <span>@result.MaskedPhone</span></div>
+                            <div class="flex text-gray-600"><span class="w-24 text-gray-400">Địa chỉ:</span> <span>@result.MaskedAddress</span></div>
+                            <div class="flex text-gray-600"><span class="w-24 text-gray-400">Thanh toán:</span> 
+                                <span>@result.PaymentMethod 
+                                    @if(result.PaymentStatus == "Paid") { <span class="text-green-600 font-medium ml-1">(Đã thanh toán)</span> }
+                                    else { <span class="text-yellow-600 font-medium ml-1">(Chưa thanh toán)</span> }
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Summary -->
+                    <div class="bg-gray-50 p-6 rounded-xl">
+                        <h3 class="text-gray-900 font-semibold mb-4 pb-2 border-b border-gray-200">Tóm Tắt Chi Phí</h3>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex justify-between text-gray-600"><span>Tạm tính:</span> <span>@result.Subtotal.ToString("N0")đ</span></div>
+                            <div class="flex justify-between text-gray-600"><span>Phí vận chuyển:</span> <span>@result.ShippingFee.ToString("N0")đ</span></div>
+                            @if (result.DiscountAmount > 0)
+                            {
+                                <div class="flex justify-between text-green-600"><span>Giảm giá:</span> <span>-@result.DiscountAmount.ToString("N0")đ</span></div>
+                            }
+                            <div class="flex justify-between text-base font-bold text-gray-900 pt-3 border-t border-gray-200">
+                                <span>Tổng cộng:</span> <span>@result.TotalAmount.ToString("N0")đ</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Products -->
+                <div>
+                    <h3 class="text-gray-900 font-semibold mb-4 pb-2 border-b border-gray-100">Sản Phẩm Đã Mua (@result.Items.Sum(x => x.Quantity))</h3>
+                    <div class="space-y-4">
+                        @foreach(var item in result.Items)
+                        {
+                            <div class="flex items-center gap-4 py-2">
+                                <div class="w-16 h-20 bg-gray-100 rounded-md overflow-hidden shrink-0">
+                                    <img src="@item.ImageUrl" alt="@item.ProductName" class="w-full h-full object-cover" />
+                                </div>
+                                <div class="flex-1">
+                                    <a href="/Product/Detail/@item.ProductSlug" class="font-medium text-gray-900 hover:text-gray-600 transition-colors">@item.ProductName</a>
+                                    <p class="text-sm text-gray-500 mt-1">@item.ColorName / @item.SizeCode</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-medium text-gray-900">@item.UnitPrice.ToString("N0")đ</p>
+                                    <p class="text-sm text-gray-500 mt-1">x @item.Quantity</p>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
