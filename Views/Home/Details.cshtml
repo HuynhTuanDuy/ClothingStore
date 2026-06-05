@@ -1,0 +1,506 @@
+@model ClothingStore.Models.ViewModels.ProductDetailViewModel
+@using System.Text.Json
+@{
+    ViewData["Title"] = Model.ProductName;
+    Layout = "~/Views/Shared/_StoreLayout.cshtml";
+
+    var variantData = Model.Variants.Select(v => new
+    {
+        variantId   = v.VariantID,
+        colorName   = v.ColorName,
+        hexCode     = v.HexCode,
+        sizeCode    = v.SizeCode,
+        price       = v.EffectivePrice,
+        origPrice   = v.SellingPrice,
+        hasDiscount = v.HasDiscount,
+        stock       = v.StockQuantity,
+        images      = v.ImageUrls
+    });
+    var variantJson = JsonSerializer.Serialize(variantData);
+
+    var distinctColors = Model.Variants
+        .GroupBy(v => v.ColorName)
+        .Select(g => g.First())
+        .ToList();
+
+    var allImages = Model.ImageUrls;
+    var mainImage = allImages.FirstOrDefault();
+}
+
+<style>
+    .detail-main-img {
+        position: relative; width: 100%;
+        padding-bottom: 125%; /* 4:5 */
+        overflow: hidden; background-color: #f0eded;
+    }
+    .detail-main-img img, .detail-main-img .placeholder {
+        position: absolute; top:0; left:0; width:100%; height:100%;
+    }
+    .detail-main-img img { object-fit: cover; transition: opacity .3s ease, transform .5s ease; }
+    .detail-main-img img.fade { opacity: 0; }
+    .placeholder { display:flex; flex-direction:column; align-items:center;
+        justify-content:center; gap:10px; color:#b0a59f; }
+
+    .thumb {
+        position:relative; padding-bottom:100%; overflow:hidden;
+        background:#f0eded; cursor:pointer;
+        border: 2px solid transparent; transition: border-color .2s;
+    }
+    .thumb img { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; }
+    .thumb.active { border-color: #553722; }
+    .thumb:hover:not(.active) { border-color: #a88c7d; }
+
+    .color-dot { transition: transform .15s, border-color .15s; }
+    .color-dot.active { border-color: #553722 !important; transform: scale(1.2); }
+
+    .sz-btn {
+        min-width: 48px; padding: 6px 12px;
+        border: 1px solid #d1c4bd; font-size: 13px; font-weight: 500;
+        transition: background .2s, border-color .2s, color .2s; cursor:pointer;
+        background: white; color: #553722;
+    }
+    .sz-btn.active { background: #553722; color: white; border-color: #553722; }
+    .sz-btn:hover:not(.active):not(:disabled) { border-color: #553722; }
+    .sz-btn:disabled { opacity:.38; cursor:not-allowed; }
+</style>
+
+<div class="max-w-5xl mx-auto px-4 md:px-8 py-8">
+
+    <!-- Breadcrumb -->
+    <nav class="text-[10px] uppercase tracking-widest text-gray-400 mb-6 font-medium">
+        <a href="@Url.Action("Index","Home")" class="hover:text-[#553722]">Home</a>
+        <span class="mx-2">/</span>
+        <a href="@Url.Action("ShopAll","Home")" class="hover:text-[#553722]">Shop All</a>
+        <span class="mx-2">/</span>
+        <span class="text-[#553722]">@Model.ProductName</span>
+    </nav>
+
+    <!-- Product Section -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
+
+        <!-- ═══ Left: Gallery ═══ -->
+        <div>
+            <!-- Main Image -->
+            <div class="detail-main-img mb-3">
+                @if (!string.IsNullOrWhiteSpace(mainImage))
+                {
+                    <img id="main-img" src="@mainImage" alt="@Model.ProductName" />
+                }
+                else
+                {
+                    <div class="placeholder">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 opacity-25" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M6 4h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2zm8 4a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                        <p class="text-sm font-medium">Chưa có hình ảnh</p>
+                    </div>
+                }
+            </div>
+
+            <!-- Thumbnails -->
+            @if (allImages.Count > 1)
+            {
+                <div class="grid grid-cols-5 gap-2" id="thumb-grid">
+                    @for (int i = 0; i < allImages.Count; i++)
+                    {
+                        <div class="thumb @(i == 0 ? "active" : "")"
+                             data-src="@allImages[i]"
+                             onclick="switchImg(this)">
+                            <img src="@allImages[i]" alt="Thumb @(i+1)" loading="lazy" />
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- ═══ Right: Info ═══ -->
+        <div class="flex flex-col">
+            <!-- Category + Name -->
+            <div class="text-[10px] uppercase tracking-widest text-gray-400 mb-1">@Model.CategoryName</div>
+            <h1 class="font-['Playfair_Display'] text-2xl md:text-3xl text-[#553722] leading-snug mb-3">
+                @Model.ProductName
+            </h1>
+
+            <!-- Price -->
+            <div class="mb-5 flex items-baseline gap-3">
+                @if (Model.HasDiscount)
+                {
+                    <span class="line-through text-gray-400 text-sm" id="orig-price">
+                        @Model.Variants.Max(v => v.SellingPrice).ToString("N0")đ
+                    </span>
+                }
+                <span id="eff-price" class="text-xl font-semibold text-[#553722]">
+                    @Model.MinEffectivePrice.ToString("N0")đ
+                </span>
+            </div>
+
+            <!-- Description -->
+            @if (!string.IsNullOrWhiteSpace(Model.Description))
+            {
+                <p class="text-gray-500 text-sm leading-relaxed mb-5 italic font-['Playfair_Display']">
+                    @Model.Description
+                </p>
+            }
+
+            <!-- Form -->
+            <form asp-controller="Cart" asp-action="Add" method="post" class="flex flex-col gap-5">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="VariantID" id="sel-variant" value="@(Model.Variants.FirstOrDefault(v => v.StockQuantity > 0)?.VariantID)" />
+
+                @if (!Model.Variants.Any())
+                {
+                    <p class="text-red-500 text-sm italic">Không có biến thể nào đang hoạt động.</p>
+                }
+                else
+                {
+                    <!-- Color -->
+                    @if (distinctColors.Count > 0)
+                    {
+                        <div>
+                            <p class="text-[10px] uppercase tracking-widest text-[#553722] font-semibold mb-2">
+                                Màu sắc: <span id="color-label" class="font-normal normal-case text-gray-500 ml-1">@distinctColors.First().ColorName</span>
+                            </p>
+                            <div class="flex flex-wrap gap-2" id="color-swatches">
+                                @for (int i = 0; i < distinctColors.Count; i++)
+                                {
+                                    var c = distinctColors[i];
+                                    <button type="button"
+                                            class="color-dot w-7 h-7 rounded-full border-2 p-[2px] focus:outline-none @(i == 0 ? "active border-[#553722]" : "border-gray-200")"
+                                            data-color="@c.ColorName" title="@c.ColorName"
+                                            onclick="selectColor(this)">
+                                        <span class="block w-full h-full rounded-full border border-gray-100" style="background-color:@c.HexCode"></span>
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Size -->
+                    <div>
+                        <p class="text-[10px] uppercase tracking-widest text-[#553722] font-semibold mb-2">
+                            Kích thước: <span id="size-label" class="font-normal normal-case text-gray-500 ml-1"></span>
+                        </p>
+                        <div class="flex flex-wrap gap-2" id="size-btns">
+                            @{
+                                var firstColor = distinctColors.FirstOrDefault()?.ColorName;
+                                var sizesForFirst = Model.Variants
+                                    .Where(v => v.ColorName == firstColor)
+                                    .OrderBy(v => v.SizeCode).ToList();
+                                var firstAvail = sizesForFirst.FirstOrDefault(v => v.StockQuantity > 0);
+                            }
+                            @foreach (var v in sizesForFirst)
+                            {
+                                <button type="button" class="sz-btn @(v == firstAvail ? "active" : "")"
+                                        data-vid="@v.VariantID" data-size="@v.SizeCode"
+                                        data-avail="@v.StockQuantity"
+                                        @(v.StockQuantity == 0 ? "disabled" : "")
+                                        onclick="selectSize(this)">
+                                    @v.SizeCode
+                                </button>
+                            }
+                        </div>
+                        <p id="stock-info" class="text-xs text-green-600 mt-1 min-h-[16px]">
+                            @if (firstAvail != null) { @($"Còn {firstAvail.StockQuantity} sản phẩm") }
+                        </p>
+                    </div>
+
+                    <!-- Qty + Add to Cart -->
+                    <div class="flex gap-3 items-stretch">
+                        <div class="flex items-center border border-gray-300 rounded" style="height:44px">
+                            <button type="button" onclick="chQty(-1)"
+                                    class="px-3 text-gray-500 hover:text-[#553722] text-lg select-none">−</button>
+                            <input id="qty" name="Quantity" type="number" min="1" value="1"
+                                   class="w-10 text-center border-0 focus:ring-0 text-sm p-0" />
+                            <button type="button" onclick="chQty(1)"
+                                    class="px-3 text-gray-500 hover:text-[#553722] text-lg select-none">+</button>
+                        </div>
+                        <button type="submit" id="add-to-cart-btn"
+                                class="flex-grow bg-[#553722] text-white text-[11px] uppercase tracking-widest font-semibold hover:bg-[#3d2716] transition-colors rounded flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                style="height:44px">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                            <span id="add-to-cart-text">Thêm vào giỏ hàng</span>
+                        </button>
+                    </div>
+                }
+            </form>
+
+            <!-- Shipping note -->
+            <div class="flex items-center gap-2 text-xs text-gray-400 mt-5 pt-5 border-t border-gray-100">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8l1 12a2 2 0 002 2h8a2 2 0 002-2l1-12"/>
+                </svg>
+                Miễn phí vận chuyển cho đơn từ 500.000đ
+            </div>
+
+            <!-- Specs -->
+            <div class="mt-5 border-t border-gray-100 text-sm divide-y divide-gray-100">
+                @if (!string.IsNullOrWhiteSpace(Model.Material))
+                {
+                    <div class="flex justify-between py-2.5">
+                        <span class="text-[10px] uppercase tracking-widest text-gray-400">Chất liệu</span>
+                        <span class="text-[#553722] font-medium text-sm">@Model.Material</span>
+                    </div>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.FitType))
+                {
+                    <div class="flex justify-between py-2.5">
+                        <span class="text-[10px] uppercase tracking-widest text-gray-400">Dáng</span>
+                        <span class="text-[#553722] font-medium text-sm">@Model.FitType</span>
+                    </div>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.Gender))
+                {
+                    <div class="flex justify-between py-2.5">
+                        <span class="text-[10px] uppercase tracking-widest text-gray-400">Giới tính</span>
+                        <span class="text-[#553722] font-medium text-sm">@Model.Gender</span>
+                    </div>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.CareInstructions))
+                {
+                    <div class="flex justify-between py-2.5">
+                        <span class="text-[10px] uppercase tracking-widest text-gray-400">Bảo quản</span>
+                        <span class="text-[#553722] font-medium text-sm text-right max-w-[60%]">@Model.CareInstructions</span>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Products with Filters -->
+    @if (Model.RelatedProducts.Any() || Model.BestSellingProducts.Any() || Model.InStockProducts.Any())
+    {
+        <section class="mt-[120px] pt-12">
+            <h2 class="font-['Playfair_Display'] text-[28px] font-medium text-[#553722] text-center mb-6">Style with</h2>
+            <!-- Filter Tabs -->
+            <div class="flex justify-center mb-12">
+                <div class="flex space-x-8 border-b border-gray-200">
+                    <button type="button" class="pb-2 text-[13px] uppercase tracking-wider font-semibold border-b-2 border-[#553722] text-[#553722] transition-colors filter-tab" onclick="switchTab('all', this)">Sản phẩm liên quan</button>
+                    <button type="button" class="pb-2 text-[13px] uppercase tracking-wider font-semibold border-b-2 border-transparent text-gray-400 hover:text-[#553722] transition-colors filter-tab" onclick="switchTab('bestseller', this)">Bán chạy</button>
+                    <button type="button" class="pb-2 text-[13px] uppercase tracking-wider font-semibold border-b-2 border-transparent text-gray-400 hover:text-[#553722] transition-colors filter-tab" onclick="switchTab('instock', this)">Còn hàng</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 tab-content" id="tab-all">
+                @foreach (var p in Model.RelatedProducts)
+                {
+                    <a href="@Url.Action("Details","Home",new{id=p.ProductID})" class="group block related-item cursor-pointer">
+                        <div class="relative overflow-hidden mb-4" style="padding-bottom:100%; background:#f0eded;">
+                            @if (!string.IsNullOrWhiteSpace(p.ThumbnailUrl))
+                            {
+                                <img src="@p.ThumbnailUrl" alt="@p.ProductName" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-in-out" />
+                            }
+                            else
+                            {
+                                <div class="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">Chưa có ảnh</div>
+                            }
+                        </div>
+                        <h3 class="font-['Inter'] text-[16px] text-[#553722] mb-1 truncate">@p.ProductName</h3>
+                        <p class="font-['Inter'] text-[14px] text-gray-500 mb-2 truncate">@p.CategoryName</p>
+                        <div class="flex items-center gap-2 mb-3">
+                            @if (p.HasDiscount)
+                            {
+                                <span class="font-['Inter'] text-[16px] text-[#553722] font-medium">@(p.MinPrice?.ToString("N0"))đ</span>
+                                <span class="font-['Inter'] text-[14px] line-through text-gray-400">@(p.OriginalMinPrice?.ToString("N0"))đ</span>
+                            }
+                            else
+                            {
+                                <span class="font-['Inter'] text-[16px] text-[#553722] font-medium">@($"{p.MinPrice?.ToString("N0")}đ")</span>
+                            }
+                        </div>
+                    </a>
+                }
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 tab-content hidden" id="tab-bestseller">
+                @foreach (var p in Model.BestSellingProducts)
+                {
+                    <a href="@Url.Action("Details","Home",new{id=p.ProductID})" class="group block related-item cursor-pointer">
+                        <div class="relative overflow-hidden mb-4" style="padding-bottom:100%; background:#f0eded;">
+                            @if (!string.IsNullOrWhiteSpace(p.ThumbnailUrl))
+                            {
+                                <img src="@p.ThumbnailUrl" alt="@p.ProductName" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-in-out" />
+                            }
+                            else
+                            {
+                                <div class="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">Chưa có ảnh</div>
+                            }
+                        </div>
+                        <h3 class="font-['Inter'] text-[16px] text-[#553722] mb-1 truncate">@p.ProductName</h3>
+                        <p class="font-['Inter'] text-[14px] text-gray-500 mb-2 truncate">@p.CategoryName</p>
+                        <div class="flex items-center gap-2 mb-3">
+                            @if (p.HasDiscount)
+                            {
+                                <span class="font-['Inter'] text-[16px] text-[#553722] font-medium">@(p.MinPrice?.ToString("N0"))đ</span>
+                                <span class="font-['Inter'] text-[14px] line-through text-gray-400">@(p.OriginalMinPrice?.ToString("N0"))đ</span>
+                            }
+                            else
+                            {
+                                <span class="font-['Inter'] text-[16px] text-[#553722] font-medium">@($"{p.MinPrice?.ToString("N0")}đ")</span>
+                            }
+                        </div>
+                    </a>
+                }
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 tab-content hidden" id="tab-instock">
+                @foreach (var p in Model.InStockProducts)
+                {
+                    <a href="@Url.Action("Details","Home",new{id=p.ProductID})" class="group block related-item cursor-pointer">
+                        <div class="relative overflow-hidden mb-4" style="padding-bottom:100%; background:#f0eded;">
+                            @if (!string.IsNullOrWhiteSpace(p.ThumbnailUrl))
+                            {
+                                <img src="@p.ThumbnailUrl" alt="@p.ProductName" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-in-out" />
+                            }
+                            else
+                            {
+                                <div class="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">Chưa có ảnh</div>
+                            }
+                        </div>
+                        <h3 class="font-['Inter'] text-[16px] text-[#553722] mb-1 truncate">@p.ProductName</h3>
+                        <p class="font-['Inter'] text-[14px] text-gray-500 mb-2 truncate">@p.CategoryName</p>
+                        <div class="flex items-center gap-2 mb-3">
+                            @if (p.HasDiscount)
+                            {
+                                <span class="font-['Inter'] text-[16px] text-[#553722] font-medium">@(p.MinPrice?.ToString("N0"))đ</span>
+                                <span class="font-['Inter'] text-[14px] line-through text-gray-400">@(p.OriginalMinPrice?.ToString("N0"))đ</span>
+                            }
+                            else
+                            {
+                                <span class="font-['Inter'] text-[16px] text-[#553722] font-medium">@($"{p.MinPrice?.ToString("N0")}đ")</span>
+                            }
+                        </div>
+                    </a>
+                }
+            </div>
+        </section>
+    }
+</div>
+
+@section Scripts {
+<script>
+const variants = @Html.Raw(variantJson);
+let selColor = variants.find(v => v.stock > 0)?.colorName ?? variants[0]?.colorName;
+
+function switchImg(el) {
+    const img = document.getElementById('main-img');
+    if (!img) return;
+    img.classList.add('fade');
+    setTimeout(() => { img.src = el.dataset.src; img.classList.remove('fade'); }, 200);
+    document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+}
+
+function rebuildThumbs(images) {
+    const grid = document.getElementById('thumb-grid');
+    if (!grid || !images?.length) return;
+    grid.innerHTML = images.map((src, i) =>
+        `<div class="thumb${i===0?' active':''}" data-src="${src}" onclick="switchImg(this)">
+            <img src="${src}" alt="Thumb ${i+1}" loading="lazy"/>
+         </div>`
+    ).join('');
+    const img = document.getElementById('main-img');
+    if (img) { img.classList.add('fade'); setTimeout(() => { img.src = images[0]; img.classList.remove('fade'); }, 200); }
+}
+
+function selectColor(btn) {
+    selColor = btn.dataset.color;
+    document.getElementById('color-label').textContent = selColor;
+    document.querySelectorAll('.color-dot').forEach(b => { b.classList.remove('active','border-[#553722]'); b.classList.add('border-gray-200'); });
+    btn.classList.add('active','border-[#553722]'); btn.classList.remove('border-gray-200');
+    const cv = variants.filter(v => v.colorName === selColor);
+    rebuildSizes(cv);
+    const imgs = cv.flatMap(v => v.images).filter(Boolean);
+    if (imgs.length) rebuildThumbs(imgs);
+}
+
+function rebuildSizes(cv) {
+    const c = document.getElementById('size-btns'); if (!c) return;
+    c.innerHTML = '';
+    const first = cv.find(v => v.stock > 0);
+    cv.forEach(v => {
+        const b = document.createElement('button');
+        b.type='button'; b.dataset.vid=v.variantId; b.dataset.size=v.sizeCode; b.dataset.avail=v.stock;
+        b.className='sz-btn'+(v===first?' active':''); b.disabled=v.stock===0;
+        b.textContent=v.sizeCode; b.onclick=()=>selectSize(b);
+        c.appendChild(b);
+    });
+    if (first) selectSize(c.querySelector('.active'));
+    else { 
+        document.getElementById('sel-variant').value=''; 
+        document.getElementById('size-label').textContent=''; 
+        document.getElementById('stock-info').textContent='Hết hàng'; 
+        const btnCart = document.getElementById('add-to-cart-btn');
+        const txtCart = document.getElementById('add-to-cart-text');
+        if (btnCart) { btnCart.disabled = true; btnCart.classList.add('bg-gray-400','cursor-not-allowed'); btnCart.classList.remove('bg-[#553722]','hover:bg-[#3d2716]'); }
+        if (txtCart) txtCart.textContent = 'Hết hàng';
+    }
+}
+
+function selectSize(btn) {
+    if (!btn || btn.disabled) return;
+    document.querySelectorAll('.sz-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('sel-variant').value = btn.dataset.vid;
+    document.getElementById('size-label').textContent = btn.dataset.size;
+    const v = variants.find(x => String(x.variantId)===String(btn.dataset.vid));
+    if (v) {
+        document.getElementById('eff-price').textContent = new Intl.NumberFormat('vi-VN').format(v.price)+'đ';
+        const op = document.getElementById('orig-price');
+        if (op) { op.style.display = v.hasDiscount?'inline':'none'; op.textContent = new Intl.NumberFormat('vi-VN').format(v.origPrice)+'đ'; }
+        
+        const btnCart = document.getElementById('add-to-cart-btn');
+        const txtCart = document.getElementById('add-to-cart-text');
+        if (v.stock > 0) {
+            document.getElementById('stock-info').textContent = `Còn ${v.stock} sản phẩm`;
+            document.getElementById('stock-info').className = 'text-xs mt-1 min-h-[16px] text-green-600';
+            if (btnCart) { btnCart.disabled = false; btnCart.classList.remove('bg-gray-400','cursor-not-allowed'); btnCart.classList.add('bg-[#553722]','hover:bg-[#3d2716]'); }
+            if (txtCart) txtCart.textContent = 'Thêm vào giỏ hàng';
+        } else {
+            document.getElementById('stock-info').textContent = 'Hết hàng';
+            document.getElementById('stock-info').className = 'text-xs mt-1 min-h-[16px] text-red-500 font-medium';
+            if (btnCart) { btnCart.disabled = true; btnCart.classList.add('bg-gray-400','cursor-not-allowed'); btnCart.classList.remove('bg-[#553722]','hover:bg-[#3d2716]'); }
+            if (txtCart) txtCart.textContent = 'Hết hàng';
+        }
+    }
+}
+
+function chQty(d) {
+    const i=document.getElementById('qty');
+    i.value=Math.max(1, parseInt(i.value||1)+d);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const first = document.querySelector('.sz-btn.active');
+    if (first) selectSize(first);
+    else if (variants.length === 0 || !variants.some(v => v.stock > 0)) {
+        // Entire product is out of stock
+        const btnCart = document.getElementById('add-to-cart-btn');
+        const txtCart = document.getElementById('add-to-cart-text');
+        document.getElementById('stock-info').textContent = 'Hết hàng';
+        document.getElementById('stock-info').className = 'text-xs mt-1 min-h-[16px] text-red-500 font-medium';
+        if (btnCart) { btnCart.disabled = true; btnCart.classList.add('bg-gray-400','cursor-not-allowed'); btnCart.classList.remove('bg-[#553722]','hover:bg-[#3d2716]'); }
+        if (txtCart) txtCart.textContent = 'Hết hàng';
+    }
+});
+
+function switchTab(filterType, btn) {
+    // Update active tab styling
+    document.querySelectorAll('.filter-tab').forEach(b => {
+        b.classList.remove('border-[#553722]', 'text-[#553722]');
+        b.classList.add('border-transparent', 'text-gray-400');
+    });
+    btn.classList.remove('border-transparent', 'text-gray-400');
+    btn.classList.add('border-[#553722]', 'text-[#553722]');
+
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(el => {
+        el.classList.add('hidden');
+    });
+
+    // Show the selected tab content
+    document.getElementById('tab-' + filterType).classList.remove('hidden');
+}
+</script>
+}

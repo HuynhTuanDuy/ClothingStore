@@ -1,0 +1,16 @@
+@model int?
+
+<div class="border-b border-outline-variant flex gap-8 mb-10 overflow-x-auto">
+    <a asp-action="@(Model == 0 || Model == null ? "Create" : "Edit")" asp-route-id="@(Model == 0 ? null : Model)" class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Create" || ViewContext.RouteData.Values["action"]?.ToString() == "Edit" ? "text-primary border-b-2 border-primary" : "text-on-surface-variant hover:text-primary border-b-2 border-transparent hover:border-outline-variant") pb-4 font-label-caps text-label-caps transition-colors uppercase tracking-widest whitespace-nowrap">
+        Thông tin cơ bản
+    </a>
+    <a asp-action="Attributes" asp-route-id="@Model" class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Attributes" ? "text-primary border-b-2 border-primary" : "text-on-surface-variant hover:text-primary border-b-2 border-transparent hover:border-outline-variant") pb-4 font-label-caps text-label-caps transition-colors uppercase tracking-widest whitespace-nowrap">
+        Thuộc tính
+    </a>
+    <a asp-action="Variants" asp-route-id="@Model" class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Variants" ? "text-primary border-b-2 border-primary" : "text-on-surface-variant hover:text-primary border-b-2 border-transparent hover:border-outline-variant") pb-4 font-label-caps text-label-caps transition-colors uppercase tracking-widest whitespace-nowrap">
+        Biến thể
+    </a>
+    <a asp-action="Images" asp-route-id="@Model" class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Images" ? "text-primary border-b-2 border-primary" : "text-on-surface-variant hover:text-primary border-b-2 border-transparent hover:border-outline-variant") pb-4 font-label-caps text-label-caps transition-colors uppercase tracking-widest whitespace-nowrap">
+        Hình ảnh
+    </a>
+</div>

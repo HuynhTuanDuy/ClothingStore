@@ -1,0 +1,127 @@
+@model ClothingStore.Models.ViewModels.AdminVariantListViewModel
+@{
+    ViewData["Title"] = "Biến thể sản phẩm";
+}
+
+<form asp-action="BulkUpdateVariants" method="post" class="max-w-5xl mx-auto w-full">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="ProductID" value="@Model.ProductID" />
+    
+    <!-- Page Header -->
+    <div class="mb-10 flex items-end justify-between">
+        <div>
+            <a asp-action="Index" class="inline-flex items-center text-on-surface-variant hover:text-primary transition-colors font-label-caps text-label-caps mb-4">
+                <span class="material-symbols-outlined text-sm mr-1">arrow_back</span>
+                Back to Products
+            </a>
+            <h2 class="font-headline-lg text-headline-lg text-on-background">@(Model.ProductID == 0 ? "Thêm sản phẩm" : "Cập nhật sản phẩm")</h2>
+        </div>
+        <div class="flex gap-4">
+            <a asp-action="Index" class="border border-primary text-primary px-6 py-2.5 font-label-caps text-label-caps rounded-DEFAULT hover:bg-surface-container transition-colors">
+                Hủy
+            </a>
+            <button type="submit" class="bg-primary text-on-primary px-6 py-2.5 font-label-caps text-label-caps rounded-DEFAULT hover:bg-on-primary-fixed-variant transition-colors flex items-center gap-2 shadow-sm uppercase tracking-widest">
+                Lưu biến thể
+                <span class="material-symbols-outlined text-[18px]">save</span>
+            </button>
+        </div>
+    </div>
+    
+    <partial name="_ProductTabs" model="Model.ProductID" />
+
+    <div class="mb-12 mt-10">
+        <div class="flex justify-between items-end">
+            <div>
+                <h2 class="font-headline-lg text-headline-lg text-on-background mb-2">Biến thể</h2>
+                <p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">Quản lý các biến thể của sản phẩm. Bạn có thể bật/tắt, cập nhật giá và số lượng tồn kho.</p>
+            </div>
+            <!-- Progress Indication -->
+            <div class="flex gap-2">
+                <div class="w-12 h-1 bg-surface-container rounded-full overflow-hidden">
+                    <div class="w-full h-full bg-primary opacity-30"></div>
+                </div>
+                <div class="w-12 h-1 bg-surface-container rounded-full overflow-hidden">
+                    <div class="w-full h-full bg-primary opacity-30"></div>
+                </div>
+                <div class="w-12 h-1 bg-surface-container rounded-full overflow-hidden">
+                    <div class="w-full h-full bg-primary"></div>
+                </div>
+                <div class="w-12 h-1 bg-surface-container rounded-full"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table Container -->
+    <div class="bg-surface rounded-xl p-8 border border-outline-variant shadow-[0_4px_24px_rgba(121,87,63,0.04)] mb-8">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h3 class="font-headline-md text-on-background">Danh sách biến thể</h3>
+                <p class="font-body-sm text-on-surface-variant mt-1">Các biến thể dựa trên thuộc tính đã chọn.</p>
+            </div>
+            <div class="flex gap-4">
+                <button type="submit" class="px-6 py-2.5 bg-primary text-on-primary rounded font-label-caps text-label-caps transition-colors hover:bg-primary-container shadow-sm flex items-center gap-2 uppercase tracking-widest">
+                    <span class="material-symbols-outlined text-[18px]">save</span>
+                    Lưu thay đổi
+                </button>
+            </div>
+        </div>
+
+        <!-- Matrix Table -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="border-b border-outline-variant">
+                        <th class="font-label-caps text-on-surface-variant pb-4 px-4 font-semibold uppercase tracking-wider w-12">Trạng thái</th>
+                        <th class="font-label-caps text-on-surface-variant pb-4 px-4 font-semibold uppercase tracking-wider">Biến thể</th>
+                        <th class="font-label-caps text-on-surface-variant pb-4 px-4 font-semibold uppercase tracking-wider">SKU</th>
+                        <th class="font-label-caps text-on-surface-variant pb-4 px-4 font-semibold uppercase tracking-wider w-32">Giá bán (₫)</th>
+                        <th class="font-label-caps text-on-surface-variant pb-4 px-4 font-semibold uppercase tracking-wider w-32">Tồn kho</th>
+                    </tr>
+                </thead>
+                <tbody class="font-body-md">
+                    @for(int i = 0; i < Model.Variants.Count; i++)
+                    {
+                        var variant = Model.Variants[i];
+                        <tr class="border-b border-outline-variant/50 hover:bg-surface-container-low transition-colors group @(variant.IsActive ? "" : "opacity-50")">
+                            <td class="py-4 px-4">
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="Variants[@i].IsActive" value="true" @(variant.IsActive ? "checked" : "") class="sr-only peer" />
+                                    <div class="w-9 h-5 bg-surface-dim peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+                                </label>
+                                <input type="hidden" name="Variants[@i].IsActive" value="false" />
+                                <input type="hidden" name="Variants[@i].VariantID" value="@variant.VariantID" />
+                            </td>
+                            <td class="py-4 px-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-4 h-4 rounded-full border border-outline-variant shadow-sm" style="background-color: @variant.HexCode;"></div>
+                                    <span class="text-on-background @(!variant.IsActive ? "line-through text-on-surface-variant" : "")">@variant.ColorName / @variant.SizeCode</span>
+                                </div>
+                            </td>
+                            <td class="py-4 px-4">
+                                <input name="Variants[@i].SKU" type="text" value="@variant.SKU" class="w-full bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 text-body-md py-1 px-0 transition-colors @(!variant.IsActive ? "text-on-surface-variant" : "")" />
+                            </td>
+                            <td class="py-4 px-4">
+                                <input name="Variants[@i].SellingPrice" type="number" step="1000" value="@variant.SellingPrice" class="w-full bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 text-body-md py-1 px-0 transition-colors @(!variant.IsActive ? "text-on-surface-variant" : "")" />
+                            </td>
+                            <td class="py-4 px-4">
+                                <input name="Variants[@i].StockQuantity" type="number" value="@variant.StockQuantity" class="w-full bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 text-body-md py-1 px-0 transition-colors @(!variant.IsActive ? "text-on-surface-variant" : "")" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex justify-between items-center pb-24">
+        <a asp-action="Attributes" asp-route-id="@Model.ProductID" class="font-label-caps text-on-surface-variant hover:text-primary transition-colors px-6 py-3 border border-outline-variant rounded font-label-caps text-label-caps uppercase tracking-widest flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+            Trở lại
+        </a>
+        <a asp-action="Images" asp-route-id="@Model.ProductID" class="font-label-caps text-on-primary bg-primary hover:bg-primary-container transition-colors px-8 py-3 rounded shadow-sm font-label-caps text-label-caps uppercase tracking-widest flex items-center gap-2">
+            Hình ảnh
+            <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+        </a>
+    </div>
+</form>

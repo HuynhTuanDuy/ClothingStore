@@ -1,0 +1,444 @@
+@model ClothingStore.Models.ViewModels.CheckoutViewModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Guest Checkout - WearWhatever</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+    <!-- Use Kanit font as requested globally -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <style>
+        .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined' !important;
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+        }
+        /* Custom form input styles for bottom-border only */
+        .input-minimal {
+            border: none;
+            border-bottom: 1px solid theme('colors.outline-variant');
+            background-color: transparent;
+            padding: 0.5rem 0;
+            width: 100%;
+            transition: border-color 0.3s ease;
+        }
+        .input-minimal:focus {
+            outline: none;
+            box-shadow: none;
+            border-bottom-color: theme('colors.primary');
+        }
+    </style>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-primary": "#eabda0",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-container": "#6f4e37",
+                        "surface-variant": "#e4e2e1",
+                        "primary-fixed-dim": "#eabda0",
+                        "surface-dim": "#dcd9d9",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-container": "#cbcac5",
+                        "on-background": "#1b1c1c",
+                        "tertiary-container": "#555552",
+                        "background": "#fbf9f8",
+                        "tertiary": "#3e3e3b",
+                        "surface-bright": "#fbf9f8",
+                        "secondary-fixed": "#d6e8c9",
+                        "secondary-container": "#d6e8c9",
+                        "on-tertiary-fixed": "#1b1c19",
+                        "tertiary-fixed": "#e4e2dd",
+                        "secondary": "#53634a",
+                        "surface-container": "#f0eded",
+                        "outline": "#82746d",
+                        "on-surface": "#1b1c1c",
+                        "on-secondary-container": "#596950",
+                        "on-tertiary": "#ffffff",
+                        "on-surface-variant": "#50453e",
+                        "on-primary-fixed": "#2d1604",
+                        "tertiary-fixed-dim": "#c8c6c2",
+                        "inverse-on-surface": "#f3f0f0",
+                        "inverse-surface": "#303030",
+                        "on-tertiary-fixed-variant": "#474744",
+                        "on-primary-fixed-variant": "#5f402a",
+                        "on-primary": "#ffffff",
+                        "surface-container-highest": "#e4e2e1",
+                        "on-error": "#ffffff",
+                        "primary-fixed": "#ffdcc6",
+                        "surface": "#fbf9f8",
+                        "error": "#ba1a1a",
+                        "on-primary-container": "#eec1a4",
+                        "outline-variant": "#d4c3ba",
+                        "secondary-fixed-dim": "#bbccae",
+                        "on-error-container": "#93000a",
+                        "primary": "#553722",
+                        "surface-container-low": "#f6f3f2",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed": "#121f0c",
+                        "on-secondary-fixed-variant": "#3c4b34",
+                        "surface-tint": "#79573f",
+                        "surface-container-high": "#eae8e7"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin-desktop": "64px",
+                        "section-gap": "120px",
+                        "base": "8px",
+                        "margin-mobile": "20px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Kanit"],
+                        "body-lg": ["Kanit"],
+                        "headline-lg-mobile": ["Kanit"],
+                        "display-lg-mobile": ["Kanit"],
+                        "body-md": ["Kanit"],
+                        "label-caps": ["Kanit"],
+                        "headline-lg": ["Kanit"],
+                        "headline-md": ["Kanit"],
+                        "display-lg": ["Kanit"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "display-lg-mobile": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "headline-lg": ["40px", { "lineHeight": "48px", "fontWeight": "600" }],
+                        "headline-md": ["28px", { "lineHeight": "36px", "fontWeight": "500" }],
+                        "display-lg": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col bg-[#fbf9f8] font-body-md antialiased">
+    <!-- Header -->
+    <header class="bg-background w-full border-b border-outline-variant/30 flex justify-center items-center py-6">
+        <a class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary tracking-tighter" href="/">WearWhatever</a>
+    </header>
+
+    <main class="flex-grow w-full max-w-[1440px] mx-auto px-margin-mobile md:px-margin-desktop py-12 md:py-24">
+        <!-- Page Title -->
+        <div class="mb-12">
+            <h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-[#1b1c1c]">Checkout</h1>
+            <p class="font-body-md text-body-md text-on-surface-variant mt-2 text-[#1b1c1c]">Complete your order details below.</p>
+        </div>
+
+        <form asp-action="PlaceOrder" method="post" id="checkoutForm">
+            @Html.AntiForgeryToken()
+            <div class="flex flex-col lg:flex-row gap-gutter lg:gap-16">
+                <!-- Left Column: Form & Payment -->
+                <div class="w-full lg:w-7/12 flex flex-col gap-12">
+                    <!-- Notice Badge -->
+                    <div class="bg-secondary-container/30 border border-secondary-container text-on-secondary-container p-4 flex items-start gap-3 rounded-sm">
+                        <span class="material-symbols-outlined mt-0.5" style="font-variation-settings: 'FILL' 0, 'wght' 200;">loyalty</span>
+                        <p class="font-body-sm text-body-sm">
+                            Khách hàng mới sẽ nhận ưu đãi đặc biệt khi <a href="@Url.Action("Register", "Account")" class="text-primary underline font-medium">đăng ký tài khoản</a>.
+                        </p>
+                    </div>
+
+
+
+                    <!-- Shipping Information Form -->
+                    <section>
+                        <h2 class="font-headline-md text-headline-md mb-6 text-[#1b1c1c]">Shipping Information</h2>
+                        <div class="space-y-8">
+                            <div>
+                                <label class="sr-only" for="fullName">Họ và tên người nhận</label>
+                                <input class="input-minimal font-body-md text-body-md text-on-background placeholder:text-outline" 
+                                       id="fullName" name="ShippingRecipientName" value="@Model.Input.ShippingRecipientName" 
+                                       placeholder="Họ và tên người nhận" type="text" 
+                                       data-val="true" data-val-required="Vui lòng nhập họ tên người nhận.">
+                                <span id="err-fullName" class="text-red-500 text-sm mt-1 block"></span>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div>
+                                    <label class="sr-only" for="phone">Số điện thoại</label>
+                                    <input class="input-minimal font-body-md text-body-md text-on-background placeholder:text-outline" 
+                                           id="phone" name="ShippingPhone" value="@Model.Input.ShippingPhone" 
+                                           placeholder="Số điện thoại" type="tel" 
+                                           data-val="true" data-val-required="Vui lòng nhập số điện thoại.">
+                                    <span id="err-phone" class="text-red-500 text-sm mt-1 block"></span>
+                                </div>
+                                <div>
+                                    <label class="sr-only" for="email">Email</label>
+                                    <input class="input-minimal font-body-md text-body-md text-on-background placeholder:text-outline" 
+                                           id="email" name="OrderEmail" value="@Model.Input.OrderEmail" 
+                                           placeholder="Email (bắt buộc)" type="email" 
+                                           data-val="true" data-val-required="Vui lòng nhập email.">
+                                    <span id="err-email" class="text-red-500 text-sm mt-1 block"></span>
+                                </div>
+                            </div>
+                            <!-- Địa chỉ: Chia thành các ô riêng biệt theo sáp nhập hành chính mới -->
+                            <!-- Row 1: Số nhà, tên đường, hẻm -->
+                            <div>
+                                <label class="block text-xs text-on-surface-variant uppercase tracking-wider mb-1" for="streetDetail">Số nhà, tên đường, hẻm / ngõ</label>
+                                <input class="input-minimal font-body-md text-body-md text-on-background placeholder:text-outline" 
+                                       id="streetDetail" name="ShippingAddress" value="@Model.Input.ShippingAddress" 
+                                       placeholder="VD: 12 Nguyễn Văn A, Hẻm 5" type="text" 
+                                       data-val="true" data-val-required="Vui lòng nhập số nhà, tên đường.">
+                                <span id="err-streetDetail" class="text-red-500 text-sm mt-1 block"></span>
+                            </div>
+
+                            <!-- Row 2: Xã / Khu phố -->
+                            <div>
+                                <label class="block text-xs text-on-surface-variant uppercase tracking-wider mb-1" for="ward">Xã / Khu phố / Phường</label>
+                                 <input class="input-minimal font-body-md text-body-md text-on-background placeholder:text-outline" 
+                                        id="ward" name="ShippingWard" value="@(Model.Input.ShippingWard == "N/A" ? "" : Model.Input.ShippingWard)" 
+                                        placeholder="VD: Xã Tân Hội, Khu phố 3" type="text" 
+                                        data-val="true" data-val-required="Vui lòng nhập xã / khu phố.">
+                                 <span id="err-ward" class="text-red-500 text-sm mt-1 block"></span>
+                            </div>
+
+                            <!-- Row 3: Thành phố / Tỉnh (2 cột) -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div>
+                                    <label class="block text-xs text-on-surface-variant uppercase tracking-wider mb-1" for="district">Huyện / Thành phố trực thuộc <span class="text-gray-400 normal-case">(nếu có)</span></label>
+                                     <input class="input-minimal font-body-md text-body-md text-on-background placeholder:text-outline" 
+                                            id="district" name="ShippingDistrict" value="@(Model.Input.ShippingDistrict == "N/A" ? "" : Model.Input.ShippingDistrict)" 
+                                            placeholder="VD: TP. Thủ Đức, Huyện Nhà Bè"
+                                            type="text">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-on-surface-variant uppercase tracking-wider mb-1" for="province">Tỉnh / Thành phố</label>
+                                     <input class="input-minimal font-body-md text-body-md text-on-background placeholder:text-outline" 
+                                            id="province" name="ShippingProvince" value="@(Model.Input.ShippingProvince == "N/A" ? "" : Model.Input.ShippingProvince)" 
+                                            placeholder="VD: TP. Hồ Chí Minh, Hà Nội" type="text" 
+                                            data-val="true" data-val-required="Vui lòng nhập tỉnh / thành phố.">
+                                     <span id="err-province" class="text-red-500 text-sm mt-1 block"></span>
+                                </div>
+                            </div>
+
+                            <!-- Ghi chú sáp nhập -->
+                            <div class="bg-amber-50 border border-amber-200 rounded-sm p-4 flex items-start gap-3">
+                                <span class="material-symbols-outlined text-amber-600 text-[20px] mt-0.5 flex-shrink-0" style="font-variation-settings: 'FILL' 0, 'wght' 300;">info</span>
+                                <p class="text-sm text-amber-800 leading-relaxed">
+                                    <strong>Lưu ý về sáp nhập đơn vị hành chính:</strong> Từ 01/07/2025, Việt Nam thực hiện sáp nhập, không còn cấp Quận/Huyện ở nhiều tỉnh/thành. Vui lòng nhập địa chỉ theo <strong>đơn vị hành chính mới nhất</strong> tại địa phương của bạn (Xã → Tỉnh/TP). Trường "Huyện / TP trực thuộc" chỉ điền nếu địa phương bạn vẫn còn cấp này.
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Payment Methods -->
+                    <section>
+                        <h2 class="font-headline-md text-headline-md mb-6 text-[#1b1c1c]">Payment Method</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- COD Card -->
+                            <label class="relative flex items-center p-4 border border-outline-variant rounded-sm cursor-pointer hover:border-primary transition-colors bg-surface-container-lowest">
+                                <input class="h-4 w-4 text-primary border-outline focus:ring-primary focus:ring-offset-background" name="PaymentMethod" type="radio" value="COD" @(Model.Input.PaymentMethod == "COD" ? "checked" : "")>
+                                <div class="ml-4 flex flex-col">
+                                    <span class="font-body-md text-body-md text-[#1b1c1c]">Thanh toán khi nhận hàng</span>
+                                    <span class="font-body-sm text-body-sm text-on-surface-variant">(COD)</span>
+                                </div>
+                            </label>
+                            <!-- Bank Transfer Card -->
+                            <label class="relative flex items-center p-4 border border-outline-variant rounded-sm cursor-pointer hover:border-primary transition-colors bg-surface-container-lowest">
+                                <input class="h-4 w-4 text-primary border-outline focus:ring-primary focus:ring-offset-background" name="PaymentMethod" type="radio" value="BankTransfer" @(Model.Input.PaymentMethod == "BankTransfer" ? "checked" : "")>
+                                <div class="ml-4 flex flex-col">
+                                    <span class="font-body-md text-body-md text-[#1b1c1c]">Chuyển khoản ngân hàng</span>
+                                    <span class="font-body-sm text-body-sm text-on-surface-variant">Bank Transfer</span>
+                                </div>
+                            </label>
+                            <!-- MoMo Card -->
+                            <label class="relative flex items-center p-4 border border-outline-variant rounded-sm cursor-pointer hover:border-primary transition-colors bg-surface-container-lowest">
+                                <input class="h-4 w-4 text-primary border-outline focus:ring-primary focus:ring-offset-background" name="PaymentMethod" type="radio" value="MoMo" @(Model.Input.PaymentMethod == "MoMo" ? "checked" : "")>
+                                <div class="ml-4 flex items-center gap-2">
+                                    <span class="font-body-md text-body-md text-[#1b1c1c]">MoMo</span>
+                                </div>
+                            </label>
+                            <!-- ZaloPay Card -->
+                            <label class="relative flex items-center p-4 border border-outline-variant rounded-sm cursor-pointer hover:border-primary transition-colors bg-surface-container-lowest">
+                                <input class="h-4 w-4 text-primary border-outline focus:ring-primary focus:ring-offset-background" name="PaymentMethod" type="radio" value="ZaloPay" @(Model.Input.PaymentMethod == "ZaloPay" ? "checked" : "")>
+                                <div class="ml-4 flex items-center gap-2">
+                                    <span class="font-body-md text-body-md text-[#1b1c1c]">ZaloPay</span>
+                                </div>
+                            </label>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Right Column: Order Summary -->
+                <div class="w-full lg:w-5/12">
+                    <div class="bg-[#f4f2fd] border border-outline-variant p-6 md:p-8 lg:sticky lg:top-8">
+                        <h3 class="font-headline-md text-headline-md text-[#1b1c1c] mb-6">Order Summary</h3>
+                        
+                        <!-- Product List -->
+                        <div class="space-y-6 mb-8">
+                            @foreach (var item in Model.Cart.Items)
+                            {
+                                <div class="flex gap-4 items-start">
+                                    <div class="w-20 h-24 bg-surface-variant flex-shrink-0 relative overflow-hidden">
+                                        @if (!string.IsNullOrEmpty(item.ThumbnailUrl))
+                                        {
+                                            <img alt="@item.ProductName" class="w-full h-full object-cover" src="@item.ThumbnailUrl">
+                                        }
+                                        else
+                                        {
+                                            <div class="w-full h-full bg-gray-200 flex items-center justify-center text-[10px] text-gray-500">No Image</div>
+                                        }
+                                        <span class="absolute top-0 right-0 bg-secondary/80 text-on-secondary font-label-caps text-[10px] px-1.5 py-0.5">@item.Quantity</span>
+                                    </div>
+                                    <div class="flex flex-col flex-grow">
+                                        <span class="font-body-md text-body-md text-[#1b1c1c]">@item.ProductName</span>
+                                        <span class="font-body-sm text-body-sm text-on-surface-variant mb-2">Color: @item.ColorName | Size: @item.SizeCode</span>
+                                        <span class="font-body-md text-body-md text-primary mt-auto text-[#1b1c1c]">@item.LineTotal.ToString("N0")đ ‣</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <hr class="border-t border-outline-variant/50 mb-6">
+                        <!-- Totals -->
+                        <div class="space-y-3 mb-6">
+                            <div class="flex justify-between font-body-sm text-body-sm text-on-surface-variant">
+                                <span>Subtotal</span>
+                                <span class="text-[#1b1c1c]">@Model.SubTotal.ToString("N0")đ ‣</span>
+                            </div>
+                            <div class="flex justify-between font-body-sm text-body-sm text-on-surface-variant">
+                                <span>Shipping</span>
+                                <span>@Model.ShippingFee.ToString("N0")đ</span>
+                            </div>
+                        </div>
+
+                        <hr class="border-t border-outline-variant/50 mb-6">
+                        <div class="flex justify-between items-end mb-8">
+                            <span class="font-body-lg text-body-lg text-[#1b1c1c]">Total</span>
+                            <span class="font-headline-md text-headline-md text-primary">@Model.FinalAmount.ToString("N0")đ ‣</span>
+                        </div>
+
+                        <!-- CTA -->
+                        <button class="w-full bg-[#6f4e37] text-[#fbf9f8] font-label-caps text-label-caps uppercase py-4 px-6 hover:opacity-90 transition-opacity duration-300" type="submit">
+                            Thanh toán ngay
+                        </button>
+                        <p class="font-body-sm text-body-sm text-on-surface-variant text-center mt-4 flex items-center justify-center gap-1">
+                            <span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 0, 'wght' 200;">lock</span>
+                            Secure Encrypted Checkout
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </main>
+
+    <!-- Footer Component -->
+    <footer class="bg-surface-container dark:bg-surface-container full-width bg-surface-container-high dark:bg-surface-container-highest mt-auto">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center w-full px-margin-mobile md:px-margin-desktop py-section-gap max-w-[1440px] mx-auto">
+            <div class="mb-8 md:mb-0">
+                <span class="font-headline-md text-headline-md text-primary dark:text-primary-fixed-dim block mb-4">WearWhatever</span>
+                <p class="font-body-sm text-body-sm text-primary dark:text-primary-fixed-dim">© 2024 WearWhatever. All rights reserved. Crafted for the intentional.</p>
+            </div>
+            <nav class="flex flex-wrap gap-x-8 gap-y-4">
+                <a class="font-body-sm text-body-sm text-on-surface-variant dark:text-on-surface-variant/70 hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-300 focus:outline-none focus:ring-1 focus:ring-outline" href="#">Shipping &amp; Returns</a>
+                <a class="font-body-sm text-body-sm text-on-surface-variant dark:text-on-surface-variant/70 hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-300 focus:outline-none focus:ring-1 focus:ring-outline" href="#">Privacy Policy</a>
+                <a class="font-body-sm text-body-sm text-on-surface-variant dark:text-on-surface-variant/70 hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-300 focus:outline-none focus:ring-1 focus:ring-outline" href="#">Terms of Service</a>
+                <a class="font-body-sm text-body-sm text-on-surface-variant dark:text-on-surface-variant/70 hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-300 focus:outline-none focus:ring-1 focus:ring-outline" href="#">Sustainability</a>
+                <a class="font-body-sm text-body-sm text-on-surface-variant dark:text-on-surface-variant/70 hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-300 focus:outline-none focus:ring-1 focus:ring-outline" href="#">Contact Us</a>
+            </nav>
+        </div>
+    </footer>
+
+    <!-- Custom Inline Validation -->
+    <script>
+        // Config: { inputId, errorSpanId, message }
+        const REQUIRED_FIELDS = [
+            { id: 'fullName',     errId: 'err-fullName',     msg: 'Vui lòng nhập họ và tên người nhận.' },
+            { id: 'phone',        errId: 'err-phone',        msg: 'Vui lòng nhập số điện thoại.' },
+            { id: 'email',        errId: 'err-email',        msg: 'Vui lòng nhập email.' },
+            { id: 'streetDetail', errId: 'err-streetDetail', msg: 'Vui lòng nhập số nhà, tên đường.' },
+            { id: 'ward',         errId: 'err-ward',         msg: 'Vui lòng nhập xã / khu phố / phường.' },
+            { id: 'province',     errId: 'err-province',     msg: 'Vui lòng nhập tỉnh / thành phố.' },
+        ];
+
+        // Attach live clear-error on input
+        REQUIRED_FIELDS.forEach(({ id, errId }) => {
+            const input = document.getElementById(id);
+            const span  = document.getElementById(errId);
+            if (!input || !span) return;
+            input.addEventListener('input', () => {
+                if (input.value.trim()) {
+                    span.textContent = '';
+                    input.classList.remove('border-red-500');
+                    input.classList.add('border-gray-300');
+                }
+            });
+        });
+
+        // Email format check
+        function isValidEmail(v) {
+            return /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/.test(v);
+        }
+
+        document.getElementById('checkoutForm').addEventListener('submit', function (e) {
+            let hasError = false;
+
+            REQUIRED_FIELDS.forEach(({ id, errId, msg }) => {
+                const input = document.getElementById(id);
+                const span  = document.getElementById(errId);
+                if (!input || !span) return;
+
+                const val = input.value.trim();
+                if (!val) {
+                    span.textContent = msg;
+                    input.classList.add('!border-b-red-500');
+                    input.style.borderBottomColor = '#ef4444';
+                    hasError = true;
+                } else {
+                    // Extra: email format
+                    if (id === 'email' && !isValidEmail(val)) {
+                        span.textContent = 'Email không hợp lệ.';
+                        input.style.borderBottomColor = '#ef4444';
+                        hasError = true;
+                    } else {
+                        span.textContent = '';
+                        input.style.borderBottomColor = '';
+                    }
+                }
+            });
+
+            if (hasError) {
+                e.preventDefault();
+                // Scroll to first error
+                const firstErr = document.querySelector('[data-err-span]:not(:empty)') ||
+                                 document.querySelector('.err-msg:not(:empty)');
+                if (!firstErr) {
+                    const firstInput = REQUIRED_FIELDS.find(f => {
+                        const sp = document.getElementById(f.errId);
+                        return sp && sp.textContent;
+                    });
+                    if (firstInput) {
+                        document.getElementById(firstInput.id)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

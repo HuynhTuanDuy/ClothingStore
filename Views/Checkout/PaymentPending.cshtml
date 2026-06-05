@@ -1,0 +1,233 @@
+@model ClothingStore.Models.ViewModels.PaymentPendingViewModel
+@{
+    Layout = null;
+    var isMoMo    = Model.PaymentMethod == "MoMo";
+    var isZalo    = Model.PaymentMethod == "ZaloPay";
+    var isBank    = Model.PaymentMethod == "BankTransfer";
+
+    // Accent colours per method
+    var accentBg   = isMoMo ? "#ae2070" : isZalo ? "#0068ff" : "#003087";
+    var accentText = "white";
+    var methodIcon = isMoMo ? "💜" : isZalo ? "💙" : "🏦";
+    var methodLabel = isMoMo ? "MoMo" : isZalo ? "ZaloPay" : "Chuyển khoản ngân hàng";
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thanh toán đơn hàng @Model.OrderCode</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Kanit', sans-serif; }
+        @@keyframes pulse-ring {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(1.3); opacity: 0; }
+        }
+        .pulse-ring::before {
+            content: '';
+            position: absolute;
+            inset: -6px;
+            border-radius: 9999px;
+            border: 2px solid currentColor;
+            animation: pulse-ring 1.5s ease-out infinite;
+        }
+        .copy-btn:active { transform: scale(0.95); }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 py-4 flex justify-center">
+        <a href="/" class="text-3xl font-bold text-[#553722] tracking-tight">WearWhatever</a>
+    </header>
+
+    <main class="flex-grow w-full max-w-4xl mx-auto px-4 py-10">
+
+        <!-- Step indicator -->
+        <div class="flex items-center justify-center mb-8 gap-2 text-sm text-gray-500">
+            <span class="flex items-center gap-1 text-green-600 font-medium">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                Thông tin
+            </span>
+            <div class="h-px w-8 bg-gray-300"></div>
+            <span class="flex items-center gap-1 text-green-600 font-medium">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                Xác nhận
+            </span>
+            <div class="h-px w-8 bg-gray-300"></div>
+            <span class="font-semibold text-gray-800">Thanh toán</span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+
+            <!-- LEFT: QR + Account Info -->
+            <div class="lg:col-span-3 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+
+                <!-- Method header -->
+                <div class="px-6 py-5 flex items-center gap-3" style="background-color: @accentBg; color: @accentText;">
+                    <span class="text-3xl">@methodIcon</span>
+                    <div>
+                        <p class="text-xs uppercase tracking-widest opacity-75">Phương thức thanh toán</p>
+                        <h2 class="text-xl font-semibold">@methodLabel</h2>
+                    </div>
+                </div>
+
+                <div class="p-6 flex flex-col items-center gap-6">
+                    <!-- QR Code -->
+                    <div class="relative">
+                        <div class="w-60 h-60 bg-white p-2 rounded-xl shadow-md border border-gray-200 flex items-center justify-center">
+                            <img id="qr-image" src="@Model.QrImageUrl" alt="Mã QR thanh toán"
+                                 class="w-full h-full object-contain"
+                                 onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=@Uri.EscapeDataString(Model.TransferContent)'">
+                        </div>
+                        <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white border border-gray-200 rounded-full px-3 py-0.5 text-xs text-gray-500 whitespace-nowrap shadow-sm">
+                            Quét để thanh toán
+                        </div>
+                    </div>
+
+                    <!-- Account Details -->
+                    <div class="w-full space-y-3 mt-2">
+                        @if (isBank)
+                        {
+                            <div class="bg-blue-50 rounded-xl p-4 space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-gray-500">Ngân hàng</span>
+                                    <span class="font-semibold text-gray-800">@Model.BankName</span>
+                                </div>
+                                <div class="border-t border-blue-100"></div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-gray-500">Số tài khoản</span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold text-lg text-gray-900 font-mono tracking-wider" id="acc-number">@Model.AccountNumber</span>
+                                        <button class="copy-btn text-blue-500 hover:text-blue-700 transition" onclick="copyText('@Model.AccountNumber', 'btn-acc')" title="Sao chép">
+                                            <svg id="btn-acc" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="border-t border-blue-100"></div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-gray-500">Chủ tài khoản</span>
+                                    <span class="font-semibold text-gray-800">@Model.AccountName</span>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="rounded-xl p-4 space-y-3" style="background-color: @(isMoMo ? "#fdf0f6" : "#f0f4ff")">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-gray-500">Ví @Model.BankName</span>
+                                    <span class="font-semibold text-gray-800">@Model.AccountName</span>
+                                </div>
+                                <div class="border-t opacity-30" style="border-color: @accentBg"></div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-gray-500">Số điện thoại</span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold text-lg text-gray-900 font-mono tracking-wider">@Model.AccountNumber</span>
+                                        <button class="copy-btn transition" style="color: @accentBg" onclick="copyText('@Model.AccountNumber', 'btn-phone')" title="Sao chép">
+                                            <svg id="btn-phone" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- Transfer Content (critical) -->
+                        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                            <p class="text-xs text-amber-600 uppercase tracking-wider font-semibold mb-2">⚠️ Nội dung chuyển khoản (bắt buộc)</p>
+                            <div class="flex items-center justify-between gap-3">
+                                <span class="font-bold text-gray-900 break-all" id="transfer-content">@Model.TransferContent</span>
+                                <button class="copy-btn flex-shrink-0 text-amber-600 hover:text-amber-800 transition" onclick="copyText('@Model.TransferContent', 'btn-content')" title="Sao chép">
+                                    <svg id="btn-content" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2">Đây là nội dung được tự động điền khi bạn quét mã QR. Vui lòng không thay đổi.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: Order Summary -->
+            <div class="lg:col-span-2 flex flex-col gap-4">
+
+                <!-- Order Info Card -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                    <h3 class="text-base font-semibold text-gray-700 uppercase tracking-wider mb-4 flex items-center gap-2">
+                        <span>🧾</span> Thông tin đơn hàng
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-500">Mã đơn hàng</span>
+                            <span class="font-bold text-gray-900 font-mono">@Model.OrderCode</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-500">Khách hàng</span>
+                            <span class="font-semibold text-gray-800">@Model.CustomerName</span>
+                        </div>
+                        <div class="border-t border-dashed border-gray-200 my-1"></div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600 font-medium">Số tiền cần chuyển</span>
+                            <span class="font-bold text-2xl text-red-600">@Model.FinalAmount.ToString("N0")đ</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Instructions Card -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                    <h3 class="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-3 flex items-center gap-2">
+                        <span>📋</span> Hướng dẫn thanh toán
+                    </h3>
+                    <ol class="space-y-3 text-sm text-gray-600">
+                        <li class="flex gap-3">
+                            <span class="flex-shrink-0 w-6 h-6 rounded-full text-white text-xs flex items-center justify-center font-bold" style="background-color: @accentBg">1</span>
+                            <span>Mở ứng dụng <strong>@methodLabel</strong> trên điện thoại.</span>
+                        </li>
+                        <li class="flex gap-3">
+                            <span class="flex-shrink-0 w-6 h-6 rounded-full text-white text-xs flex items-center justify-center font-bold" style="background-color: @accentBg">2</span>
+                            <span>Quét mã QR hoặc chuyển đến số <strong>@Model.AccountNumber</strong>.</span>
+                        </li>
+                        <li class="flex gap-3">
+                            <span class="flex-shrink-0 w-6 h-6 rounded-full text-white text-xs flex items-center justify-center font-bold" style="background-color: @accentBg">3</span>
+                            <span>Nhập đúng số tiền <strong class="text-red-600">@Model.FinalAmount.ToString("N0")đ</strong>.</span>
+                        </li>
+                        <li class="flex gap-3">
+                            <span class="flex-shrink-0 w-6 h-6 rounded-full text-white text-xs flex items-center justify-center font-bold" style="background-color: @accentBg">4</span>
+                            <span>Nội dung chuyển khoản: <strong class="text-amber-700">@Model.TransferContent</strong> (sẽ tự điền khi quét QR).</span>
+                        </li>
+                        <li class="flex gap-3">
+                            <span class="flex-shrink-0 w-6 h-6 rounded-full text-white text-xs flex items-center justify-center font-bold" style="background-color: @accentBg">5</span>
+                            <span>Xác nhận thanh toán. Đơn hàng sẽ được xử lý ngay sau khi nhận được tiền.</span>
+                        </li>
+                    </ol>
+                </div>
+
+                <!-- CTA Buttons -->
+                <div class="space-y-3">
+                    <a href="/" class="block w-full text-center bg-[#553722] text-white py-3 px-6 rounded-xl font-semibold hover:bg-[#6f4e37] transition-colors">
+                        Về trang chủ
+                    </a>
+                    <p class="text-xs text-gray-400 text-center">
+                        Đơn hàng sẽ được giữ trong <strong>24 giờ</strong>. Sau thời gian này nếu chưa thanh toán, đơn có thể bị hủy.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast notification -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-gray-900 text-white px-4 py-2.5 rounded-xl text-sm font-medium shadow-lg opacity-0 transition-opacity duration-300 pointer-events-none">
+        ✅ Đã sao chép!
+    </div>
+
+    <script>
+        function copyText(text, btnId) {
+            navigator.clipboard.writeText(text).then(() => {
+                const toast = document.getElementById('toast');
+                toast.style.opacity = '1';
+                setTimeout(() => toast.style.opacity = '0', 2000);
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+@model IReadOnlyList<ClothingStore.Models.ViewModels.AdminProductListItemViewModel>
+@{
+    ViewData["Title"] = "Quản lý sản phẩm";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #553722;
+        }
+        .toggle-label {
+            width: 2.5rem;
+            height: 1.25rem;
+            background-color: #d4c3ba;
+            border-radius: 9999px;
+            transition: all 0.3s;
+        }
+        .toggle-inner {
+            position: absolute;
+            left: 2px;
+            top: 2px;
+            width: 1rem;
+            height: 1rem;
+            background-color: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+        }
+        .toggle-checkbox:checked ~ .toggle-inner {
+            transform: translateX(1.25rem);
+        }
+    </style>
+}
+
+<!-- Header -->
+<div class="flex justify-between items-end mb-12">
+    <div>
+        <p class="text-sm text-on-surface-variant uppercase tracking-wider mb-2 font-medium">Kho hàng</p>
+        <h2 class="text-3xl font-bold text-on-background">Quản lý sản phẩm</h2>
+    </div>
+    <a asp-action="Create" class="bg-primary text-white text-sm font-semibold uppercase tracking-wider px-6 py-3 rounded hover:bg-primary/90 transition-colors duration-300 shadow-sm">
+        THÊM SẢN PHẨM MỚI
+    </a>
+</div>
+
+<!-- Filters -->
+<div class="flex flex-wrap items-center justify-between gap-6 mb-8 pb-6 border-b border-outline-variant">
+    <div class="flex items-center gap-4 flex-1">
+        <div class="relative w-full max-w-md">
+            <span class="material-symbols-outlined absolute left-0 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+            <input class="w-full bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 pl-8 pb-2 text-base text-on-background transition-colors placeholder:text-on-surface-variant/50" 
+                   placeholder="Tìm kiếm sản phẩm theo tên..." type="text"/>
+        </div>
+    </div>
+    <div class="flex items-center gap-6">
+        <select class="bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 pb-2 text-sm font-medium uppercase tracking-wider text-on-background pr-8 cursor-pointer">
+            <option>TẤT CẢ DANH MỤC</option>
+            <!-- Add category options dynamically if needed in the future -->
+        </select>
+        @{
+            var currentStatus = Context.Request.Query["status"].ToString();
+            var allClass = string.IsNullOrEmpty(currentStatus) ? "bg-background shadow-sm text-primary font-semibold" : "text-on-surface-variant hover:text-primary font-medium";
+            var activeClass = currentStatus == "active" ? "bg-background shadow-sm text-primary font-semibold" : "text-on-surface-variant hover:text-primary font-medium";
+            var hiddenClass = currentStatus == "hidden" ? "bg-background shadow-sm text-primary font-semibold" : "text-on-surface-variant hover:text-primary font-medium";
+        }
+        <div class="flex gap-2 bg-surface-container-low p-1 rounded-full">
+            <a href="?status=" class="px-4 py-1.5 rounded-full text-sm uppercase tracking-wider transition-colors @allClass">Tất cả</a>
+            <a href="?status=active" class="px-4 py-1.5 rounded-full text-sm uppercase tracking-wider transition-colors @activeClass">Hoạt động</a>
+            <a href="?status=hidden" class="px-4 py-1.5 rounded-full text-sm uppercase tracking-wider transition-colors @hiddenClass">Bị ẩn</a>
+        </div>
+    </div>
+</div>
+
+<!-- Product Table -->
+<div class="w-full text-left">
+    <!-- Table Header -->
+    <div class="grid grid-cols-12 gap-4 pb-4 border-b border-outline-variant/50 text-sm font-medium uppercase tracking-wider text-on-surface-variant">
+        <div class="col-span-1">ID</div>
+        <div class="col-span-4">SẢN PHẨM</div>
+        <div class="col-span-2">DANH MỤC</div>
+        <div class="col-span-1 text-center">BIẾN THỂ</div>
+        <div class="col-span-1 text-center">TỒN KHO</div>
+        <div class="col-span-2 text-center">TRẠNG THÁI</div>
+        <div class="col-span-1 text-right">THAO TÁC</div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="py-12 text-center text-on-surface-variant">
+            Chưa có sản phẩm nào.
+        </div>
+    }
+
+    <!-- Rows -->
+    @foreach (var product in Model)
+    {
+        <div class="grid grid-cols-12 gap-4 items-center py-5 border-b border-outline-variant/30 group hover:bg-surface-container-lowest transition-colors @(product.IsActive ? "" : "opacity-60")">
+            <div class="col-span-1 text-base text-on-surface-variant font-mono">#@product.ProductID</div>
+            <div class="col-span-4 flex items-center gap-4">
+                <div class="w-14 h-16 bg-surface-container overflow-hidden rounded-sm shrink-0 flex items-center justify-center">
+                    @if (!string.IsNullOrWhiteSpace(product.ThumbnailUrl))
+                    {
+                        <img src="@product.ThumbnailUrl" alt="@product.ProductName" class="w-full h-full object-cover" />
+                    }
+                    else
+                    {
+                        <span class="material-symbols-outlined text-outline-variant">image</span>
+                    }
+                </div>
+                <div>
+                    <p class="text-base text-on-background font-medium mb-0.5 line-clamp-2">@product.ProductName</p>
+                </div>
+            </div>
+            <div class="col-span-2">
+                <span class="inline-flex items-center px-2.5 py-1 rounded-sm bg-secondary-fixed/30 text-on-secondary-container text-xs font-semibold uppercase tracking-wider">
+                    @product.CategoryName
+                </span>
+            </div>
+            <div class="col-span-1 text-base text-center text-on-background">@product.VariantCount</div>
+            <div class="col-span-1 text-base text-center font-medium @(product.TotalStock == 0 ? "text-error" : "text-on-background")">
+                @product.TotalStock
+            </div>
+            <div class="col-span-2 flex justify-center">
+                <form asp-action="Delete" asp-route-id="@product.ProductID" method="post" class="m-0">
+                    @Html.AntiForgeryToken()
+                    <div class="relative inline-block w-10 h-5 align-middle select-none" title="Chuyển trạng thái">
+                        <input type="checkbox" id="toggle_@product.ProductID" onchange="this.form.submit()" @(product.IsActive ? "checked" : "")
+                               class="toggle-checkbox absolute block w-10 h-5 opacity-0 cursor-pointer z-10" />
+                        <label for="toggle_@product.ProductID" class="toggle-label block overflow-hidden h-5 rounded-full bg-outline-variant cursor-pointer"></label>
+                        <div class="toggle-inner pointer-events-none"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="col-span-1 flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <a asp-action="Edit" asp-route-id="@product.ProductID" class="text-on-surface-variant hover:text-primary transition-colors p-1.5 rounded-full hover:bg-surface-container-highest" title="Sửa thông tin">
+                    <span class="material-symbols-outlined text-[24px]">edit</span>
+                </a>
+                <a asp-action="Variants" asp-route-id="@product.ProductID" class="text-on-surface-variant hover:text-primary transition-colors p-1.5 rounded-full hover:bg-surface-container-highest" title="Quản lý biến thể">
+                    <span class="material-symbols-outlined text-[24px]">style</span>
+                </a>
+                <a asp-action="Images" asp-route-id="@product.ProductID" class="text-on-surface-variant hover:text-primary transition-colors p-1.5 rounded-full hover:bg-surface-container-highest" title="Quản lý hình ảnh">
+                    <span class="material-symbols-outlined text-[24px]">image</span>
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Pagination (Placeholder to match UI) -->
+<div class="flex justify-between items-center mt-12 text-sm font-semibold uppercase tracking-wider text-on-surface-variant">
+    <p>HIỂN THỊ @Model.Count SẢN PHẨM</p>
+    <div class="flex gap-4 items-center">
+        <button class="hover:text-primary transition-colors flex items-center gap-1 opacity-50 cursor-not-allowed">
+            <span class="material-symbols-outlined text-[18px]">arrow_back</span> TRƯỚC
+        </button>
+        <div class="flex gap-2">
+            <button class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center">1</button>
+        </div>
+        <button class="hover:text-primary transition-colors flex items-center gap-1 opacity-50 cursor-not-allowed">
+            SAU <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+        </button>
+    </div>
+</div>

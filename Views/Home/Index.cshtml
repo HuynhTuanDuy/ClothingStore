@@ -1,0 +1,182 @@
+@model ProductListViewModel
+@{
+    ViewData["Title"] = "Shop All";
+    Layout = "_StoreLayout";
+}
+
+<!-- BEGIN: HeroSection -->
+<section class="container mx-auto px-4 py-12 md:py-20 flex flex-col md:flex-row items-center">
+    <!-- Hero Left: Lifestyle Image -->
+    <div class="md:w-1/2 p-4">
+        <img alt="Lifestyle image - Woman with stuffed animals" class="w-full h-auto object-cover rounded-sm shadow-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCIK9oBxvMgBEykb_H62mTicay9VoZEMd8HcVATs27wNanMJ06B5bbVGC80otMfNC0roKj75si-Q-zXA0hHUY57hjBEOjzfRflqamtYygZHUvzk3ibDK9ER31EKyQTS_T3CSwVBCxxLBPZ3R0XoFejzFOgA6fZG8cSCmGOtmDs9s_QP-XF9jfovFBiVKM1q6B6iy-DmOfk13v3SuDEtBtQjgfphM1KdnUpjpCwhaAzjU6Qw3sxM0uwSXuOsR-fNRxkXh3tcVaJ3Igc" style="max-height: 600px;"/>
+    </div>
+    <!-- Hero Right: Text Content -->
+    <div class="md:w-1/2 p-8 md:p-16">
+        <h1 class="text-5xl md:text-6xl font-serif text-brand-dark-brown mb-6 leading-tight">Never lose your sense of wonder</h1>
+        <p class="text-gray-600 mb-8 leading-relaxed text-lg italic">
+            Never lose your sense of wonder. Understated and plush comfort even if it's rainy and overcast outside. Let ourselves travel to a cozy corner and wonder, this is where we feel at home.
+        </p>
+        <a href="#product-section" class="inline-block bg-brand-brown text-white px-8 py-3 hover:bg-brand-dark-brown transition-colors font-medium rounded">
+            Shop Now
+        </a>
+    </div>
+</section>
+<!-- END: HeroSection -->
+
+<!-- BEGIN: CollageSection -->
+<section class="container mx-auto px-4 pb-20">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-0">
+        <!-- Row 1 -->
+        <div class="h-80">
+            <img alt="Collage detail 1" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCWt_besUAQjalCCFflHEdoowZsYMgPTBgQs3DY4WitzL1LF1ouXhMyFGdTUpXkcd8diQcJ9BDj6R264uS5GFVfqv_c8aoRR2Yx_kW9hc4F7P-dv6FttUkK6ktADtDz8bokw0iaT6Ahxl2NykkvzDbSl-JOYc3SvTVKXmV3PqqmzYyXQrzQ6CiGYi-1sH32UiWWcI7P3Ko0OjXCMXJUDUcJ-DlUIJmoxQV4RUY0ACuKD1GnHQorNI6iDtMlCaLGpCjhNARBdVilY2w"/>
+        </div>
+        <div class="h-80 bg-brand-brown flex items-center justify-center p-8 text-center">
+            <p class="font-serif text-white text-xl italic leading-relaxed">
+                A little corner of calm, wrapped in muted shades and mindful comfort.
+            </p>
+        </div>
+        <div class="h-80">
+            <img alt="Collage detail 2" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVy2GUZwrlJPnSmzPNOSvnpTN4wUN_rXkYXPd0Hl3GPlSI-4FoDpiZSvzc6fYqpW5-jE6RtzE4dVQcHMiWODkkrnSGwEa5cGpqQ8Nbv0MPeOpWrr5tL4GPx57X5I568y-6sGhw908cBMLOYP45dM6fQObNlkcl2ieGpEFXlwzuCywsibON0EKGzr18hzkRcHrrY6G5ws3LLPgHXu2QGoForybY9KB-kewlL96RKKhfjsmjIB3nJe83J7kN461NsbAv9XHozzrbypc"/>
+        </div>
+        <div class="h-80">
+            <img alt="Collage detail 3" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCWt_besUAQjalCCFflHEdoowZsYMgPTBgQs3DY4WitzL1LF1ouXhMyFGdTUpXkcd8diQcJ9BDj6R264uS5GFVfqv_c8aoRR2Yx_kW9hc4F7P-dv6FttUkK6ktADtDz8bokw0iaT6Ahxl2NykkvzDbSl-JOYc3SvTVKXmV3PqqmzYyXQrzQ6CiGYi-1sH32UiWWcI7P3Ko0OjXCMXJUDUcJ-DlUIJmoxQV4RUY0ACuKD1GnHQorNI6iDtMlCaLGpCjhNARBdVilY2w"/>
+        </div>
+        <!-- Row 2 -->
+        <div class="h-80">
+            <img alt="Collage detail 4" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVy2GUZwrlJPnSmzPNOSvnpTN4wUN_rXkYXPd0Hl3GPlSI-4FoDpiZSvzc6fYqpW5-jE6RtzE4dVQcHMiWODkkrnSGwEa5cGpqQ8Nbv0MPeOpWrr5tL4GPx57X5I568y-6sGhw908cBMLOYP45dM6fQObNlkcl2ieGpEFXlwzuCywsibON0EKGzr18hzkRcHrrY6G5ws3LLPgHXu2QGoForybY9KB-kewlL96RKKhfjsmjIB3nJe83J7kN461NsbAv9XHozzrbypc"/>
+        </div>
+        <div class="h-80">
+            <img alt="Collage detail 5" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCWt_besUAQjalCCFflHEdoowZsYMgPTBgQs3DY4WitzL1LF1ouXhMyFGdTUpXkcd8diQcJ9BDj6R264uS5GFVfqv_c8aoRR2Yx_kW9hc4F7P-dv6FttUkK6ktADtDz8bokw0iaT6Ahxl2NykkvzDbSl-JOYc3SvTVKXmV3PqqmzYyXQrzQ6CiGYi-1sH32UiWWcI7P3Ko0OjXCMXJUDUcJ-DlUIJmoxQV4RUY0ACuKD1GnHQorNI6iDtMlCaLGpCjhNARBdVilY2w"/>
+        </div>
+        <div class="h-80 bg-brand-brown flex items-center justify-center p-8 text-center">
+            <p class="font-serif text-white text-xl italic leading-relaxed">
+                For the one who embraces bold choices and the never ending journey of self-discovery.
+            </p>
+        </div>
+        <div class="h-80">
+            <img alt="Collage detail 6" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVy2GUZwrlJPnSmzPNOSvnpTN4wUN_rXkYXPd0Hl3GPlSI-4FoDpiZSvzc6fYqpW5-jE6RtzE4dVQcHMiWODkkrnSGwEa5cGpqQ8Nbv0MPeOpWrr5tL4GPx57X5I568y-6sGhw908cBMLOYP45dM6fQObNlkcl2ieGpEFXlwzuCywsibON0EKGzr18hzkRcHrrY6G5ws3LLPgHXu2QGoForybY9KB-kewlL96RKKhfjsmjIB3nJe83J7kN461NsbAv9XHozzrbypc"/>
+        </div>
+    </div>
+</section>
+<!-- END: CollageSection -->
+
+<!-- BEGIN: ProductSection -->
+<section id="product-section" class="container mx-auto px-4 py-16">
+    <div class="flex justify-between items-end mb-12">
+        <h2 class="text-4xl font-serif text-brand-dark-brown">WearWhatever</h2>
+        
+        <!-- Filter Form (Minimal version) -->
+        <form method="get" class="flex gap-4">
+            <select name="categoryId" onchange="this.form.submit()" class="border-gray-300 rounded text-sm text-gray-700 bg-white">
+                <option value="">All Categories</option>
+                @foreach (var cat in Model.Categories)
+                {
+                    <option value="@cat.CategoryID" selected="@(cat.CategoryID == Model.CategoryID)">@cat.CategoryName</option>
+                }
+            </select>
+        </form>
+    </div>
+
+    @if (!Model.Products.Any())
+    {
+        <div class="text-center py-20 text-gray-500">
+            <p class="text-xl">No products found.</p>
+        </div>
+    }
+    else
+    {
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
+            @foreach (var product in Model.Products)
+            {
+                <article class="product-card group cursor-pointer" data-purpose="product-item" onclick="location.href='@Url.Action("Details", "Home", new { id = product.ProductID })'">
+                    <div class="relative mb-4 overflow-hidden" style="padding-bottom: 125%; background: #f1f1f1;">
+                        @if (!product.HasStock)
+                        {
+                            <span class="absolute top-2 right-2 bg-gray-500 text-white text-[9px] px-2 py-0.5 tracking-tighter uppercase font-medium z-10">Sold Out</span>
+                        }
+                        else if (product.HasDiscount)
+                        {
+                            <span class="absolute top-2 right-2 bg-red-500 text-white text-[9px] px-2 py-0.5 tracking-tighter uppercase font-medium z-10">Sale</span>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(product.ThumbnailUrl))
+                        {
+                            <img alt="@product.ProductName" class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="@product.ThumbnailUrl"/>
+                        }
+                        else
+                        {
+                            <div class="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 text-gray-400 gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M6 4h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2zm8 4a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                </svg>
+                                <span class="text-[10px] uppercase tracking-widest">Chưa có ảnh</span>
+                            </div>
+                        }
+                    </div>
+                    <div class="space-y-1 mt-2">
+                        <h3 class="text-lg font-medium leading-tight group-hover:underline">@product.ProductName</h3>
+                        <p class="text-base text-gray-900 font-medium">
+                            @if (product.HasDiscount)
+                            {
+                                <span class="text-red-600 mr-2">@(product.MinPrice?.ToString("N0") ?? "0") VNĐ</span>
+                                <span class="line-through text-gray-400">@(product.OriginalMinPrice?.ToString("N0") ?? "0") VNĐ</span>
+                            }
+                            else
+                            {
+                                <span>@(product.MinPrice?.ToString("N0") ?? "0") VNĐ</span>
+                            }
+                        </p>
+                        
+                        @if (product.Colors.Any())
+                        {
+                            <div class="flex space-x-2 py-2">
+                                @foreach (var color in product.Colors.Take(4))
+                                {
+                                    <span class="w-4 h-4 rounded-full border border-gray-200" style="background-color: @color.HexCode"></span>
+                                }
+                                @if (product.Colors.Count > 4)
+                                {
+                                    <span class="text-[10px] text-gray-500 self-center">+@(product.Colors.Count - 4)</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                </article>
+            }
+        </div>
+
+        <!-- Pagination -->
+        @if (Model.TotalPages > 1)
+        {
+            <div class="flex justify-center mt-12 gap-2">
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <a href="?page=@i&categoryId=@Model.CategoryID&search=@Model.Search" 
+                       class="w-10 h-10 flex items-center justify-center border border-gray-200 @(i == Model.Page ? "bg-brand-dark-brown text-white" : "bg-white text-gray-700 hover:bg-gray-50") transition-colors">
+                        @i
+                    </a>
+                }
+            </div>
+        }
+    }
+</section>
+<!-- END: ProductSection -->
+
+<!-- BEGIN: NewsletterBanner -->
+<section class="bg-brand-brown py-12 px-4">
+    <div class="container mx-auto flex justify-center">
+        <div class="bg-brand-lavender max-w-2xl w-full p-10 relative rounded shadow-sm">
+            <div class="text-center">
+                <h2 class="text-3xl font-serif text-brand-dark-brown mb-2">Sign up and save</h2>
+                <p class="text-gray-600 mb-8 text-sm">Enter your email to sign up to newsletter and update!</p>
+                <form class="flex flex-col sm:flex-row gap-0 justify-center">
+                    <input class="w-full sm:w-80 border-none px-4 py-3 bg-white/80 focus:ring-0 focus:outline-none text-sm" placeholder="Email" required type="email" />
+                    <button class="bg-brand-dark-brown text-white px-8 py-3 uppercase text-xs font-bold tracking-widest hover:bg-black transition-colors" type="submit">
+                        Subscribe
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- END: NewsletterBanner -->

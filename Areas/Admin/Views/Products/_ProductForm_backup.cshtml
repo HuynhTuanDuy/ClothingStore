@@ -1,0 +1,335 @@
+@model ProductEditViewModel
+
+<style>
+/* ── Image Picker Modal ── */
+#img-picker-modal {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.55); z-index: 1060;
+    align-items: center; justify-content: center;
+}
+#img-picker-modal.open { display: flex; }
+
+.img-picker-dialog {
+    background: #fff; border-radius: 8px;
+    width: min(860px, 96vw); max-height: 88vh;
+    display: flex; flex-direction: column;
+    box-shadow: 0 24px 60px rgba(0,0,0,.25);
+    overflow: hidden;
+}
+.img-picker-header {
+    padding: 16px 20px; border-bottom: 1px solid #dee2e6;
+    display: flex; align-items: center; justify-content: space-between;
+}
+.img-picker-grid {
+    flex: 1; overflow-y: auto; padding: 16px;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px;
+}
+.img-picker-item {
+    position: relative; padding-bottom: 100%;
+    border: 3px solid transparent; border-radius: 6px;
+    overflow: hidden; cursor: pointer; background: #f8f9fa;
+    transition: border-color .15s, transform .15s;
+}
+.img-picker-item img {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+}
+.img-picker-item:hover { border-color: #6c757d; transform: scale(1.02); }
+.img-picker-item.selected { border-color: #212529; }
+.img-picker-item.selected::after {
+    content: '✓'; position: absolute; top: 4px; right: 6px;
+    background: #212529; color: #fff; font-size: 11px; font-weight: 700;
+    width: 20px; height: 20px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    line-height: 20px; text-align: center;
+}
+.btn-delete-img {
+    position: absolute; top: 4px; left: 4px;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: rgba(220, 53, 69, 0.9); color: white;
+    border: none; font-size: 14px; line-height: 1;
+    display: none; align-items: center; justify-content: center;
+    cursor: pointer; padding: 0; z-index: 10;
+}
+.img-picker-item:hover .btn-delete-img { display: flex; }
+.img-picker-footer {
+    padding: 12px 20px; border-top: 1px solid #dee2e6;
+    display: flex; justify-content: flex-end; gap: 10px;
+}
+.img-picker-empty {
+    grid-column: 1/-1; text-align:center; padding:40px;
+    color: #6c757d; font-style: italic;
+}
+
+/* Current thumbnail preview */
+#thumb-preview {
+    width: 80px; height: 80px; object-fit: cover;
+    border-radius: 6px; border: 1px solid #dee2e6;
+    display: none;
+}
+#thumb-preview.show { display: block; }
+</style>
+
+<form asp-action="@(Model.ProductID == 0 ? "Create" : "Edit")" method="post" class="admin-panel">
+    @Html.AntiForgeryToken()
+    <input asp-for="ProductID" type="hidden" />
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+    <div class="row g-3">
+        <div class="col-md-8">
+            <label asp-for="ProductName" class="form-label"></label>
+            <input asp-for="ProductName" class="form-control" />
+            <span asp-validation-for="ProductName" class="text-danger"></span>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="Slug" class="form-label"></label>
+            <input asp-for="Slug" class="form-control" />
+            <span asp-validation-for="Slug" class="text-danger"></span>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="CategoryID" class="form-label">Category</label>
+            <select asp-for="CategoryID" asp-items="Model.Categories" class="form-select"></select>
+            <span asp-validation-for="CategoryID" class="text-danger"></span>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="ProgramID" class="form-label">Discount Program</label>
+            <select asp-for="ProgramID" asp-items="Model.DiscountPrograms" class="form-select"></select>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="Gender" class="form-label"></label>
+            <input asp-for="Gender" class="form-control" />
+            <span asp-validation-for="Gender" class="text-danger"></span>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="Material" class="form-label"></label>
+            <input asp-for="Material" class="form-control" />
+            <span asp-validation-for="Material" class="text-danger"></span>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="FitType" class="form-label"></label>
+            <input asp-for="FitType" class="form-control" />
+            <span asp-validation-for="FitType" class="text-danger"></span>
+        </div>
+
+        <!-- ── Thumbnail URL with Image Picker ── -->
+        <div class="col-12">
+            <label asp-for="ThumbnailUrl" class="form-label">Thumbnail URL</label>
+            <div class="d-flex gap-2 align-items-center">
+                <img id="thumb-preview"
+                     src="@Model.ThumbnailUrl"
+                     alt="Thumbnail preview"
+                     class="@(!string.IsNullOrWhiteSpace(Model.ThumbnailUrl) ? "show" : "")" />
+                <div class="flex-grow-1">
+                    <div class="input-group">
+                        <input asp-for="ThumbnailUrl" id="ThumbnailUrl" class="form-control"
+                               placeholder="e.g. /uploads/products/my-image.jpg"
+                               oninput="updateThumbPreview(this.value)" />
+                        <button type="button" class="btn btn-outline-secondary"
+                                onclick="openPicker()" title="Pick from library">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M6.002 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/>
+                                <path d="M2.002 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2h-12zm12 1a1 1 0 0 1 1 1v6.5l-3.777-1.947a.5.5 0 0 0-.577.093l-3.71 3.71-2.66-1.772a.5.5 0 0 0-.63.062L1.002 12V3a1 1 0 0 1 1-1h12z"/>
+                            </svg>
+                            Chọn từ thư viện
+                        </button>
+                    </div>
+                    <span asp-validation-for="ThumbnailUrl" class="text-danger"></span>
+                    <small class="text-muted">Nhập URL trực tiếp hoặc chọn từ ảnh đã upload</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <label asp-for="Description" class="form-label"></label>
+            <textarea asp-for="Description" rows="4" class="form-control"></textarea>
+        </div>
+        <div class="col-12">
+            <label asp-for="CareInstructions" class="form-label"></label>
+            <textarea asp-for="CareInstructions" rows="2" class="form-control"></textarea>
+            <span asp-validation-for="CareInstructions" class="text-danger"></span>
+        </div>
+        
+        <!-- ── Related Products ── -->
+        <div class="col-12">
+            <label asp-for="SelectedRelatedProductIds" class="form-label">Sản phẩm liên quan (Style with)</label>
+            <select asp-for="SelectedRelatedProductIds" asp-items="Model.AvailableProducts" class="form-select select2-multiple" multiple="multiple" data-placeholder="Chọn sản phẩm liên quan...">
+            </select>
+            <small class="text-muted d-block mt-1">Chọn các sản phẩm sẽ hiển thị ở mục "Style with" của trang chi tiết.</small>
+        </div>
+
+        <div class="col-12 d-flex gap-4">
+            <div class="form-check">
+                <input asp-for="IsActive" class="form-check-input" />
+                <label asp-for="IsActive" class="form-check-label"></label>
+            </div>
+            <div class="form-check">
+                <input asp-for="IsBestSeller" class="form-check-input" />
+                <label asp-for="IsBestSeller" class="form-check-label">Bán chạy</label>
+            </div>
+        </div>
+    </div>
+    <div class="d-flex justify-content-between mt-4">
+        <a class="btn btn-outline-dark" asp-action="Index">Back</a>
+        <button class="btn btn-dark" type="submit">Save product</button>
+    </div>
+</form>
+
+<!-- ── Image Picker Modal ── -->
+<div id="img-picker-modal" role="dialog" aria-modal="true" aria-label="Chọn ảnh từ thư viện">
+    <div class="img-picker-dialog">
+        <div class="img-picker-header">
+            <h6 class="mb-0 fw-semibold">🖼️ Thư viện ảnh</h6>
+            <button type="button" class="btn-close" onclick="closePicker()" aria-label="Đóng"></button>
+        </div>
+
+        <!-- Search -->
+        <div class="px-3 pt-3 pb-0">
+            <input type="search" id="picker-search" class="form-control form-control-sm"
+                   placeholder="Tìm theo tên file..."
+                   oninput="filterImages(this.value)" />
+        </div>
+
+        <!-- Grid -->
+        <div class="img-picker-grid" id="picker-grid">
+            <div class="img-picker-empty">Đang tải...</div>
+        </div>
+
+        <div class="img-picker-footer">
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="closePicker()">Huỷ</button>
+            <button type="button" class="btn btn-dark btn-sm" id="picker-confirm-btn"
+                    onclick="confirmSelection()" disabled>Chọn ảnh này</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let _allImages = [];
+let _selectedUrl = null;
+
+function updateThumbPreview(url) {
+    const img = document.getElementById('thumb-preview');
+    if (url && url.trim()) {
+        img.src = url.trim();
+        img.classList.add('show');
+    } else {
+        img.classList.remove('show');
+    }
+}
+
+async function openPicker() {
+    document.getElementById('img-picker-modal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    _selectedUrl = null;
+    document.getElementById('picker-confirm-btn').disabled = true;
+
+    if (_allImages.length === 0) {
+        await loadImages();
+    } else {
+        renderGrid(_allImages);
+    }
+    // Mark the currently selected image
+    markCurrent();
+}
+
+function closePicker() {
+    document.getElementById('img-picker-modal').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+async function loadImages() {
+    const grid = document.getElementById('picker-grid');
+    grid.innerHTML = '<div class="img-picker-empty">Đang tải...</div>';
+    try {
+        const resp = await fetch('@Url.Action("GetLibraryImages", "Products", new { area = "Admin" })');
+        _allImages = await resp.json();
+        renderGrid(_allImages);
+        markCurrent();
+    } catch {
+        grid.innerHTML = '<div class="img-picker-empty text-danger">Không thể tải ảnh. Vui lòng thử lại.</div>';
+    }
+}
+
+function renderGrid(images) {
+    const grid = document.getElementById('picker-grid');
+    if (!images.length) {
+        grid.innerHTML = '<div class="img-picker-empty">Chưa có ảnh nào trong thư viện.<br>Hãy upload ảnh qua trang <strong>Images</strong> của variant.</div>';
+        return;
+    }
+    grid.innerHTML = images.map(img => `
+        <div class="img-picker-item" data-url="${img.url}" title="${img.name}" onclick="selectImage(this, '${img.url}')">
+            <img src="${img.url}" alt="${img.name}" loading="lazy" />
+            <button type="button" class="btn-delete-img" onclick="deleteImage(event, '${img.url}')" title="Xóa ảnh này">&times;</button>
+        </div>
+    `).join('');
+}
+
+function markCurrent() {
+    const current = document.getElementById('ThumbnailUrl').value.trim();
+    document.querySelectorAll('.img-picker-item').forEach(el => {
+        el.classList.toggle('selected', el.dataset.url === current);
+    });
+    if (current) { _selectedUrl = current; document.getElementById('picker-confirm-btn').disabled = false; }
+}
+
+function selectImage(el, url) {
+    document.querySelectorAll('.img-picker-item').forEach(e => e.classList.remove('selected'));
+    el.classList.add('selected');
+    _selectedUrl = url;
+    document.getElementById('picker-confirm-btn').disabled = false;
+}
+
+async function deleteImage(e, url) {
+    e.stopPropagation();
+    if (!confirm('Bạn có chắc chắn muốn xóa ảnh này khỏi hệ thống?')) return;
+    
+    try {
+        const resp = await fetch('@Url.Action("DeleteLibraryImage", "Products", new { area = "Admin" })', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(url)
+        });
+        
+        if (resp.ok) {
+            _allImages = _allImages.filter(img => img.url !== url);
+            if (_selectedUrl === url) {
+                _selectedUrl = null;
+                document.getElementById('picker-confirm-btn').disabled = true;
+            }
+            renderGrid(_allImages);
+        } else {
+            alert('Không thể xóa ảnh. Có thể ảnh đang được sử dụng.');
+        }
+    } catch {
+        alert('Đã xảy ra lỗi khi xóa ảnh.');
+    }
+}
+
+function confirmSelection() {
+    if (!_selectedUrl) return;
+    const input = document.getElementById('ThumbnailUrl');
+    input.value = _selectedUrl;
+    updateThumbPreview(_selectedUrl);
+    closePicker();
+}
+
+function filterImages(query) {
+    const q = query.toLowerCase();
+    const filtered = _allImages.filter(img => img.name.toLowerCase().includes(q));
+    renderGrid(filtered);
+    markCurrent();
+}
+
+// Close modal on backdrop click
+document.getElementById('img-picker-modal').addEventListener('click', function(e) {
+    if (e.target === this) closePicker();
+});
+
+// Keyboard: Escape to close
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closePicker();
+});
+
+// Initial preview on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const url = document.getElementById('ThumbnailUrl').value;
+    if (url) updateThumbPreview(url);
+});
+</script>

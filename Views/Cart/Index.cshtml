@@ -1,0 +1,191 @@
+@model ClothingStore.Models.ViewModels.CartViewModel
+
+@{
+    ViewData["Title"] = "Giỏ hàng";
+    Layout = "~/Views/Shared/_StoreLayout.cshtml";
+}
+
+@section Scripts {
+    <style>
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+          -webkit-appearance: none; 
+          margin: 0; 
+        }
+        .material-symbols-outlined {
+          font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+}
+
+<div class="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop pt-8 md:pt-12 pb-section-gap">
+    <header class="mb-16">
+        <h1 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-background">Giỏ hàng của bạn</h1>
+    </header>
+
+    @if (Model.IsEmpty)
+    {
+        <div class="text-center py-16">
+            <p class="text-xl text-gray-500 mb-6">Giỏ hàng của bạn đang trống.</p>
+            <a href="@Url.Action("ShopAll", "Home")" class="inline-block bg-primary text-white px-8 py-3 rounded uppercase text-sm font-semibold tracking-wider hover:bg-[#3d2716] transition-colors">
+                Tiếp tục mua sắm
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+            <!-- Cart Items List (Left Col) -->
+            <div class="md:col-span-8 flex flex-col gap-8">
+                @foreach (var item in Model.Items)
+                {
+                    <div class="flex flex-col sm:flex-row gap-6 pb-8 border-b border-outline-variant">
+                        <div class="w-full sm:w-48 aspect-square shrink-0 bg-surface-container-low cursor-pointer relative overflow-hidden" onclick="location.href='@Url.Action("Details", "Home", new { id = item.ProductID })'">
+                            @if (!string.IsNullOrWhiteSpace(item.ThumbnailUrl))
+                            {
+                                <img alt="@item.ProductName" class="w-full h-full object-cover mix-blend-multiply absolute inset-0" src="@item.ThumbnailUrl"/>
+                            }
+                            else
+                            {
+                                <div class="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 text-gray-400 gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M6 4h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2zm8 4a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                    </svg>
+                                    <span class="text-[10px] uppercase tracking-widest text-center px-1">Chưa có ảnh</span>
+                                </div>
+                            }
+                        </div>
+                        <div class="flex flex-col justify-between flex-grow">
+                            <div>
+                                <div class="flex justify-between items-start mb-2">
+                                    <h3 class="font-headline-md text-headline-md text-on-background cursor-pointer hover:underline" onclick="location.href='@Url.Action("Details", "Home", new { id = item.ProductID })'">@item.ProductName</h3>
+                                    <span class="font-body-lg text-body-lg text-on-background whitespace-nowrap ml-4">
+                                        @if (item.HasDiscount)
+                                        {
+                                            <span class="text-red-600 mr-2">@item.UnitPrice.ToString("N0")đ</span>
+                                            <span class="line-through text-gray-400 text-sm">@item.OriginalPrice.ToString("N0")đ</span>
+                                        }
+                                        else
+                                        {
+                                            <span>@item.UnitPrice.ToString("N0")đ</span>
+                                        }
+                                    </span>
+                                </div>
+                                <p class="font-body-sm text-body-sm text-on-surface-variant mb-1">Màu sắc: @item.ColorName</p>
+                                <p class="font-body-sm text-body-sm text-on-surface-variant">Kích cỡ: @item.SizeCode</p>
+                            </div>
+                            <div class="flex justify-between items-center mt-6 sm:mt-0">
+                                <form asp-action="Update" method="post" class="flex items-center border border-outline rounded-DEFAULT">
+                                    <input type="hidden" name="cartItemId" value="@item.CartItemID" />
+                                    <button type="submit" name="quantity" value="@(item.Quantity - 1)" class="px-3 py-1 text-on-surface-variant hover:text-primary transition-colors">-</button>
+                                    <input readonly name="currentQty" type="number" value="@item.Quantity" class="w-10 text-center font-body-sm text-body-sm bg-transparent border-none p-0 focus:ring-0 text-on-background" />
+                                    <button type="submit" name="quantity" value="@(item.Quantity + 1)" class="px-3 py-1 text-on-surface-variant hover:text-primary transition-colors">+</button>
+                                </form>
+                                <form asp-action="Update" method="post">
+                                    <input type="hidden" name="cartItemId" value="@item.CartItemID" />
+                                    <input type="hidden" name="quantity" value="0" />
+                                    <button type="submit" class="font-label-caps text-label-caps text-on-surface-variant hover:text-error transition-colors uppercase">Xóa</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Order Summary (Right Col) -->
+            <div class="md:col-span-4 mt-8 md:mt-0">
+                <div class="bg-surface-container-low p-8 rounded-DEFAULT sticky top-32">
+                    <h2 class="font-headline-md text-headline-md text-on-background mb-6">Tóm tắt đơn hàng</h2>
+                    <div class="flex flex-col gap-4 mb-8">
+                        <div class="flex justify-between font-body-md text-body-md text-on-surface-variant">
+                            <span>Tạm tính</span>
+                            <span>@Model.SubTotal.ToString("N0")đ</span>
+                        </div>
+                        <div class="flex justify-between font-body-md text-body-md text-on-surface-variant">
+                            <span>Phí vận chuyển</span>
+                            <span>Tính lúc thanh toán</span>
+                        </div>
+                        <div class="w-full h-[1px] bg-outline-variant my-2"></div>
+                        <div class="flex justify-between font-body-lg text-body-lg text-on-background">
+                            <span>Tổng cộng</span>
+                            <span>@Model.SubTotal.ToString("N0")đ</span>
+                        </div>
+                    </div>
+                    <a href="@Url.Action("Index", "Checkout")" class="w-full flex justify-center items-center bg-primary-container text-on-primary-container font-label-caps text-label-caps py-4 px-6 rounded-DEFAULT hover:bg-primary hover:text-on-primary transition-colors uppercase tracking-wider mb-4">
+                        Tiến hành thanh toán
+                    </a>
+                    <p class="text-center font-body-sm text-body-sm text-on-surface-variant italic">
+                        Miễn phí vận chuyển cho đơn hàng trên 500.000đ.
+                    </p>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Curated For You Section -->
+    @if (Model.RecommendedProducts?.Any() == true)
+    {
+        <section class="mt-section-gap border-t border-outline-variant pt-16">
+            <h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-background mb-12 text-center">Gợi ý cho bạn</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
+                @foreach (var rec in Model.RecommendedProducts)
+                {
+                    <a class="group block" href="@Url.Action("Details", "Home", new { id = rec.ProductID })">
+                        <div class="aspect-[4/5] bg-surface-container-low mb-4 overflow-hidden rounded-DEFAULT relative">
+                            @if (!rec.HasStock)
+                            {
+                                <span class="absolute top-2 right-2 bg-gray-500 text-white text-[9px] px-2 py-0.5 tracking-tighter uppercase font-medium z-10">Sold Out</span>
+                            }
+                            else if (rec.HasDiscount)
+                            {
+                                <span class="absolute top-2 right-2 bg-red-500 text-white text-[9px] px-2 py-0.5 tracking-tighter uppercase font-medium z-10">Sale</span>
+                            }
+
+                            @if (!string.IsNullOrWhiteSpace(rec.ThumbnailUrl))
+                            {
+                                <img alt="@rec.ProductName" class="absolute inset-0 w-full h-full object-cover mix-blend-multiply transition-transform duration-700 group-hover:scale-105" src="@rec.ThumbnailUrl"/>
+                            }
+                            else
+                            {
+                                <div class="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 text-gray-400 gap-2 transition-transform duration-700 group-hover:scale-105">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M6 4h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2zm8 4a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                    </svg>
+                                    <span class="text-[10px] uppercase tracking-widest text-center px-1">Chưa có ảnh</span>
+                                </div>
+                            }
+                        </div>
+                        <div class="space-y-1 mt-2">
+                            <h3 class="text-lg font-medium leading-tight group-hover:underline">@rec.ProductName</h3>
+                            <p class="text-base text-gray-900 font-medium">
+                                @if (rec.HasDiscount)
+                                {
+                                    <span class="text-red-600 mr-2">@(rec.MinPrice?.ToString("N0") ?? "0")đ</span>
+                                    <span class="line-through text-gray-400">@(rec.OriginalMinPrice?.ToString("N0") ?? "0")đ</span>
+                                }
+                                else
+                                {
+                                    <span>@(rec.MinPrice?.ToString("N0") ?? "0")đ</span>
+                                }
+                            </p>
+                            
+                            @if (rec.Colors != null && rec.Colors.Any())
+                            {
+                                <div class="flex space-x-2 py-2">
+                                    @foreach (var color in rec.Colors.Take(4))
+                                    {
+                                        <span class="w-4 h-4 rounded-full border border-gray-200" style="background-color: @color.HexCode"></span>
+                                    }
+                                    @if (rec.Colors.Count > 4)
+                                    {
+                                        <span class="text-[10px] text-gray-500 self-center">+@(rec.Colors.Count - 4)</span>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </a>
+                }
+            </div>
+        </section>
+    }
+</div>

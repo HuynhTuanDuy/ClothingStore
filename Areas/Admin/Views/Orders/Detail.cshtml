@@ -1,0 +1,329 @@
+@model ClothingStore.Models.ViewModels.AdminOrderDetailViewModel
+@{
+    ViewData["Title"] = "Chi tiết đơn hàng " + Model.OrderCode;
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+
+    string paymentColor = Model.PaymentStatus switch {
+        "Paid" => "bg-secondary-container text-on-secondary-fixed-variant",
+        "Pending" => "bg-surface-variant text-on-surface-variant",
+        "Failed" => "bg-error-container text-error",
+        _ => "bg-surface-variant text-on-surface-variant"
+    };
+
+    string statusColor = Model.OrderStatus switch {
+        "Pending" => "bg-amber-100 text-amber-700",
+        "Confirmed" => "bg-blue-100 text-blue-700",
+        "Processing" => "bg-purple-100 text-purple-700",
+        "Shipping" => "bg-cyan-100 text-cyan-700",
+        "Delivered" => "bg-green-100 text-green-700",
+        "Cancelled" => "bg-red-100 text-red-700",
+        _ => "bg-surface-variant text-on-surface-variant"
+    };
+
+    string statusLabel = Model.OrderStatus switch {
+        "Pending" => "CHỜ XÁC NHẬN",
+        "Confirmed" => "ĐÃ XÁC NHẬN",
+        "Processing" => "ĐANG XỬ LÝ",
+        "Shipping" => "ĐANG GIAO",
+        "Delivered" => "ĐÃ GIAO",
+        "Cancelled" => "ĐÃ HỦY",
+        _ => Model.OrderStatus.ToUpper()
+    };
+
+    string paymentLabel = Model.PaymentStatus switch {
+        "Paid" => "ĐÃ THANH TOÁN",
+        "Pending" => "CHỜ THANH TOÁN",
+        "Failed" => "THẤT BẠI",
+        _ => Model.PaymentStatus.ToUpper()
+    };
+}
+
+<div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div class="flex items-center gap-4">
+        <a href="@Url.Action("Index", "Orders")" class="p-2 border border-outline-variant rounded hover:bg-surface-container transition-all text-on-surface-variant inline-flex">
+            <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+        </a>
+        <div>
+            <h3 class="font-headline-lg text-[32px] leading-[40px] font-semibold text-primary">Đơn hàng #@Model.OrderCode</h3>
+            <p class="font-body-md text-on-surface-variant mt-1">@Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</p>
+        </div>
+    </div>
+    <div class="flex gap-3">
+        <span class="inline-flex items-center px-4 py-2 rounded-full @paymentColor font-label-caps text-xs">@paymentLabel</span>
+        <span class="inline-flex items-center px-4 py-2 rounded-full @statusColor font-label-caps text-xs">@statusLabel</span>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-12">
+    <!-- Left Column: Details -->
+    <div class="lg:col-span-2 space-y-8">
+        
+        <!-- Products Table -->
+        <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/30 overflow-hidden">
+            <div class="p-6 border-b border-outline-variant/50">
+                <h4 class="font-headline-sm text-lg font-medium">Sản phẩm đã đặt</h4>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-surface-container-low border-b border-outline-variant/50">
+                            <th class="px-6 py-4 font-label-caps text-xs text-on-surface-variant uppercase">Sản phẩm</th>
+                            <th class="px-6 py-4 font-label-caps text-xs text-on-surface-variant uppercase text-center">SL</th>
+                            <th class="px-6 py-4 font-label-caps text-xs text-on-surface-variant uppercase text-right whitespace-nowrap">Đơn giá</th>
+                            <th class="px-6 py-4 font-label-caps text-xs text-on-surface-variant uppercase text-right">Tổng</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-outline-variant/20">
+                        @foreach(var item in Model.Items)
+                        {
+                            <tr>
+                                <td class="px-6 py-4 min-w-[250px]">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-12 h-12 rounded bg-surface-variant flex items-center justify-center overflow-hidden shrink-0">
+                                            @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                            {
+                                                <img src="@item.ImageUrl" alt="@item.ProductName" class="w-full h-full object-cover" />
+                                            }
+                                            else
+                                            {
+                                                <span class="material-symbols-outlined text-on-surface-variant opacity-50">image</span>
+                                            }
+                                        </div>
+                                        <div>
+                                            <p class="font-body-md font-medium text-primary line-clamp-2">@item.ProductName</p>
+                                            <p class="font-body-sm text-on-surface-variant mt-0.5">@item.ColorName / @item.SizeCode</p>
+                                            <p class="font-body-sm text-xs opacity-70 mt-0.5">SKU: @item.SKU</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-center font-body-md">@item.Quantity</td>
+                                <td class="px-6 py-4 text-right font-body-md whitespace-nowrap">@item.UnitPrice.ToString("N0")đ</td>
+                                <td class="px-6 py-4 text-right font-body-md font-semibold text-primary whitespace-nowrap">@item.SubTotal.ToString("N0")đ</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="p-6 bg-surface-container-low space-y-3">
+                <div class="flex justify-between font-body-md text-on-surface-variant">
+                    <span>Tạm tính</span>
+                    <span>@Model.TotalAmount.ToString("N0")đ</span>
+                </div>
+                <div class="flex justify-between font-body-md text-on-surface-variant">
+                    <span>Phí vận chuyển</span>
+                    <span>@Model.ShippingFee.ToString("N0")đ</span>
+                </div>
+                @if (Model.DiscountAmount > 0)
+                {
+                    <div class="flex justify-between font-body-md text-error">
+                        <span>Giảm giá @(string.IsNullOrEmpty(Model.CouponCode) ? "" : $"({Model.CouponCode})")</span>
+                        <span>-@Model.DiscountAmount.ToString("N0")đ</span>
+                    </div>
+                }
+                <div class="pt-4 border-t border-outline-variant/50 flex justify-between font-headline-md text-xl font-semibold text-primary">
+                    <span>Tổng cộng</span>
+                    <span>@Model.FinalAmount.ToString("N0")đ</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order History -->
+        <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/30 overflow-hidden">
+            <div class="p-6 border-b border-outline-variant/50">
+                <h4 class="font-headline-sm text-lg font-medium">Lịch sử cập nhật</h4>
+            </div>
+            <div class="p-6 space-y-6">
+                @if (!Model.StatusHistory.Any())
+                {
+                    <p class="text-on-surface-variant italic text-sm">Chưa có lịch sử cập nhật.</p>
+                }
+                else
+                {
+                    <div class="relative border-l-2 border-outline-variant ml-3 space-y-8">
+                        @foreach(var h in Model.StatusHistory)
+                        {
+                            string historyDotClass = h.NewStatus switch {
+                                "Pending" => "bg-amber-500", "Confirmed" => "bg-blue-500",
+                                "Processing" => "bg-purple-500", "Shipping" => "bg-cyan-500",
+                                "Delivered" => "bg-green-500", "Cancelled" => "bg-red-500",
+                                _ => "bg-primary"
+                            };
+                            string historyTextClass = h.NewStatus switch {
+                                "Pending" => "text-amber-700", "Confirmed" => "text-blue-700",
+                                "Processing" => "text-purple-700", "Shipping" => "text-cyan-700",
+                                "Delivered" => "text-green-700", "Cancelled" => "text-red-700",
+                                _ => "text-primary"
+                            };
+
+                            <div class="relative pl-6">
+                                <div class="absolute w-3 h-3 @historyDotClass rounded-full -left-[7px] top-1.5 border-2 border-surface-container-lowest"></div>
+                                <div class="font-body-sm text-on-surface-variant mb-1">@h.ChangedAt?.ToString("dd/MM/yyyy HH:mm")</div>
+                                <p class="font-body-md font-medium text-on-surface mb-1">
+                                    Cập nhật trạng thái thành 
+                                    <span class="font-bold @historyTextClass">
+                                        @(h.NewStatus switch {
+                                            "Pending" => "CHỜ XÁC NHẬN", "Confirmed" => "ĐÃ XÁC NHẬN",
+                                            "Processing" => "ĐANG XỬ LÝ", "Shipping" => "ĐANG GIAO",
+                                            "Delivered" => "ĐÃ GIAO", "Cancelled" => "ĐÃ HỦY", _ => h.NewStatus.ToUpper()
+                                        })
+                                    </span>
+                                </p>
+                                @if (!string.IsNullOrWhiteSpace(h.Note))
+                                {
+                                    <p class="font-body-sm p-3 bg-surface-container-low rounded-lg text-on-surface-variant mt-2 border border-outline-variant/30">@h.Note</p>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Actions & Info -->
+    <div class="space-y-8">
+        
+        <!-- Action Card: Update Status -->
+        <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/30 overflow-hidden">
+            <div class="p-6 border-b border-outline-variant/50 flex justify-between items-center">
+                <h4 class="font-headline-sm text-lg font-medium text-primary">Cập nhật đơn hàng</h4>
+                @if (Model.OrderStatus == "Cancelled")
+                {
+                    <span class="px-2 py-1 rounded bg-error-container text-error text-[10px] font-bold uppercase tracking-wider">Đã khóa</span>
+                }
+            </div>
+            <div class="p-6">
+                @{
+                    bool isLocked = Model.OrderStatus == "Cancelled";
+                }
+                <form asp-action="UpdateStatus" method="post" class="space-y-5">
+                    <input type="hidden" name="OrderID" value="@Model.OrderID" />
+                    
+                    <div>
+                        <label class="block font-label-caps text-xs text-on-surface-variant mb-2">Trạng thái đơn hàng</label>
+                        <select name="NewStatus" @(isLocked ? "disabled" : "") class="w-full px-4 py-3 border border-outline-variant rounded-lg font-body-sm bg-transparent focus:outline-none focus:border-primary appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2349454F%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-[length:16px_16px] bg-[right_12px_center] bg-no-repeat transition-colors disabled:opacity-60 disabled:bg-surface-variant disabled:cursor-not-allowed">
+                            @foreach(var opt in Model.StatusOptions)
+                            {
+                                string vnLabel = opt.Text switch {
+                                    "Pending" => "Chờ xác nhận", "Confirmed" => "Đã xác nhận",
+                                    "Processing" => "Đang xử lý", "Shipping" => "Đang giao",
+                                    "Delivered" => "Đã giao", "Cancelled" => "Đã hủy", _ => opt.Text
+                                };
+                                if (opt.Selected) {
+                                    <option value="@opt.Value" selected>@vnLabel</option>
+                                } else {
+                                    <option value="@opt.Value">@vnLabel</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block font-label-caps text-xs text-on-surface-variant mb-2">Hình thức thanh toán</label>
+                        <select name="NewPaymentMethod" @(isLocked ? "disabled" : "") class="w-full px-4 py-3 border border-outline-variant rounded-lg font-body-sm bg-transparent focus:outline-none focus:border-primary appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2349454F%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-[length:16px_16px] bg-[right_12px_center] bg-no-repeat transition-colors disabled:opacity-60 disabled:bg-surface-variant disabled:cursor-not-allowed">
+                            @foreach(var opt in Model.PaymentMethodOptions)
+                            {
+                                if (opt.Selected) {
+                                    <option value="@opt.Value" selected>@opt.Text</option>
+                                } else {
+                                    <option value="@opt.Value">@opt.Text</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block font-label-caps text-xs text-on-surface-variant mb-2">Trạng thái thanh toán</label>
+                        <select name="NewPaymentStatus" @(isLocked ? "disabled" : "") class="w-full px-4 py-3 border border-outline-variant rounded-lg font-body-sm bg-transparent focus:outline-none focus:border-primary appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2349454F%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-[length:16px_16px] bg-[right_12px_center] bg-no-repeat transition-colors disabled:opacity-60 disabled:bg-surface-variant disabled:cursor-not-allowed">
+                            @foreach(var opt in Model.PaymentStatusOptions)
+                            {
+                                if (opt.Selected) {
+                                    <option value="@opt.Value" selected>@opt.Text</option>
+                                } else {
+                                    <option value="@opt.Value">@opt.Text</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block font-label-caps text-xs text-on-surface-variant mb-2">Mã vận đơn (Tùy chọn)</label>
+                        <input type="text" name="TrackingNumber" value="@Model.TrackingNumber" @(isLocked ? "disabled" : "") class="w-full px-4 py-3 border border-outline-variant rounded-lg font-body-sm bg-transparent focus:outline-none focus:border-primary placeholder:text-outline/50 transition-colors disabled:opacity-60 disabled:bg-surface-variant disabled:cursor-not-allowed" placeholder="VD: GHN-123456" />
+                    </div>
+
+                    <div>
+                        <label class="block font-label-caps text-xs text-on-surface-variant mb-2">Ghi chú</label>
+                        <textarea name="Note" rows="3" @(isLocked ? "disabled" : "") class="w-full px-4 py-3 border border-outline-variant rounded-lg font-body-sm bg-transparent focus:outline-none focus:border-primary placeholder:text-outline/50 transition-colors disabled:opacity-60 disabled:bg-surface-variant disabled:cursor-not-allowed" placeholder="Nhập ghi chú cho lần thay đổi này..."></textarea>
+                    </div>
+
+                    @if (!isLocked)
+                    {
+                        <button type="submit" class="w-full bg-primary text-on-primary py-3 rounded-lg font-label-caps font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-2 mt-2">
+                            <span class="material-symbols-outlined text-[18px]">save</span>
+                            LƯU CẬP NHẬT
+                        </button>
+                    }
+                </form>
+            </div>
+        </div>
+
+        <!-- Customer Card -->
+        <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/30 overflow-hidden">
+            <div class="p-6 border-b border-outline-variant/50">
+                <h4 class="font-headline-sm text-lg font-medium">Khách hàng</h4>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-secondary font-semibold text-lg shrink-0">
+                        @(string.IsNullOrWhiteSpace(Model.CustomerName) ? "A" : Model.CustomerName.Substring(0,1).ToUpper())
+                    </div>
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-2 mb-1">
+                            <p class="font-body-lg font-medium text-primary truncate">@Model.CustomerName</p>
+                            @{
+                                string rankColor = Model.MembershipRank.ToLower() switch {
+                                    "gold" => "bg-yellow-500 text-white",
+                                    "silver" => "bg-gray-400 text-white",
+                                    "platinum" => "bg-purple-600 text-white",
+                                    "khách vãng lai" => "hidden",
+                                    _ => "bg-blue-500 text-white"
+                                };
+                            }
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold @rankColor shrink-0">@Model.MembershipRank</span>
+                        </div>
+                        <p class="font-body-sm text-on-surface-variant truncate">@Model.OrderEmail</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shipping Card -->
+        <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/30 overflow-hidden">
+            <div class="p-6 border-b border-outline-variant/50">
+                <h4 class="font-headline-sm text-lg font-medium">Thông tin giao hàng</h4>
+            </div>
+            <div class="p-6 space-y-5">
+                <div>
+                    <p class="font-label-caps text-xs text-on-surface-variant mb-1">Người nhận</p>
+                    <p class="font-body-md font-medium text-primary">@Model.ShippingName</p>
+                </div>
+                <div>
+                    <p class="font-label-caps text-xs text-on-surface-variant mb-1">Số điện thoại</p>
+                    <p class="font-body-md text-primary">@Model.ShippingPhone</p>
+                </div>
+                <div>
+                    <p class="font-label-caps text-xs text-on-surface-variant mb-1">Địa chỉ giao hàng</p>
+                    <p class="font-body-md text-on-surface-variant leading-relaxed">@Model.ShippingAddress</p>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.TrackingNumber))
+                {
+                    <div class="p-4 bg-surface-container-low rounded-lg border border-outline-variant/30">
+                        <p class="font-label-caps text-xs text-on-surface-variant mb-1">Mã vận đơn</p>
+                        <p class="font-body-md font-semibold text-primary">@Model.TrackingNumber</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+    </div>
+</div>

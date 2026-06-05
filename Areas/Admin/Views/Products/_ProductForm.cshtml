@@ -1,0 +1,225 @@
+@model ProductEditViewModel
+
+<style>
+/* ── Select2 Custom Styling ── */
+.select2-container--default .select2-selection--multiple {
+    background-color: transparent;
+    border: none !important;
+    padding: 8px 16px;
+    min-height: 48px;
+}
+.select2-container--default.select2-container--focus .select2-selection--multiple {
+    border: none !important;
+    outline: none !important;
+}
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+    background-color: #f0eded; /* surface-container */
+    border: 1px solid #d4c3ba; /* outline-variant */
+    border-radius: 4px;
+    padding: 2px 8px;
+    color: #1b1c1c; /* on-background */
+    font-size: 14px;
+    margin-top: 4px;
+}
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+    color: #50453e;
+    margin-right: 6px;
+    border-right: none;
+}
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+    color: #ba1a1a;
+    background-color: transparent;
+}
+.select2-container .select2-search--inline .select2-search__field {
+    font-family: 'Inter', sans-serif;
+    color: #1b1c1c;
+    margin-top: 8px;
+}
+
+
+</style>
+
+<form asp-action="@(Model.ProductID == 0 ? "Create" : "Edit")" method="post" class="max-w-5xl mx-auto w-full">
+    @Html.AntiForgeryToken()
+    <input asp-for="ProductID" type="hidden" />
+
+    <!-- Page Header -->
+    <div class="mb-10 flex items-end justify-between">
+        <div>
+            <a asp-action="Index" class="inline-flex items-center text-on-surface-variant hover:text-primary transition-colors font-label-caps text-label-caps mb-4">
+                <span class="material-symbols-outlined text-sm mr-1">arrow_back</span>
+                Back to Products
+            </a>
+            <h2 class="font-headline-lg text-headline-lg text-on-background">@(Model.ProductID == 0 ? "Thêm sản phẩm" : "Cập nhật sản phẩm")</h2>
+        </div>
+        <div class="flex gap-4">
+            <button type="button" class="border border-primary text-primary px-6 py-2.5 font-label-caps text-label-caps rounded-DEFAULT hover:bg-surface-container transition-colors" onclick="window.history.back()">
+                Hủy
+            </button>
+            <button type="submit" class="bg-primary text-on-primary px-6 py-2.5 font-label-caps text-label-caps rounded-DEFAULT hover:bg-on-primary-fixed-variant transition-colors flex items-center gap-2 shadow-sm uppercase tracking-widest">
+                Lưu sản phẩm
+                <span class="material-symbols-outlined text-[18px]">save</span>
+            </button>
+        </div>
+    </div>
+
+    <partial name="_ProductTabs" model="Model.ProductID" />
+
+    <div asp-validation-summary="ModelOnly" class="text-error mb-6 bg-error-container text-on-error-container p-4 rounded"></div>
+
+    <!-- Form Content (Basic Info Tab) -->
+    <div class="space-y-10 pb-24">
+        <!-- Section 1: Naming & Categorization -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+            <!-- Product Name -->
+            <div class="space-y-2">
+                <label asp-for="ProductName" class="block font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">Product Name *</label>
+                <input asp-for="ProductName" class="w-full bg-surface-container-low border-b border-x-0 border-t-0 border-outline-variant px-4 py-3 font-body-md text-body-md text-on-background focus:ring-0 focus:border-primary transition-colors placeholder:text-outline" placeholder="e.g. Ribbed Cashmere Sweater" />
+                <span asp-validation-for="ProductName" class="text-error text-xs"></span>
+            </div>
+
+            <!-- Slug -->
+            <div class="space-y-2">
+                <label asp-for="Slug" class="block font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest flex items-center gap-2">
+                    Slug
+                    <span class="material-symbols-outlined text-[14px] text-outline">link</span>
+                </label>
+                <div class="flex">
+                    <span class="bg-surface-container-high border-b border-outline-variant px-4 py-3 font-body-md text-body-md text-on-surface-variant rounded-tl-DEFAULT">/products/</span>
+                    <input asp-for="Slug" class="flex-1 bg-surface-container-low border-b border-x-0 border-t-0 border-outline-variant px-4 py-3 font-body-md text-body-md text-on-background focus:ring-0 focus:border-primary transition-colors placeholder:text-outline rounded-tr-DEFAULT" placeholder="ribbed-cashmere-sweater" />
+                </div>
+                <span asp-validation-for="Slug" class="text-error text-xs"></span>
+            </div>
+
+            <!-- Category -->
+            <div class="space-y-2">
+                <label asp-for="CategoryID" class="block font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">Category *</label>
+                <div class="relative">
+                    <select asp-for="CategoryID" asp-items="Model.Categories" class="w-full bg-surface-container-low border-b border-x-0 border-t-0 border-outline-variant px-4 py-3 font-body-md text-body-md text-on-background focus:ring-0 focus:border-primary transition-colors">
+                        <option disabled selected value="">Select category...</option>
+                    </select>
+                </div>
+                <span asp-validation-for="CategoryID" class="text-error text-xs"></span>
+            </div>
+
+            <!-- Gender -->
+            <div class="space-y-2">
+                <label asp-for="Gender" class="block font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">Gender Audience</label>
+                <div class="relative">
+                    <select asp-for="Gender" class="w-full bg-surface-container-low border-b border-x-0 border-t-0 border-outline-variant px-4 py-3 font-body-md text-body-md text-on-background focus:ring-0 focus:border-primary transition-colors">
+                        <option value="Unisex">Unisex / Neutral</option>
+                        <option value="Womens">Women's</option>
+                        <option value="Mens">Men's</option>
+                        <option value="Kids">Kids</option>
+                    </select>
+                </div>
+                <span asp-validation-for="Gender" class="text-error text-xs"></span>
+            </div>
+        </div>
+
+        <hr class="border-outline-variant/50" />
+
+        <!-- Section 2: Details -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-8">
+            <!-- Material -->
+            <div class="space-y-2">
+                <label asp-for="Material" class="block font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">Material</label>
+                <input asp-for="Material" class="w-full bg-surface-container-low border-b border-x-0 border-t-0 border-outline-variant px-4 py-3 font-body-md text-body-md text-on-background focus:ring-0 focus:border-primary transition-colors placeholder:text-outline" placeholder="e.g. 100% Organic Cotton" />
+                <span asp-validation-for="Material" class="text-error text-xs"></span>
+            </div>
+
+            <!-- Fit Type -->
+            <div class="space-y-2">
+                <label asp-for="FitType" class="block font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">Fit Type</label>
+                <div class="relative">
+                    <select asp-for="FitType" class="w-full bg-surface-container-low border-b border-x-0 border-t-0 border-outline-variant px-4 py-3 font-body-md text-body-md text-on-background focus:ring-0 focus:border-primary transition-colors">
+                        <option value="Relaxed">Relaxed Fit</option>
+                        <option value="Slim">Slim Fit</option>
+                        <option value="Regular">Regular</option>
+                        <option value="Oversized">Oversized</option>
+                    </select>
+                </div>
+                <span asp-validation-for="FitType" class="text-error text-xs"></span>
+            </div>
+
+            <!-- Care Instructions -->
+            <div class="space-y-2">
+                <label asp-for="CareInstructions" class="block font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">Care Instructions</label>
+                <input asp-for="CareInstructions" class="w-full bg-surface-container-low border-b border-x-0 border-t-0 border-outline-variant px-4 py-3 font-body-md text-body-md text-on-background focus:ring-0 focus:border-primary transition-colors placeholder:text-outline" placeholder="e.g. Dry clean only" />
+                <span asp-validation-for="CareInstructions" class="text-error text-xs"></span>
+            </div>
+        </div>
+
+        <hr class="border-outline-variant/50" />
+
+        <!-- Settings -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+            <!-- Left side could be empty or we can span Discount Program & Toggles to full width or leave them as is -->
+            <div class="space-y-6 md:col-span-2">
+
+            <!-- Discount Program & Toggles -->
+            <div class="space-y-6">
+                <div class="space-y-2">
+                    <label asp-for="ProgramID" class="block font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">Discount Program</label>
+                    <div class="relative">
+                        <select asp-for="ProgramID" asp-items="Model.DiscountPrograms" class="w-full bg-surface-container-low border-b border-x-0 border-t-0 border-outline-variant px-4 py-3 font-body-md text-body-md text-on-background focus:ring-0 focus:border-primary transition-colors">
+                            <option value="">No Discount</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex gap-8">
+                    <div class="flex items-center gap-3">
+                        <div class="relative inline-block w-10 h-5 align-middle select-none">
+                            <input asp-for="IsActive" class="opacity-0 absolute block w-10 h-5 cursor-pointer z-10 peer" />
+                            <label for="IsActive" class="block overflow-hidden h-5 rounded-full bg-outline-variant cursor-pointer peer-checked:bg-primary transition-colors"></label>
+                            <div class="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full transition-transform duration-300 peer-checked:translate-x-5 pointer-events-none"></div>
+                        </div>
+                        <label asp-for="IsActive" class="font-body-md text-body-md text-on-background cursor-pointer">Active Product</label>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <div class="relative inline-block w-10 h-5 align-middle select-none">
+                            <input asp-for="IsBestSeller" class="opacity-0 absolute block w-10 h-5 cursor-pointer z-10 peer" />
+                            <label for="IsBestSeller" class="block overflow-hidden h-5 rounded-full bg-outline-variant cursor-pointer peer-checked:bg-primary transition-colors"></label>
+                            <div class="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full transition-transform duration-300 peer-checked:translate-x-5 pointer-events-none"></div>
+                        </div>
+                        <label asp-for="IsBestSeller" class="font-body-md text-body-md text-on-background cursor-pointer">Best Seller</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="border-outline-variant/50" />
+
+        <!-- Related Products -->
+        <div class="space-y-2">
+            <label asp-for="SelectedRelatedProductIds" class="block font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">Sản phẩm liên quan (Style with)</label>
+            <div class="bg-surface-container-low border-b border-outline-variant">
+                <select asp-for="SelectedRelatedProductIds" asp-items="Model.AvailableProducts" class="w-full bg-transparent px-4 py-3 font-body-md text-body-md text-on-background focus:ring-0 focus:border-primary transition-colors select2-multiple" multiple="multiple" data-placeholder="Chọn sản phẩm liên quan...">
+                </select>
+            </div>
+            <p class="font-body-sm text-body-sm text-outline mt-2">Chọn các sản phẩm sẽ hiển thị ở mục "Style with" của trang chi tiết.</p>
+        </div>
+
+        <!-- Section 3: Description -->
+        <div class="space-y-2">
+            <label asp-for="Description" class="block font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">Product Description</label>
+            <div class="border border-outline-variant rounded-DEFAULT bg-surface-container-low overflow-hidden focus-within:border-primary transition-colors">
+                <!-- Fake Rich Text Toolbar -->
+                <div class="bg-surface-container-high border-b border-outline-variant px-4 py-2 flex items-center gap-4">
+                    <button type="button" class="text-on-surface-variant hover:text-primary transition-colors p-1" title="Bold"><span class="material-symbols-outlined text-[18px]">format_bold</span></button>
+                    <button type="button" class="text-on-surface-variant hover:text-primary transition-colors p-1" title="Italic"><span class="material-symbols-outlined text-[18px]">format_italic</span></button>
+                    <button type="button" class="text-on-surface-variant hover:text-primary transition-colors p-1" title="Underline"><span class="material-symbols-outlined text-[18px]">format_underlined</span></button>
+                    <div class="w-px h-4 bg-outline-variant mx-1"></div>
+                    <button type="button" class="text-on-surface-variant hover:text-primary transition-colors p-1" title="List"><span class="material-symbols-outlined text-[18px]">format_list_bulleted</span></button>
+                    <button type="button" class="text-on-surface-variant hover:text-primary transition-colors p-1" title="Link"><span class="material-symbols-outlined text-[18px]">link</span></button>
+                </div>
+                <textarea asp-for="Description" class="w-full bg-transparent border-none px-6 py-4 font-body-md text-body-md text-on-background focus:ring-0 resize-y placeholder:text-outline min-h-[200px]" placeholder="Craft a compelling narrative about this piece..." rows="8"></textarea>
+            </div>
+            <p class="font-body-sm text-body-sm text-outline mt-2 text-right">Craft a compelling narrative.</p>
+        </div>
+    </div>
+</form>
+
+

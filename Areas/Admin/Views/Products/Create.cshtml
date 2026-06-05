@@ -1,0 +1,18 @@
+@model ProductEditViewModel
+@{
+    ViewData["Title"] = "Create Product";
+}
+
+<partial name="_ProductForm" model="Model" />
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function() {
+            $('.select2-multiple').select2({
+                width: '100%',
+                allowClear: true
+            });
+        });
+    </script>
+}

@@ -1,0 +1,276 @@
+@model ClothingStore.Models.ViewModels.DashboardViewModel
+@using System.Text.Json
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<!-- Page Header -->
+<div class="mb-8">
+    <h2 class="text-2xl font-bold text-on-background">Tổng quan</h2>
+    <p class="text-sm text-on-surface-variant mt-1">Dữ liệu kinh doanh năm @Model.Year — WearWhatever</p>
+</div>
+
+<!-- KPI Cards -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div class="bg-surface border border-outline-variant p-5 hover:border-outline transition-colors">
+        <div class="flex justify-between items-start mb-3">
+            <p class="text-sm text-on-surface-variant uppercase tracking-wider">Doanh thu</p>
+            <span class="material-symbols-outlined text-primary" style="font-size:24px">payments</span>
+        </div>
+        <p class="text-2xl font-bold text-primary">@Model.TotalRevenue.ToString("N0")đ</p>
+        <p class="text-sm text-on-surface-variant mt-1">Năm @Model.Year</p>
+    </div>
+    <div class="bg-surface border border-outline-variant p-5 hover:border-outline transition-colors">
+        <div class="flex justify-between items-start mb-3">
+            <p class="text-sm text-on-surface-variant uppercase tracking-wider">Đơn hàng</p>
+            <span class="material-symbols-outlined text-primary" style="font-size:24px">shopping_bag</span>
+        </div>
+        <p class="text-2xl font-bold text-primary">@Model.TotalOrders</p>
+        <p class="text-sm text-amber-600 mt-1">@Model.PendingOrders chờ xử lý</p>
+    </div>
+    <div class="bg-surface border border-outline-variant p-5 hover:border-outline transition-colors">
+        <div class="flex justify-between items-start mb-3">
+            <p class="text-sm text-on-surface-variant uppercase tracking-wider">Khách hàng</p>
+            <span class="material-symbols-outlined text-primary" style="font-size:24px">group</span>
+        </div>
+        <p class="text-2xl font-bold text-primary">@Model.TotalCustomers</p>
+        <p class="text-sm text-on-surface-variant mt-1">Tổng thành viên</p>
+    </div>
+    <div class="bg-surface border border-outline-variant p-5 hover:border-outline transition-colors">
+        <div class="flex justify-between items-start mb-3">
+            <p class="text-sm text-on-surface-variant uppercase tracking-wider">Sắp hết hàng</p>
+            <span class="material-symbols-outlined text-error" style="font-size:24px">inventory</span>
+        </div>
+        <p class="text-2xl font-bold text-error">@Model.LowStockVariants</p>
+        <p class="text-sm text-on-surface-variant mt-1">Biến thể ≤ 5 sản phẩm</p>
+    </div>
+</div>
+
+<!-- Revenue Chart + Top Products -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+    <!-- Bar Chart -->
+    <div class="lg:col-span-2 bg-surface border border-outline-variant p-6">
+        <div class="flex justify-between items-center mb-5">
+            <h3 class="text-lg font-semibold text-on-background">Doanh thu theo tháng</h3>
+            <form method="get" class="flex gap-2 items-center">
+                <select name="chartType" class="border border-outline-variant bg-transparent rounded pl-3 pr-8 py-1.5 text-sm focus:outline-none focus:border-primary">
+                    <option value="bar" selected="@(Context.Request.Query["chartType"] != "line")">Biểu đồ cột</option>
+                    <option value="line" selected="@(Context.Request.Query["chartType"] == "line")">Biểu đồ đường</option>
+                </select>
+                <select name="year" class="border border-outline-variant bg-transparent rounded pl-3 pr-8 py-1.5 text-sm focus:outline-none focus:border-primary">
+                    @for(int y = DateTime.Now.Year - 4; y <= DateTime.Now.Year; y++) {
+                        if (Model.Year == y) {
+                            <option value="@y" selected>@y</option>
+                        } else {
+                            <option value="@y">@y</option>
+                        }
+                    }
+                </select>
+                <button class="px-4 py-1.5 text-sm bg-primary text-white rounded hover:opacity-90" type="submit">Áp dụng</button>
+            </form>
+        </div>
+        
+        <div class="h-64 relative mt-4">
+            @if (Model.TotalRevenue == 0)
+            {
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <p class="text-sm text-on-surface-variant">Chưa có doanh thu năm @Model.Year</p>
+                </div>
+            }
+            <canvas id="revenueChart"></canvas>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const ctx = document.getElementById('revenueChart');
+                if (!ctx) return;
+                
+                const isLine = '@Context.Request.Query["chartType"]' === 'line';
+                
+                new Chart(ctx, {
+                    type: isLine ? 'line' : 'bar',
+                    data: {
+                        labels: @Html.Raw(JsonSerializer.Serialize(Model.RevenueLabels)),
+                        datasets: [{
+                            label: 'Doanh thu',
+                            data: @Html.Raw(JsonSerializer.Serialize(Model.RevenueValues)),
+                            backgroundColor: isLine ? 'rgba(85, 55, 34, 0.1)' : '#553722',
+                            borderColor: '#553722',
+                            borderWidth: isLine ? 2 : 0,
+                            fill: isLine,
+                            tension: 0.3,
+                            borderRadius: isLine ? 0 : 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.raw.toLocaleString('vi-VN') + 'đ';
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: { 
+                                beginAtZero: true,
+                                border: { display: false },
+                                grid: { color: '#eae8e7' },
+                                ticks: {
+                                    callback: function(value) {
+                                        if (value >= 1000000) return (value / 1000000) + 'M';
+                                        if (value >= 1000) return (value / 1000) + 'k';
+                                        return value;
+                                    }
+                                }
+                            },
+                            x: {
+                                border: { display: false },
+                                grid: { display: false }
+                            }
+                        }
+                    }
+                });
+            });
+        </script>
+    </div>
+
+    <!-- Top Products -->
+    <div class="bg-surface border border-outline-variant p-6">
+        <h3 class="text-lg font-semibold text-on-background mb-4">Top sản phẩm bán chạy</h3>
+        @if (Model.TopProducts.Any())
+        {
+            <div class="space-y-2.5">
+                @foreach (var p in Model.TopProducts.Take(6))
+                {
+                    <div class="flex justify-between items-center py-2 border-b border-outline-variant last:border-0">
+                        <div class="min-w-0 flex-1 mr-2">
+                            <p class="text-base font-medium text-on-background truncate">@p.ProductName</p>
+                            <p class="text-sm text-on-surface-variant">@p.TotalSold sản phẩm đã bán</p>
+                        </div>
+                        <span class="text-base font-bold text-primary whitespace-nowrap flex-shrink-0">@p.Revenue.ToString("N0")đ</span>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="flex flex-col items-center justify-center h-40 text-on-surface-variant">
+                <span class="material-symbols-outlined text-4xl mb-2 opacity-30">bar_chart</span>
+                <p class="text-sm">Chưa có dữ liệu năm @Model.Year</p>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Recent Orders + Low Stock -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- Recent Orders -->
+    <div class="lg:col-span-8 bg-surface border border-outline-variant p-6">
+        <div class="flex justify-between items-center mb-4 pb-3 border-b border-outline-variant">
+            <h3 class="text-lg font-semibold text-on-background">Đơn hàng gần đây</h3>
+            <a asp-area="Admin" asp-controller="Orders" asp-action="Index"
+               class="text-sm text-primary hover:underline font-medium">Xem tất cả →</a>
+        </div>
+        @if (Model.RecentOrders.Any())
+        {
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="text-on-surface-variant text-sm uppercase tracking-wider border-b border-outline-variant">
+                            <th class="pb-2.5 font-medium">Mã đơn</th>
+                            <th class="pb-2.5 px-3 font-medium">Ngày</th>
+                            <th class="pb-2.5 px-3 font-medium">Khách hàng</th>
+                            <th class="pb-2.5 px-3 font-medium">Tổng tiền</th>
+                            <th class="pb-2.5 pl-3 font-medium text-right">Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm text-on-background">
+                        @foreach (var o in Model.RecentOrders)
+                        {
+                            var statusColor = o.OrderStatus switch
+                            {
+                                "Pending"    => "bg-amber-100 text-amber-700",
+                                "Confirmed"  => "bg-blue-100 text-blue-700",
+                                "Processing" => "bg-purple-100 text-purple-700",
+                                "Shipping"   => "bg-cyan-100 text-cyan-700",
+                                "Delivered"  => "bg-green-100 text-green-700",
+                                "Cancelled"  => "bg-red-100 text-red-700",
+                                _            => "bg-surface-container-highest text-on-surface-variant"
+                            };
+                            var statusLabel = o.OrderStatus switch
+                            {
+                                "Pending"    => "Chờ xác nhận",
+                                "Confirmed"  => "Đã xác nhận",
+                                "Processing" => "Đang xử lý",
+                                "Shipping"   => "Đang giao",
+                                "Delivered"  => "Đã giao",
+                                "Cancelled"  => "Đã hủy",
+                                _            => o.OrderStatus
+                            };
+                            <tr class="border-b border-outline-variant last:border-0 hover:bg-surface-container-low transition-colors">
+                                <td class="py-3 font-mono text-sm font-semibold">
+                                    <a asp-area="Admin" asp-controller="Orders" asp-action="Detail" asp-route-id="@o.OrderCode"
+                                       class="text-primary hover:underline">@o.OrderCode</a>
+                                </td>
+                                <td class="py-3 px-3 text-on-surface-variant text-sm">@o.OrderDate.ToString("dd/MM HH:mm")</td>
+                                <td class="py-3 px-3 max-w-[120px] truncate">@o.CustomerName</td>
+                                <td class="py-3 px-3 font-semibold text-primary">@o.FinalAmount.ToString("N0")đ</td>
+                                <td class="py-3 pl-3 text-right">
+                                    <span class="inline-block px-3 py-1 rounded-full text-xs font-medium @statusColor">@statusLabel</span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="flex flex-col items-center justify-center h-32 text-on-surface-variant">
+                <span class="material-symbols-outlined text-4xl mb-2 opacity-30">receipt_long</span>
+                <p class="text-sm">Chưa có đơn hàng nào</p>
+            </div>
+        }
+    </div>
+
+    <!-- Low Stock Alert -->
+    <div class="lg:col-span-4 bg-surface border border-outline-variant p-6">
+        <div class="flex justify-between items-center mb-4 pb-3 border-b border-outline-variant">
+            <h3 class="text-lg font-semibold text-on-background">Sắp hết hàng</h3>
+            <span class="text-sm bg-error/10 text-error px-3 py-1 rounded-full font-medium">≤ 5 sản phẩm</span>
+        </div>
+        @if (Model.LowStockItems.Any())
+        {
+            <ul class="space-y-0 divide-y divide-outline-variant">
+                @foreach (var item in Model.LowStockItems)
+                {
+                    var stockColor = item.StockQuantity == 0 ? "text-error font-bold" :
+                                     item.StockQuantity <= 2 ? "text-error" : "text-amber-600";
+                    <li class="py-3 hover:bg-surface-container-low -mx-2 px-2 rounded transition-colors">
+                        <div class="flex justify-between items-start">
+                            <span class="text-[11px] text-on-surface-variant font-mono uppercase">@item.SKU</span>
+                            <span class="text-sm @stockColor">@item.StockQuantity còn lại</span>
+                        </div>
+                        <p class="text-base font-medium text-on-background truncate mt-0.5">@item.ProductName</p>
+                        <p class="text-sm text-on-surface-variant">@item.SizeCode · @item.ColorName</p>
+                    </li>
+                }
+            </ul>
+        }
+        else
+        {
+            <div class="flex flex-col items-center justify-center h-32 text-on-surface-variant">
+                <span class="material-symbols-outlined text-4xl mb-2 opacity-40 text-green-600">check_circle</span>
+                <p class="text-sm text-green-700">Tất cả sản phẩm đủ hàng!</p>
+            </div>
+        }
+    </div>
+</div>

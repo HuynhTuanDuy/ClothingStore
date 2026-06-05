@@ -1,0 +1,222 @@
+@{
+    Layout = null; // Use the dedicated structure provided in the mockup
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Checkout - WearWhatever</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-primary": "#eabda0",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-container": "#6f4e37",
+                        "surface-variant": "#e4e2e1",
+                        "primary-fixed-dim": "#eabda0",
+                        "surface-dim": "#dcd9d9",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-container": "#cbcac5",
+                        "on-background": "#1b1c1c",
+                        "tertiary-container": "#555552",
+                        "background": "#fbf9f8",
+                        "tertiary": "#3e3e3b",
+                        "surface-bright": "#fbf9f8",
+                        "secondary-fixed": "#d6e8c9",
+                        "secondary-container": "#d6e8c9",
+                        "on-tertiary-fixed": "#1b1c19",
+                        "tertiary-fixed": "#e4e2dd",
+                        "secondary": "#53634a",
+                        "surface-container": "#f0eded",
+                        "outline": "#82746d",
+                        "on-surface": "#1b1c1c",
+                        "on-secondary-container": "#596950",
+                        "on-tertiary": "#ffffff",
+                        "on-surface-variant": "#50453e",
+                        "on-primary-fixed": "#2d1604",
+                        "tertiary-fixed-dim": "#c8c6c2",
+                        "inverse-on-surface": "#f3f0f0",
+                        "inverse-surface": "#303030",
+                        "on-tertiary-fixed-variant": "#474744",
+                        "on-primary-fixed-variant": "#5f402a",
+                        "on-primary": "#ffffff",
+                        "surface-container-highest": "#e4e2e1",
+                        "on-error": "#ffffff",
+                        "primary-fixed": "#ffdcc6",
+                        "surface": "#fbf9f8",
+                        "error": "#ba1a1a",
+                        "on-primary-container": "#eec1a4",
+                        "outline-variant": "#d4c3ba",
+                        "secondary-fixed-dim": "#bbccae",
+                        "on-error-container": "#93000a",
+                        "primary": "#553722",
+                        "surface-container-low": "#f6f3f2",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed": "#121f0c",
+                        "on-secondary-fixed-variant": "#3c4b34",
+                        "surface-tint": "#79573f",
+                        "surface-container-high": "#eae8e7"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin-desktop": "64px",
+                        "section-gap": "120px",
+                        "base": "8px",
+                        "margin-mobile": "20px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Kanit"],
+                        "body-lg": ["Kanit"],
+                        "headline-lg-mobile": ["Kanit"],
+                        "display-lg-mobile": ["Kanit"],
+                        "body-md": ["Kanit"],
+                        "label-caps": ["Kanit"],
+                        "headline-lg": ["Kanit"],
+                        "headline-md": ["Kanit"],
+                        "display-lg": ["Kanit"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "display-lg-mobile": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "headline-lg": ["40px", { "lineHeight": "48px", "fontWeight": "600" }],
+                        "headline-md": ["28px", { "lineHeight": "36px", "fontWeight": "500" }],
+                        "display-lg": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        @@keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up {
+            animation: fadeInUp 0.8s ease-out forwards;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-body-md antialiased selection:bg-primary-container selection:text-on-primary-container">
+    
+    <!-- Header -->
+    <header class="w-full flex justify-center items-center py-8">
+        <a class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary tracking-tighter" href="@Url.Action("Index", "Home")">WearWhatever</a>
+    </header>
+
+    <main class="flex-grow flex items-center justify-center px-margin-mobile md:px-margin-desktop py-12 md:py-24">
+        <div class="w-full max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+            
+            <!-- Left Column: Login / Create Account -->
+            <div class="lg:col-span-5 lg:col-start-2 flex flex-col justify-center animate-fade-in-up" style="animation-delay: 0.1s;">
+                <div class="mb-12">
+                    <h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-4">Welcome Back</h1>
+                    <p class="font-body-md text-body-md text-on-surface-variant">Sign in to access your curated collection and expedited checkout.</p>
+                </div>
+                
+                @if (TempData["Error"] != null)
+                {
+                    <div class="mb-4 text-error font-body-sm text-sm">@TempData["Error"]</div>
+                }
+
+                <form asp-controller="Account" asp-action="Login" method="post" class="space-y-6">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="ReturnUrl" value="/Checkout" />
+                    
+                    <div>
+                        <label class="block font-label-caps text-label-caps text-on-surface-variant mb-2" for="email">Email Address</label>
+                        <input class="w-full bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 px-0 py-3 font-body-md text-body-md text-on-background placeholder-on-surface-variant/50 transition-colors" 
+                               id="email" name="UsernameOrEmail" placeholder="your@email.com" type="text" required />
+                    </div>
+                    <div>
+                        <label class="block font-label-caps text-label-caps text-on-surface-variant mb-2" for="password">Password</label>
+                        <input class="w-full bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 px-0 py-3 font-body-md text-body-md text-on-background placeholder-on-surface-variant/50 transition-colors" 
+                               id="password" name="Password" placeholder="••••••••" type="password" required />
+                    </div>
+                    <div class="flex items-center justify-between pt-2">
+                        <label class="flex items-center space-x-2 cursor-pointer group">
+                            <input class="form-checkbox text-primary border-outline-variant rounded-sm focus:ring-primary focus:ring-offset-background bg-transparent w-4 h-4 transition-colors" 
+                                   type="checkbox" name="RememberMe" value="true" />
+                            <span class="font-body-sm text-body-sm text-on-surface-variant group-hover:text-primary transition-colors">Remember me</span>
+                        </label>
+                        <a class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary underline underline-offset-4 transition-colors" href="#">Forgot password?</a>
+                    </div>
+                    
+                    <button class="w-full bg-primary text-on-primary py-4 px-6 font-label-caps text-label-caps hover:bg-on-primary-fixed-variant transition-colors duration-300 mt-8" type="submit">
+                        SIGN IN & CHECKOUT
+                    </button>
+                </form>
+
+                <div class="mt-8 border-t border-outline-variant/30 pt-8">
+                    <h2 class="font-headline-md text-headline-md text-primary mb-4">New to WearWhatever?</h2>
+                    <p class="font-body-sm text-body-sm text-on-surface-variant mb-6 italic">Tạo tài khoản để thanh toán sẽ nhận ưu đãi dành riêng cho khách hàng mới.</p>
+                    <a href="@Url.Action("Register", "Account")" class="block text-center w-full bg-transparent border border-primary text-primary py-4 px-6 font-label-caps text-label-caps hover:bg-primary/5 transition-colors duration-300">
+                        CREATE AN ACCOUNT
+                    </a>
+                </div>
+            </div>
+
+            <!-- Vertical Divider (Desktop only) -->
+            <div class="hidden lg:flex lg:col-span-1 justify-center items-center">
+                <div class="h-3/4 w-[1px] bg-outline-variant/50"></div>
+            </div>
+
+            <!-- Horizontal Divider (Mobile only) -->
+            <div class="flex lg:hidden w-full justify-center items-center py-12">
+                <div class="w-3/4 h-[1px] bg-outline-variant/50"></div>
+            </div>
+
+            <!-- Right Column: Guest Checkout -->
+            <div class="lg:col-span-4 lg:col-start-8 flex flex-col justify-center animate-fade-in-up" style="animation-delay: 0.2s;">
+                <div class="mb-12">
+                    <h2 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-4">Guest Checkout</h2>
+                    <p class="font-body-md text-body-md text-on-surface-variant">Proceed without an account. You can save your details for next time at the end.</p>
+                </div>
+                
+                <form action="@Url.Action("Index", "Checkout")" method="get" class="space-y-6">
+                    <input type="hidden" name="guest" value="true" />
+                    <div>
+                        <label class="block font-label-caps text-label-caps text-on-surface-variant mb-2" for="guest-email">Email Address (for receipt)</label>
+                        <!-- Note: The email entered here is not saved by default to the next page in the current basic flow, but you can pass it to checkout if needed via JS or TempData -->
+                        <input class="w-full bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 px-0 py-3 font-body-md text-body-md text-on-background placeholder-on-surface-variant/50 transition-colors" 
+                               id="guest-email" name="guestEmail" placeholder="your@email.com" type="email" required />
+                    </div>
+                    
+                    <button class="w-full bg-transparent border border-primary text-primary py-4 px-6 font-label-caps text-label-caps hover:bg-primary/5 transition-colors duration-300 mt-8 group flex items-center justify-center space-x-2" type="submit">
+                        <span>CONTINUE AS GUEST</span>
+                        <span class="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                    </button>
+                </form>
+
+                <div class="mt-auto pt-24 text-center">
+                    <p class="font-body-sm text-body-sm text-on-surface-variant/70">By proceeding, you agree to our <a class="underline hover:text-primary" href="#">Terms of Service</a> and <a class="underline hover:text-primary" href="#">Privacy Policy</a>.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+</body>
+</html>

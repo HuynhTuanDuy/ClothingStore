@@ -1,0 +1,186 @@
+@model ClothingStore.Models.ViewModels.AdminProductImagesViewModel
+@{
+    ViewData["Title"] = "Hình ảnh sản phẩm";
+}
+
+<div class="max-w-5xl mx-auto w-full">
+    <!-- Page Header -->
+    <div class="mb-10 flex items-end justify-between">
+        <div>
+            <a asp-action="Index" class="inline-flex items-center text-on-surface-variant hover:text-primary transition-colors font-label-caps text-label-caps mb-4">
+                <span class="material-symbols-outlined text-sm mr-1">arrow_back</span>
+                Back to Products
+            </a>
+            <h2 class="font-headline-lg text-headline-lg text-on-background">@(Model.Upload.ProductID == 0 ? "Thêm sản phẩm" : "Cập nhật sản phẩm")</h2>
+        </div>
+        <div class="flex gap-4">
+            <a asp-action="Index" class="border border-primary text-primary px-6 py-2.5 font-label-caps text-label-caps rounded-DEFAULT hover:bg-surface-container transition-colors">
+                Hủy
+            </a>
+            <a asp-action="Index" class="bg-primary text-on-primary px-6 py-2.5 font-label-caps text-label-caps rounded-DEFAULT hover:bg-on-primary-fixed-variant transition-colors flex items-center gap-2 shadow-sm uppercase tracking-widest">
+                Hoàn tất
+                <span class="material-symbols-outlined text-[18px]">done_all</span>
+            </a>
+        </div>
+    </div>
+    
+    <partial name="_ProductTabs" model="Model.Upload.ProductID" />
+
+    <div class="mb-12 mt-10">
+        <div class="flex justify-between items-end">
+            <div>
+                <h2 class="font-headline-lg text-headline-lg text-on-background mb-2">Hình ảnh</h2>
+                <p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">Quản lý hình ảnh theo từng biến thể màu sắc. Ảnh đầu tiên của biến thể chính sẽ được dùng làm ảnh đại diện.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Form -->
+    <form asp-action="UploadImage" method="post" enctype="multipart/form-data" class="mb-12 bg-surface rounded-xl p-8 border border-outline-variant shadow-[0_4px_24px_rgba(121,87,63,0.04)]">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="ProductID" value="@Model.Upload.ProductID" />
+        <input type="hidden" name="ProductName" value="@Model.Upload.ProductName" />
+        
+        <div class="flex justify-between items-start mb-6">
+            <div>
+                <h3 class="font-headline-md text-headline-md text-on-background mb-1">Tải ảnh lên</h3>
+                <p class="font-body-sm text-body-sm text-on-surface-variant">Chọn biến thể và tải ảnh mới lên (JPG/PNG, max 5MB).</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div class="space-y-2 md:col-span-2">
+                <label class="block font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">Gán cho biến thể</label>
+                <select name="VariantID" asp-items="Model.Upload.Variants" class="w-full bg-surface-container-low border-b border-x-0 border-t-0 border-outline-variant px-4 py-3 font-body-md text-body-md text-on-background focus:ring-0 focus:border-primary transition-colors"></select>
+            </div>
+            <div class="space-y-2">
+                <label class="block font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">Thứ tự</label>
+                <input name="DisplayOrder" type="number" min="1" value="@Model.Upload.DisplayOrder" class="w-full bg-surface-container-low border-b border-x-0 border-t-0 border-outline-variant px-4 py-3 font-body-md text-body-md text-on-surface-variant focus:ring-0 focus:border-primary transition-colors cursor-not-allowed" readonly />
+            </div>
+        </div>
+
+        <div class="relative border border-dashed border-primary/40 bg-surface-container-low rounded-lg p-12 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-surface-container transition-colors group mb-6">
+            <input name="ImageFiles" id="imageFiles" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" type="file" multiple required />
+            <div class="w-16 h-16 rounded-full bg-surface mb-4 flex items-center justify-center shadow-sm text-primary group-hover:scale-105 transition-transform duration-300">
+                <span class="material-symbols-outlined text-[32px]">cloud_upload</span>
+            </div>
+            <p class="font-body-lg text-body-lg text-primary mb-1">Nhấn để chọn file ảnh</p>
+            <p class="font-body-sm text-body-sm text-on-surface-variant">Hỗ trợ: JPEG, PNG, WEBP. Chọn một hoặc nhiều ảnh cùng lúc.</p>
+        </div>
+        
+        <!-- Preview Container -->
+        <div id="filePreviewContainer" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6 hidden"></div>
+
+        <div class="flex justify-end">
+            <button type="submit" class="bg-primary text-on-primary px-8 py-2.5 rounded font-label-caps text-label-caps transition-colors hover:bg-primary-container shadow-sm flex items-center gap-2 uppercase tracking-widest">
+                <span class="material-symbols-outlined text-[18px]">upload</span>
+                Tải ảnh lên
+            </button>
+        </div>
+    </form>
+
+    <!-- Gallery -->
+    <div class="mb-24">
+        <div class="flex items-center justify-between mb-6">
+            <h4 class="font-headline-md text-headline-md text-on-background">Thư viện ảnh đã tải lên (@Model.Images.Count)</h4>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            @foreach(var image in Model.Images)
+            {
+                <div class="border border-outline-variant bg-surface rounded flex flex-col overflow-hidden relative group shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+                    <div class="aspect-[4/5] bg-surface-container-high relative overflow-hidden">
+                        @if(image.IsMain) {
+                            <div class="absolute top-3 left-3 z-10 bg-primary/90 backdrop-blur px-2 py-1 text-[10px] uppercase tracking-widest text-on-primary border border-outline-variant/30">Ảnh đại diện</div>
+                        } else if(image.DisplayOrder == 1) {
+                            <div class="absolute top-3 left-3 z-10 bg-surface/90 backdrop-blur px-2 py-1 text-[10px] uppercase tracking-widest text-primary border border-outline-variant/30">Ảnh chính</div>
+                        }
+                        <img alt="@image.VariantName" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="@image.ImageURL"/>
+                        
+                        <div class="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity z-10">
+                            @if (!image.IsMain) {
+                                <form asp-action="SetThumbnail" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="productId" value="@Model.Upload.ProductID" />
+                                    <input type="hidden" name="imageUrl" value="@image.ImageURL" />
+                                    <button type="submit" class="w-8 h-8 bg-surface/90 backdrop-blur rounded-full flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors border border-outline-variant/30 shadow-sm" title="Đặt làm ảnh đại diện">
+                                        <span class="material-symbols-outlined text-[18px]">star</span>
+                                    </button>
+                                </form>
+                            }
+                            <form asp-action="DeleteImage" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@image.ImageID" />
+                                <button type="submit" onclick="return confirm('Bạn có chắc chắn muốn xóa ảnh này?');" class="w-8 h-8 bg-surface/90 backdrop-blur rounded-full flex items-center justify-center text-on-surface-variant hover:text-error transition-colors border border-outline-variant/30 shadow-sm" title="Xóa ảnh">
+                                    <span class="material-symbols-outlined text-[18px]">delete</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="p-5 flex flex-col gap-4 bg-background">
+                        <div class="flex flex-col gap-1">
+                            <label class="font-label-caps text-label-caps text-on-surface-variant">Gán cho biến thể</label>
+                            <input type="text" class="w-full bg-transparent border-0 border-b border-outline-variant py-2 px-0 font-body-sm text-body-sm text-on-background focus:ring-0 focus:border-primary text-on-surface-variant cursor-not-allowed" value="@image.VariantName" disabled />
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <label class="font-label-caps text-label-caps text-on-surface-variant">Thứ tự hiển thị</label>
+                            <input class="w-16 bg-transparent border border-outline-variant rounded py-1 text-center font-body-sm text-body-sm text-on-background focus:ring-0 focus:border-primary cursor-not-allowed text-on-surface-variant" type="number" value="@image.DisplayOrder" disabled/>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let selectedFiles = [];
+        const inputElement = document.getElementById('imageFiles');
+        const container = document.getElementById('filePreviewContainer');
+
+        inputElement.addEventListener('change', function(e) {
+            if (this.files && this.files.length > 0) {
+                Array.from(this.files).forEach(file => selectedFiles.push(file));
+            }
+            renderPreviews();
+        });
+
+        function renderPreviews() {
+            container.innerHTML = '';
+            
+            if (selectedFiles.length > 0) {
+                container.classList.remove('hidden');
+                
+                const dt = new DataTransfer();
+                selectedFiles.forEach(file => dt.items.add(file));
+                inputElement.files = dt.files;
+
+                selectedFiles.forEach((file, index) => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const div = document.createElement('div');
+                        div.className = 'relative aspect-square rounded-lg overflow-hidden border border-outline-variant group';
+                        div.innerHTML = `
+                            <img src="${e.target.result}" class="w-full h-full object-cover" />
+                            <div class="absolute bottom-0 inset-x-0 bg-background/80 backdrop-blur-sm text-[10px] p-1 truncate" title="${file.name}">${file.name}</div>
+                            <button type="button" class="absolute top-1 right-1 w-6 h-6 bg-error/90 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs" onclick="removeFile(${index})" title="Xóa ảnh này">
+                                <span class="material-symbols-outlined text-[14px]">close</span>
+                            </button>
+                        `;
+                        container.appendChild(div);
+                    }
+                    reader.readAsDataURL(file);
+                });
+            } else {
+                container.classList.add('hidden');
+                inputElement.value = ''; // clear input
+            }
+        }
+
+        window.removeFile = function(index) {
+            selectedFiles.splice(index, 1);
+            renderPreviews();
+        };
+    </script>
+}
