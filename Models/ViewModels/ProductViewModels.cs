@@ -100,6 +100,10 @@ public class ProductDetailViewModel
     public List<ProductCardViewModel> BestSellingProducts { get; set; } = [];
     public List<ProductCardViewModel> InStockProducts { get; set; } = [];
 
+    // Reviews Stats
+    public double AverageRating { get; set; }
+    public int TotalReviews { get; set; }
+
     // Helpers for the view
     public decimal MinEffectivePrice => Variants.Count > 0 ? Variants.Min(v => v.EffectivePrice) : 0;
     public bool HasDiscount => Variants.Any(v => v.HasDiscount);
@@ -128,4 +132,5 @@ public class ReviewViewModel
     public string Comment { get; set; } = string.Empty;
     public DateTime ReviewDate { get; set; }
     public string CustomerName { get; set; } = string.Empty;
+    public List<string> Images { get; set; } = [];
 }

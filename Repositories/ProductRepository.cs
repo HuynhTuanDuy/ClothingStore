@@ -164,8 +164,6 @@ public class ProductRepository(StoreDbContext dbContext, IMemoryCache cache) : I
                 .ThenInclude(x => x.Color)
             .Include(x => x.ProductVariants.Where(v => v.IsActive))
                 .ThenInclude(x => x.ProductImages.OrderBy(i => i.DisplayOrder))
-            .Include(x => x.Reviews.Where(r => r.IsApproved).OrderByDescending(r => r.ReviewDate).Take(10))
-                .ThenInclude(r => r.Customer)
             .FirstOrDefaultAsync(x => x.Slug == slug && x.IsActive);
     }
 
@@ -181,8 +179,6 @@ public class ProductRepository(StoreDbContext dbContext, IMemoryCache cache) : I
                 .ThenInclude(x => x.Color)
             .Include(x => x.ProductVariants.Where(v => v.IsActive))
                 .ThenInclude(x => x.ProductImages.OrderBy(i => i.DisplayOrder))
-            .Include(x => x.Reviews.Where(r => r.IsApproved).OrderByDescending(r => r.ReviewDate).Take(10))
-                .ThenInclude(r => r.Customer)
             .FirstOrDefaultAsync(x => x.ProductID == productId && x.IsActive);
     }
 

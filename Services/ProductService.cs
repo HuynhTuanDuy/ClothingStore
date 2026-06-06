@@ -4,7 +4,9 @@ using ClothingStore.Repositories;
 
 namespace ClothingStore.Services;
 
-public class ProductService(IProductRepository productRepository) : IProductService
+public class ProductService(
+    IProductRepository productRepository,
+    IReviewService reviewService) : IProductService
 {
     public async Task<ProductListViewModel> GetProductListAsync(ProductFilter filter)
     {
@@ -40,7 +42,8 @@ public class ProductService(IProductRepository productRepository) : IProductServ
     public async Task<ProductDetailViewModel?> GetProductDetailsAsync(int productId)
     {
         var product = await productRepository.GetProductDetailsAsync(productId);
-        if (product is null) return null;
+        if (product == null) return null;
+
         var vm = MapDetails(product);
         var related = await productRepository.GetRelatedProductsAsync(product.ProductID, product.CategoryID, 8);
         var bestSelling = await productRepository.GetDynamicBestSellerProductsAsync(8);
@@ -48,6 +51,13 @@ public class ProductService(IProductRepository productRepository) : IProductServ
         vm.RelatedProducts = related.Select(MapCard).ToList();
         vm.BestSellingProducts = bestSelling.Select(MapCard).ToList();
         vm.InStockProducts = inStock.Select(MapCard).ToList();
+        
+        // Fetch Review Stats and Reviews
+        var stats = await reviewService.GetReviewStatsAsync(productId);
+        vm.AverageRating = stats.AverageRating;
+        vm.TotalReviews = stats.TotalReviews;
+        vm.Reviews = await reviewService.GetProductReviewsAsync(productId);
+
         return vm;
     }
 
@@ -62,6 +72,13 @@ public class ProductService(IProductRepository productRepository) : IProductServ
         vm.RelatedProducts = related.Select(MapCard).ToList();
         vm.BestSellingProducts = bestSelling.Select(MapCard).ToList();
         vm.InStockProducts = inStock.Select(MapCard).ToList();
+
+        // Fetch Review Stats and Reviews
+        var stats = await reviewService.GetReviewStatsAsync(product.ProductID);
+        vm.AverageRating = stats.AverageRating;
+        vm.TotalReviews = stats.TotalReviews;
+        vm.Reviews = await reviewService.GetProductReviewsAsync(product.ProductID);
+
         return vm;
     }
 
@@ -216,18 +233,7 @@ public class ProductService(IProductRepository productRepository) : IProductServ
             CategoryID       = product.CategoryID,
             ImageUrls        = allImageUrls,
             Variants         = variantVms,
-            Reviews = product.Reviews
-                .Where(r => r.IsApproved)
-                .OrderByDescending(r => r.ReviewDate)
-                .Select(r => new ReviewViewModel
-                {
-                    ReviewID     = r.ReviewID,
-                    Rating       = r.Rating,
-                    Comment      = r.Comment,
-                    ReviewDate   = r.ReviewDate,
-                    CustomerName = r.Customer.FullName
-                })
-                .ToList()
+            Reviews          = new List<ReviewViewModel>() // Fetched externally
         };
     }
 }
