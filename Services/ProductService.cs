@@ -43,7 +43,7 @@ public class ProductService(IProductRepository productRepository) : IProductServ
         if (product is null) return null;
         var vm = MapDetails(product);
         var related = await productRepository.GetRelatedProductsAsync(product.ProductID, product.CategoryID, 12);
-        var bestSelling = await productRepository.GetBestSellingProductsAsync(12);
+        var bestSelling = await productRepository.GetDynamicBestSellerProductsAsync(12);
         var inStock = await productRepository.GetInStockProductsAsync(12);
         vm.RelatedProducts = related.Select(MapCard).ToList();
         vm.BestSellingProducts = bestSelling.Select(MapCard).ToList();
@@ -57,7 +57,7 @@ public class ProductService(IProductRepository productRepository) : IProductServ
         if (product is null) return null;
         var vm = MapDetails(product);
         var related = await productRepository.GetRelatedProductsAsync(product.ProductID, product.CategoryID, 12);
-        var bestSelling = await productRepository.GetBestSellingProductsAsync(12);
+        var bestSelling = await productRepository.GetDynamicBestSellerProductsAsync(12);
         var inStock = await productRepository.GetInStockProductsAsync(12);
         vm.RelatedProducts = related.Select(MapCard).ToList();
         vm.BestSellingProducts = bestSelling.Select(MapCard).ToList();
@@ -82,6 +82,12 @@ public class ProductService(IProductRepository productRepository) : IProductServ
         }
 
         var products = await productRepository.GetInStockProductsAsync(count);
+        return products.Select(MapCard).ToList();
+    }
+
+    public async Task<List<ProductCardViewModel>> GetDynamicBestSellingProductsAsync(int count = 4)
+    {
+        var products = await productRepository.GetDynamicBestSellerProductsAsync(count);
         return products.Select(MapCard).ToList();
     }
 

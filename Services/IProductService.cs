@@ -9,4 +9,5 @@ public interface IProductService
     Task<ProductDetailViewModel?> GetProductDetailsAsync(int productId);
     Task<ProductDetailViewModel?> GetProductBySlugAsync(string slug);
     Task<List<ProductCardViewModel>> GetRecommendedProductsAsync(List<CartItemViewModel> cartItems, int count = 4);
+    Task<List<ProductCardViewModel>> GetDynamicBestSellingProductsAsync(int count = 4);
 }

@@ -19,6 +19,17 @@ public class ProductListViewModel
     public int PageSize { get; set; } = 12;
     public int TotalCount { get; set; }
     public int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
+    public string? SortBy { get; set; }
+    
+    public List<SelectListItem> SortOptions { get; } = new List<SelectListItem>
+    {
+        new SelectListItem { Value = "newest", Text = "Mới nhất" },
+        new SelectListItem { Value = "bestselling", Text = "Bán chạy nhất" },
+        new SelectListItem { Value = "priceasc", Text = "Giá: Thấp đến cao" },
+        new SelectListItem { Value = "pricedesc", Text = "Giá: Cao đến thấp" },
+        new SelectListItem { Value = "nameasc", Text = "Tên: A-Z" },
+        new SelectListItem { Value = "namedesc", Text = "Tên: Z-A" }
+    };
 
     public List<CategoryFilterViewModel> Categories { get; set; } = [];
     public List<SizeFilterViewModel> Sizes { get; set; } = [];

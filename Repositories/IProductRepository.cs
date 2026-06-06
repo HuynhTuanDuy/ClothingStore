@@ -10,6 +10,7 @@ public interface IProductRepository
     Task<Product?> GetProductDetailsAsync(int productId);
     Task<List<Product>> GetRelatedProductsAsync(int productId, int categoryId, int count = 4);
     Task<List<Product>> GetBestSellingProductsAsync(int count = 4);
+    Task<List<Product>> GetDynamicBestSellerProductsAsync(int count = 4);
     Task<List<Product>> GetInStockProductsAsync(int count = 4);
     Task<Product?> GetProductForAdminAsync(int productId);
     Task<List<Product>> GetAdminProductsAsync(int page = 1, int pageSize = 20);

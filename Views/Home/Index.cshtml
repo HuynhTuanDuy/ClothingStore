@@ -1,4 +1,4 @@
-@model ProductListViewModel
+@model ClothingStore.Models.ViewModels.HomeViewModel
 @{
     ViewData["Title"] = "Shop All";
     Layout = "_StoreLayout";
@@ -60,6 +60,25 @@
 </section>
 <!-- END: CollageSection -->
 
+<!-- END: CollageSection -->
+
+<!-- BEGIN: BestSellersSection -->
+@if (Model.BestSellers.Any())
+{
+    <section class="container mx-auto px-4 py-12">
+        <div class="flex justify-between items-end mb-8">
+            <h2 class="text-4xl font-serif text-brand-dark-brown">Best Sellers</h2>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
+            @foreach (var product in Model.BestSellers)
+            {
+                @await Html.PartialAsync("_ProductCard", product)
+            }
+        </div>
+    </section>
+}
+<!-- END: BestSellersSection -->
+
 <!-- BEGIN: ProductSection -->
 <section id="product-section" class="container mx-auto px-4 py-16">
     <div class="flex justify-between items-end mb-12">
@@ -69,15 +88,18 @@
         <form method="get" class="flex gap-4">
             <select name="categoryId" onchange="this.form.submit()" class="border-gray-300 rounded text-sm text-gray-700 bg-white">
                 <option value="">All Categories</option>
-                @foreach (var cat in Model.Categories)
+                @foreach (var cat in Model.ShopProducts.Categories)
                 {
-                    <option value="@cat.CategoryID" selected="@(cat.CategoryID == Model.CategoryID)">@cat.CategoryName</option>
+                    <option value="@cat.CategoryID" selected="@(cat.CategoryID == Model.ShopProducts.CategoryID)">@cat.CategoryName</option>
                 }
+            </select>
+            <select name="sortBy" onchange="this.form.submit()" asp-for="ShopProducts.SortBy" asp-items="Model.ShopProducts.SortOptions" class="border-gray-300 rounded text-sm text-gray-700 bg-white">
+                <option value="">Sort By</option>
             </select>
         </form>
     </div>
 
-    @if (!Model.Products.Any())
+    @if (!Model.ShopProducts.Products.Any())
     {
         <div class="text-center py-20 text-gray-500">
             <p class="text-xl">No products found.</p>
@@ -86,73 +108,20 @@
     else
     {
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
-            @foreach (var product in Model.Products)
+            @foreach (var product in Model.ShopProducts.Products)
             {
-                <article class="product-card group cursor-pointer" data-purpose="product-item" onclick="location.href='@Url.Action("Details", "Home", new { id = product.ProductID })'">
-                    <div class="relative mb-4 overflow-hidden" style="padding-bottom: 125%; background: #f1f1f1;">
-                        @if (!product.HasStock)
-                        {
-                            <span class="absolute top-2 right-2 bg-gray-500 text-white text-[9px] px-2 py-0.5 tracking-tighter uppercase font-medium z-10">Sold Out</span>
-                        }
-                        else if (product.HasDiscount)
-                        {
-                            <span class="absolute top-2 right-2 bg-red-500 text-white text-[9px] px-2 py-0.5 tracking-tighter uppercase font-medium z-10">Sale</span>
-                        }
-
-                        @if (!string.IsNullOrWhiteSpace(product.ThumbnailUrl))
-                        {
-                            <img alt="@product.ProductName" class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="@product.ThumbnailUrl"/>
-                        }
-                        else
-                        {
-                            <div class="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 text-gray-400 gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M6 4h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2zm8 4a2 2 0 11-4 0 2 2 0 014 0z"/>
-                                </svg>
-                                <span class="text-[10px] uppercase tracking-widest">Chưa có ảnh</span>
-                            </div>
-                        }
-                    </div>
-                    <div class="space-y-1 mt-2">
-                        <h3 class="text-lg font-medium leading-tight group-hover:underline">@product.ProductName</h3>
-                        <p class="text-base text-gray-900 font-medium">
-                            @if (product.HasDiscount)
-                            {
-                                <span class="text-red-600 mr-2">@(product.MinPrice?.ToString("N0") ?? "0") VNĐ</span>
-                                <span class="line-through text-gray-400">@(product.OriginalMinPrice?.ToString("N0") ?? "0") VNĐ</span>
-                            }
-                            else
-                            {
-                                <span>@(product.MinPrice?.ToString("N0") ?? "0") VNĐ</span>
-                            }
-                        </p>
-                        
-                        @if (product.Colors.Any())
-                        {
-                            <div class="flex space-x-2 py-2">
-                                @foreach (var color in product.Colors.Take(4))
-                                {
-                                    <span class="w-4 h-4 rounded-full border border-gray-200" style="background-color: @color.HexCode"></span>
-                                }
-                                @if (product.Colors.Count > 4)
-                                {
-                                    <span class="text-[10px] text-gray-500 self-center">+@(product.Colors.Count - 4)</span>
-                                }
-                            </div>
-                        }
-                    </div>
-                </article>
+                @await Html.PartialAsync("_ProductCard", product)
             }
         </div>
 
         <!-- Pagination -->
-        @if (Model.TotalPages > 1)
+        @if (Model.ShopProducts.TotalPages > 1)
         {
             <div class="flex justify-center mt-12 gap-2">
-                @for (int i = 1; i <= Model.TotalPages; i++)
+                @for (int i = 1; i <= Model.ShopProducts.TotalPages; i++)
                 {
-                    <a href="?page=@i&categoryId=@Model.CategoryID&search=@Model.Search" 
-                       class="w-10 h-10 flex items-center justify-center border border-gray-200 @(i == Model.Page ? "bg-brand-dark-brown text-white" : "bg-white text-gray-700 hover:bg-gray-50") transition-colors">
+                    <a href="?page=@i&categoryId=@Model.ShopProducts.CategoryID&search=@Model.ShopProducts.Search&sortBy=@Model.ShopProducts.SortBy" 
+                       class="w-10 h-10 flex items-center justify-center border border-gray-200 @(i == Model.ShopProducts.Page ? "bg-brand-dark-brown text-white" : "bg-white text-gray-700 hover:bg-gray-50") transition-colors">
                         @i
                     </a>
                 }

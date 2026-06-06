@@ -3,6 +3,7 @@ using ClothingStore.Models.Entities;
 using ClothingStore.Models.ViewModels;
 using ClothingStore.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace ClothingStore.Services;
 
@@ -13,7 +14,8 @@ public class CheckoutService(
     IOrderRepository orderRepository,
     IUnitOfWork unitOfWork,
     ICurrentCustomerService currentCustomerService,
-    IHttpContextAccessor httpContextAccessor) : ICheckoutService
+    IHttpContextAccessor httpContextAccessor,
+    IMemoryCache memoryCache) : ICheckoutService
 {
     // Shipping fee policy
     private const decimal FreeShippingThreshold = 500_000m;
@@ -178,6 +180,12 @@ public class CheckoutService(
             await orderRepository.AddOrderAsync(order);
             await unitOfWork.SaveChangesAsync();
             await transaction.CommitAsync();
+
+            // Invalidate Best Seller cache since there is a new order
+            memoryCache.Remove("BestSellerProducts_4");
+            memoryCache.Remove("BestSellerProducts_12");
+            memoryCache.Remove("ProductSalesDictionary");
+
             return PlaceOrderResult.Success(orderCode);
         }
         catch (DbUpdateConcurrencyException)

@@ -8,6 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // ── MVC ───────────────────────────────────────────────────────
 builder.Services.AddControllersWithViews();
+builder.Services.AddMemoryCache();
+
 
 // ── Database ──────────────────────────────────────────────────
 builder.Services.AddDbContext<StoreDbContext>(options =>

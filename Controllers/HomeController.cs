@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using ClothingStore.Models;
+using ClothingStore.Models.ViewModels;
 using ClothingStore.Repositories;
 using ClothingStore.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -16,10 +17,21 @@ public class HomeController(IProductService productService) : Controller
         int? sizeId = null,
         decimal? minPrice = null,
         decimal? maxPrice = null,
+        string? sortBy = null,
         int page = 1)
     {
-        var filter = new ProductFilter(search, categoryId, gender, colorId, sizeId, minPrice, maxPrice, page) with { PageSize = 4 };
-        var model  = await productService.GetProductListAsync(filter);
+        var filter = new ProductFilter(search, categoryId, gender, colorId, sizeId, minPrice, maxPrice, page, 4, sortBy);
+        var productListModel = await productService.GetProductListAsync(filter);
+        productListModel.SortBy = sortBy;
+
+        var bestSellersList = await productService.GetDynamicBestSellingProductsAsync(4); 
+
+        var model = new HomeViewModel
+        {
+            ShopProducts = productListModel,
+            BestSellers = bestSellersList
+        };
+
         return View(model);
     }
 
@@ -31,10 +43,12 @@ public class HomeController(IProductService productService) : Controller
         int? sizeId = null,
         decimal? minPrice = null,
         decimal? maxPrice = null,
+        string? sortBy = null,
         int page = 1)
     {
-        var filter = new ProductFilter(search, categoryId, gender, colorId, sizeId, minPrice, maxPrice, page);
+        var filter = new ProductFilter(search, categoryId, gender, colorId, sizeId, minPrice, maxPrice, page, 12, sortBy);
         var model  = await productService.GetProductListAsync(filter);
+        model.SortBy = sortBy;
         return View(model);
     }
 

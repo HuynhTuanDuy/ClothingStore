@@ -1,6 +1,7 @@
 using ClothingStore.Data;
 using ClothingStore.Models.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace ClothingStore.Repositories;
 
@@ -14,14 +15,46 @@ public record ProductFilter(
     decimal? MinPrice = null,
     decimal? MaxPrice = null,
     int Page = 1,
-    int PageSize = 12
+    int PageSize = 12,
+    string? SortBy = null
 );
 
-public class ProductRepository(StoreDbContext dbContext) : IProductRepository
+public class ProductRepository(StoreDbContext dbContext, IMemoryCache cache) : IProductRepository
 {
     public async Task<List<Product>> SearchProductsAsync(ProductFilter filter)
     {
-        var query = BuildProductQuery(filter);
+        if (filter.SortBy?.ToLower() == "bestselling")
+        {
+            var idQuery = BuildProductQuery(filter, includeDetails: false).Select(x => x.ProductID);
+            var filteredIds = await idQuery.ToListAsync();
+
+            var salesDict = await GetProductSalesDictionaryAsync();
+            var pageIds = filteredIds
+                .OrderByDescending(id => salesDict.GetValueOrDefault(id, 0))
+                .ThenByDescending(id => id) // tie-breaker
+                .Skip((filter.Page - 1) * filter.PageSize)
+                .Take(filter.PageSize)
+                .ToList();
+
+            if (pageIds.Count == 0) return new List<Product>();
+
+            var products = await dbContext.Products
+                .AsNoTracking()
+                .Include(x => x.Category)
+                .Include(x => x.DiscountProgram)
+                .Include(x => x.ProductVariants.Where(v => v.IsActive))
+                    .ThenInclude(v => v.Color)
+                .Include(x => x.ProductVariants.Where(v => v.IsActive))
+                    .ThenInclude(v => v.Size)
+                .Include(x => x.ProductVariants.Where(v => v.IsActive))
+                    .ThenInclude(v => v.ProductImages.OrderBy(i => i.DisplayOrder).Take(1))
+                .Where(x => pageIds.Contains(x.ProductID))
+                .ToListAsync();
+
+            return products.OrderBy(p => pageIds.IndexOf(p.ProductID)).ToList();
+        }
+
+        var query = BuildProductQuery(filter, includeDetails: true);
         return await query
             .Skip((filter.Page - 1) * filter.PageSize)
             .Take(filter.PageSize)
@@ -30,7 +63,7 @@ public class ProductRepository(StoreDbContext dbContext) : IProductRepository
 
     public Task<int> CountProductsAsync(ProductFilter filter)
     {
-        var query = BuildProductQuery(filter);
+        var query = BuildProductQuery(filter, includeDetails: false);
         return query.CountAsync();
     }
 
@@ -38,20 +71,24 @@ public class ProductRepository(StoreDbContext dbContext) : IProductRepository
     /// [HIGH-03 FIX] Full filter: search, category, gender, color, size, price range.
     /// [MED-01 FIX] Include Color and Size to avoid N+1.
     /// </summary>
-    private IQueryable<Product> BuildProductQuery(ProductFilter f)
+    private IQueryable<Product> BuildProductQuery(ProductFilter f, bool includeDetails = true)
     {
-        var query = dbContext.Products
-            .AsNoTracking()
-            .Include(x => x.Category)
-            .Include(x => x.DiscountProgram)
-            .Include(x => x.ProductVariants.Where(v => v.IsActive))
-                .ThenInclude(v => v.Color)                  // [MED-01 FIX]
-            .Include(x => x.ProductVariants.Where(v => v.IsActive))
-                .ThenInclude(v => v.Size)                   // [MED-01 FIX]
-            .Include(x => x.ProductVariants.Where(v => v.IsActive))
-                .ThenInclude(v => v.ProductImages.OrderBy(i => i.DisplayOrder).Take(1))
-            .Where(x => x.IsActive)
-            .AsQueryable();
+        var query = dbContext.Products.AsNoTracking();
+
+        if (includeDetails)
+        {
+            query = query
+                .Include(x => x.Category)
+                .Include(x => x.DiscountProgram)
+                .Include(x => x.ProductVariants.Where(v => v.IsActive))
+                    .ThenInclude(v => v.Color)                  // [MED-01 FIX]
+                .Include(x => x.ProductVariants.Where(v => v.IsActive))
+                    .ThenInclude(v => v.Size)                   // [MED-01 FIX]
+                .Include(x => x.ProductVariants.Where(v => v.IsActive))
+                    .ThenInclude(v => v.ProductImages.OrderBy(i => i.DisplayOrder).Take(1));
+        }
+
+        query = query.Where(x => x.IsActive);
 
         if (!string.IsNullOrWhiteSpace(f.Search))
         {
@@ -78,7 +115,41 @@ public class ProductRepository(StoreDbContext dbContext) : IProductRepository
         if (f.MaxPrice.HasValue)
             query = query.Where(x => x.ProductVariants.Any(v => v.IsActive && v.SellingPrice <= f.MaxPrice.Value));
 
-        return query.OrderByDescending(x => x.CreatedAt).ThenBy(x => x.ProductName);
+        switch (f.SortBy?.ToLower())
+        {
+            case "priceasc":
+                return query.OrderBy(x => x.ProductVariants.Where(v => v.IsActive).Min(v => (decimal?)v.SellingPrice) ?? 0);
+            case "pricedesc":
+                return query.OrderByDescending(x => x.ProductVariants.Where(v => v.IsActive).Max(v => (decimal?)v.SellingPrice) ?? 0);
+            case "nameasc":
+                return query.OrderBy(x => x.ProductName);
+            case "namedesc":
+                return query.OrderByDescending(x => x.ProductName);
+            case "bestselling":
+                // Handled in memory inside SearchProductsAsync
+                return query;
+            case "newest":
+            default:
+                return query.OrderByDescending(x => x.CreatedAt).ThenBy(x => x.ProductName);
+        }
+    }
+
+    private async Task<Dictionary<int, int>> GetProductSalesDictionaryAsync()
+    {
+        return await cache.GetOrCreateAsync("ProductSalesDictionary", async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(4);
+            var sales = await dbContext.OrderDetails
+                .AsNoTracking()
+                .Where(od => od.Order.OrderStatus == OrderStatus.Delivered ||
+                             od.Order.OrderStatus == OrderStatus.Shipping ||
+                             od.Order.OrderStatus == OrderStatus.Processing ||
+                             od.Order.OrderStatus == OrderStatus.Confirmed)
+                .GroupBy(od => od.ProductVariant.ProductID)
+                .Select(g => new { ProductID = g.Key, TotalSold = g.Sum(od => od.Quantity) })
+                .ToDictionaryAsync(x => x.ProductID, x => x.TotalSold);
+            return sales;
+        }) ?? new Dictionary<int, int>();
     }
 
     public Task<Product?> GetProductBySlugAsync(string slug)
@@ -172,6 +243,56 @@ public class ProductRepository(StoreDbContext dbContext) : IProductRepository
             .OrderByDescending(x => x.ProductID)
             .Take(count)
             .ToListAsync();
+    }
+
+    public async Task<List<Product>> GetDynamicBestSellerProductsAsync(int count = 4)
+    {
+        var cacheKey = $"BestSellerProducts_{count}";
+        if (cache.TryGetValue(cacheKey, out List<Product>? cachedProducts) && cachedProducts != null)
+        {
+            return cachedProducts;
+        }
+
+        var bestSellingProductIds = await dbContext.OrderDetails
+            .AsNoTracking()
+            .Where(od => od.Order.OrderStatus == OrderStatus.Delivered ||
+                         od.Order.OrderStatus == OrderStatus.Shipping ||
+                         od.Order.OrderStatus == OrderStatus.Processing ||
+                         od.Order.OrderStatus == OrderStatus.Confirmed)
+            .GroupBy(od => od.ProductVariant.ProductID)
+            .Select(g => new { ProductID = g.Key, TotalSold = g.Sum(od => od.Quantity) })
+            .OrderByDescending(x => x.TotalSold)
+            .Take(count)
+            .Select(x => x.ProductID)
+            .ToListAsync();
+
+        if (!bestSellingProductIds.Any())
+        {
+            return await GetBestSellingProductsAsync(count);
+        }
+
+        var products = await dbContext.Products
+            .AsNoTracking()
+            .Include(x => x.Category)
+            .Include(x => x.DiscountProgram)
+            .Include(x => x.ProductVariants.Where(v => v.IsActive))
+                .ThenInclude(v => v.Color)
+            .Include(x => x.ProductVariants.Where(v => v.IsActive))
+                .ThenInclude(v => v.ProductImages.OrderBy(i => i.DisplayOrder).Take(1))
+            .Where(x => bestSellingProductIds.Contains(x.ProductID) && x.IsActive)
+            .ToListAsync();
+
+        var sortedProducts = products
+            .OrderBy(p => bestSellingProductIds.IndexOf(p.ProductID))
+            .ToList();
+
+        var cacheOptions = new MemoryCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(4)
+        };
+        cache.Set(cacheKey, sortedProducts, cacheOptions);
+
+        return sortedProducts;
     }
 
     public async Task<List<Product>> GetInStockProductsAsync(int count = 4)
