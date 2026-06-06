@@ -283,95 +283,44 @@
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 tab-content" id="tab-all">
-                @foreach (var p in Model.RelatedProducts)
+                @if (Model.RelatedProducts.Any())
                 {
-                    <a href="@Url.Action("Details","Home",new{id=p.ProductID})" class="group block related-item cursor-pointer">
-                        <div class="relative overflow-hidden mb-4" style="padding-bottom:100%; background:#f0eded;">
-                            @if (!string.IsNullOrWhiteSpace(p.ThumbnailUrl))
-                            {
-                                <img src="@p.ThumbnailUrl" alt="@p.ProductName" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-in-out" />
-                            }
-                            else
-                            {
-                                <div class="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">Chưa có ảnh</div>
-                            }
-                        </div>
-                        <h3 class="font-['Inter'] text-[16px] text-[#553722] mb-1 truncate">@p.ProductName</h3>
-                        <p class="font-['Inter'] text-[14px] text-gray-500 mb-2 truncate">@p.CategoryName</p>
-                        <div class="flex items-center gap-2 mb-3">
-                            @if (p.HasDiscount)
-                            {
-                                <span class="font-['Inter'] text-[16px] text-[#553722] font-medium">@(p.MinPrice?.ToString("N0"))đ</span>
-                                <span class="font-['Inter'] text-[14px] line-through text-gray-400">@(p.OriginalMinPrice?.ToString("N0"))đ</span>
-                            }
-                            else
-                            {
-                                <span class="font-['Inter'] text-[16px] text-[#553722] font-medium">@($"{p.MinPrice?.ToString("N0")}đ")</span>
-                            }
-                        </div>
-                    </a>
+                    @foreach (var p in Model.RelatedProducts)
+                    {
+                        <partial name="_ProductCard" model="p" />
+                    }
+                }
+                else
+                {
+                    <div class="col-span-full text-center text-gray-500 py-8">Chưa có sản phẩm liên quan.</div>
                 }
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 tab-content hidden" id="tab-bestseller">
-                @foreach (var p in Model.BestSellingProducts)
+                @if (Model.BestSellingProducts.Any())
                 {
-                    <a href="@Url.Action("Details","Home",new{id=p.ProductID})" class="group block related-item cursor-pointer">
-                        <div class="relative overflow-hidden mb-4" style="padding-bottom:100%; background:#f0eded;">
-                            @if (!string.IsNullOrWhiteSpace(p.ThumbnailUrl))
-                            {
-                                <img src="@p.ThumbnailUrl" alt="@p.ProductName" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-in-out" />
-                            }
-                            else
-                            {
-                                <div class="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">Chưa có ảnh</div>
-                            }
-                        </div>
-                        <h3 class="font-['Inter'] text-[16px] text-[#553722] mb-1 truncate">@p.ProductName</h3>
-                        <p class="font-['Inter'] text-[14px] text-gray-500 mb-2 truncate">@p.CategoryName</p>
-                        <div class="flex items-center gap-2 mb-3">
-                            @if (p.HasDiscount)
-                            {
-                                <span class="font-['Inter'] text-[16px] text-[#553722] font-medium">@(p.MinPrice?.ToString("N0"))đ</span>
-                                <span class="font-['Inter'] text-[14px] line-through text-gray-400">@(p.OriginalMinPrice?.ToString("N0"))đ</span>
-                            }
-                            else
-                            {
-                                <span class="font-['Inter'] text-[16px] text-[#553722] font-medium">@($"{p.MinPrice?.ToString("N0")}đ")</span>
-                            }
-                        </div>
-                    </a>
+                    @foreach (var p in Model.BestSellingProducts)
+                    {
+                        <partial name="_ProductCard" model="p" />
+                    }
+                }
+                else
+                {
+                    <div class="col-span-full text-center text-gray-500 py-8">Chưa có sản phẩm bán chạy.</div>
                 }
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 tab-content hidden" id="tab-instock">
-                @foreach (var p in Model.InStockProducts)
+                @if (Model.InStockProducts.Any())
                 {
-                    <a href="@Url.Action("Details","Home",new{id=p.ProductID})" class="group block related-item cursor-pointer">
-                        <div class="relative overflow-hidden mb-4" style="padding-bottom:100%; background:#f0eded;">
-                            @if (!string.IsNullOrWhiteSpace(p.ThumbnailUrl))
-                            {
-                                <img src="@p.ThumbnailUrl" alt="@p.ProductName" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-in-out" />
-                            }
-                            else
-                            {
-                                <div class="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">Chưa có ảnh</div>
-                            }
-                        </div>
-                        <h3 class="font-['Inter'] text-[16px] text-[#553722] mb-1 truncate">@p.ProductName</h3>
-                        <p class="font-['Inter'] text-[14px] text-gray-500 mb-2 truncate">@p.CategoryName</p>
-                        <div class="flex items-center gap-2 mb-3">
-                            @if (p.HasDiscount)
-                            {
-                                <span class="font-['Inter'] text-[16px] text-[#553722] font-medium">@(p.MinPrice?.ToString("N0"))đ</span>
-                                <span class="font-['Inter'] text-[14px] line-through text-gray-400">@(p.OriginalMinPrice?.ToString("N0"))đ</span>
-                            }
-                            else
-                            {
-                                <span class="font-['Inter'] text-[16px] text-[#553722] font-medium">@($"{p.MinPrice?.ToString("N0")}đ")</span>
-                            }
-                        </div>
-                    </a>
+                    @foreach (var p in Model.InStockProducts)
+                    {
+                        <partial name="_ProductCard" model="p" />
+                    }
+                }
+                else
+                {
+                    <div class="col-span-full text-center text-gray-500 py-8">Chưa có sản phẩm nào.</div>
                 }
             </div>
         </section>

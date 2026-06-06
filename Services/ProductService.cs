@@ -42,9 +42,9 @@ public class ProductService(IProductRepository productRepository) : IProductServ
         var product = await productRepository.GetProductDetailsAsync(productId);
         if (product is null) return null;
         var vm = MapDetails(product);
-        var related = await productRepository.GetRelatedProductsAsync(product.ProductID, product.CategoryID, 12);
-        var bestSelling = await productRepository.GetDynamicBestSellerProductsAsync(12);
-        var inStock = await productRepository.GetInStockProductsAsync(12);
+        var related = await productRepository.GetRelatedProductsAsync(product.ProductID, product.CategoryID, 8);
+        var bestSelling = await productRepository.GetDynamicBestSellerProductsAsync(8);
+        var inStock = await productRepository.GetInStockProductsAsync(8);
         vm.RelatedProducts = related.Select(MapCard).ToList();
         vm.BestSellingProducts = bestSelling.Select(MapCard).ToList();
         vm.InStockProducts = inStock.Select(MapCard).ToList();
@@ -56,9 +56,9 @@ public class ProductService(IProductRepository productRepository) : IProductServ
         var product = await productRepository.GetProductBySlugAsync(slug);
         if (product is null) return null;
         var vm = MapDetails(product);
-        var related = await productRepository.GetRelatedProductsAsync(product.ProductID, product.CategoryID, 12);
-        var bestSelling = await productRepository.GetDynamicBestSellerProductsAsync(12);
-        var inStock = await productRepository.GetInStockProductsAsync(12);
+        var related = await productRepository.GetRelatedProductsAsync(product.ProductID, product.CategoryID, 8);
+        var bestSelling = await productRepository.GetDynamicBestSellerProductsAsync(8);
+        var inStock = await productRepository.GetInStockProductsAsync(8);
         vm.RelatedProducts = related.Select(MapCard).ToList();
         vm.BestSellingProducts = bestSelling.Select(MapCard).ToList();
         vm.InStockProducts = inStock.Select(MapCard).ToList();
