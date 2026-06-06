@@ -1,0 +1,65 @@
+@{
+    Layout = "_StoreLayout";
+    var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+}
+
+<div class="container mx-auto px-4 py-8 max-w-7xl">
+    <!-- Breadcrumb could go here -->
+    
+    <div class="flex flex-col lg:flex-row gap-8">
+        <!-- Sidebar Menu -->
+        <aside class="w-full lg:w-64 flex-shrink-0">
+            <div class="bg-white rounded-lg border border-gray-100 p-4 sticky top-24">
+                <div class="mb-6 px-4">
+                    <h3 class="text-lg font-semibold text-brand-dark-brown">Tài khoản của tôi</h3>
+                </div>
+                
+                <nav class="space-y-1">
+                    <a asp-controller="CustomerAccount" asp-action="Index"
+                       class="block px-4 py-2.5 rounded-md transition-colors text-sm font-medium @(action == "Index" ? "bg-brand-cream text-brand-brown" : "text-gray-600 hover:bg-gray-50 hover:text-brand-brown")">
+                        Bảng điều khiển
+                    </a>
+                    
+                    <a asp-controller="CustomerAccount" asp-action="Orders"
+                       class="block px-4 py-2.5 rounded-md transition-colors text-sm font-medium @(action.StartsWith("Order") ? "bg-brand-cream text-brand-brown" : "text-gray-600 hover:bg-gray-50 hover:text-brand-brown")">
+                        Đơn hàng của tôi
+                    </a>
+                    
+                    <a asp-controller="CustomerAccount" asp-action="Profile"
+                       class="block px-4 py-2.5 rounded-md transition-colors text-sm font-medium @(action == "Profile" ? "bg-brand-cream text-brand-brown" : "text-gray-600 hover:bg-gray-50 hover:text-brand-brown")">
+                        Thông tin cá nhân
+                    </a>
+                    
+                    <a asp-controller="CustomerAccount" asp-action="Addresses"
+                       class="block px-4 py-2.5 rounded-md transition-colors text-sm font-medium @(action == "Addresses" ? "bg-brand-cream text-brand-brown" : "text-gray-600 hover:bg-gray-50 hover:text-brand-brown")">
+                        Sổ địa chỉ
+                    </a>
+                    
+                    <a asp-controller="CustomerAccount" asp-action="ChangePassword"
+                       class="block px-4 py-2.5 rounded-md transition-colors text-sm font-medium @(action == "ChangePassword" ? "bg-brand-cream text-brand-brown" : "text-gray-600 hover:bg-gray-50 hover:text-brand-brown")">
+                        Đổi mật khẩu
+                    </a>
+                    
+                    <div class="my-4 border-t border-gray-100"></div>
+                    
+                    <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
+                        <button type="submit" class="w-full text-left px-4 py-2.5 rounded-md transition-colors text-sm font-medium text-red-600 hover:bg-red-50">
+                            Đăng xuất
+                        </button>
+                    </form>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1">
+            <div class="bg-white rounded-lg border border-gray-100 p-6 md:p-8">
+                @RenderBody()
+            </div>
+        </main>
+    </div>
+</div>
+
+@section Scripts {
+    @await RenderSectionAsync("Scripts", required: false)
+}

@@ -1,0 +1,153 @@
+@model ClothingStore.Models.ViewModels.RegisterViewModel
+
+@{
+    ViewData["Title"] = "Đăng ký tài khoản";
+    Layout = "_AuthLayout";
+}
+
+<div class="text-center mb-8">
+    <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Tạo tài khoản</h1>
+    <p class="text-sm text-gray-500 mt-2">Trở thành thành viên để nhận nhiều ưu đãi</p>
+</div>
+
+<form asp-controller="Account" asp-action="Register" method="post" class="space-y-5">
+    @Html.AntiForgeryToken()
+    
+    <div asp-validation-summary="ModelOnly" class="text-sm text-red-600 bg-red-50 p-3 rounded border border-red-100"></div>
+
+    <div>
+        <label asp-for="FullName" class="block text-sm font-medium text-gray-700">Họ và tên</label>
+        <div class="mt-1">
+            <input asp-for="FullName" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-brand-brown focus:border-brand-brown sm:text-sm" placeholder="VD: Nguyễn Văn A" />
+        </div>
+        <span asp-validation-for="FullName" class="text-xs text-red-500 mt-1 block"></span>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div>
+            <label asp-for="Email" class="block text-sm font-medium text-gray-700">Email</label>
+            <div class="mt-1">
+                <input asp-for="Email" type="email" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-brand-brown focus:border-brand-brown sm:text-sm" placeholder="email@example.com" />
+            </div>
+            <span asp-validation-for="Email" class="text-xs text-red-500 mt-1 block"></span>
+        </div>
+
+        <div>
+            <label asp-for="Phone" class="block text-sm font-medium text-gray-700">Số điện thoại</label>
+            <div class="mt-1">
+                <input asp-for="Phone" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-brand-brown focus:border-brand-brown sm:text-sm" placeholder="09xxxxxxxx" />
+            </div>
+            <span asp-validation-for="Phone" class="text-xs text-red-500 mt-1 block"></span>
+        </div>
+    </div>
+
+    <div>
+        <label asp-for="UserName" class="block text-sm font-medium text-gray-700">Tên đăng nhập</label>
+        <div class="mt-1">
+            <input asp-for="UserName" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-brand-brown focus:border-brand-brown sm:text-sm" placeholder="Nhập tên đăng nhập" />
+        </div>
+        <span asp-validation-for="UserName" class="text-xs text-red-500 mt-1 block"></span>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div>
+            <label asp-for="Password" class="block text-sm font-medium text-gray-700">Mật khẩu</label>
+            <div class="mt-1 relative">
+                <input asp-for="Password" type="password" id="reg_password" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-brand-brown focus:border-brand-brown sm:text-sm" placeholder="••••••••" />
+                <button type="button" onclick="toggleRegPassword()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5">
+                    <svg class="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                </button>
+            </div>
+            <span asp-validation-for="Password" class="text-xs text-red-500 mt-1 block"></span>
+        </div>
+
+        <div>
+            <label asp-for="ConfirmPassword" class="block text-sm font-medium text-gray-700">Xác nhận mật khẩu</label>
+            <div class="mt-1 relative">
+                <input asp-for="ConfirmPassword" type="password" id="reg_confirm_password" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-brand-brown focus:border-brand-brown sm:text-sm" placeholder="••••••••" />
+                <button type="button" onclick="toggleRegConfirmPassword()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5">
+                    <svg class="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                </button>
+            </div>
+            <span asp-validation-for="ConfirmPassword" class="text-xs text-red-500 mt-1 block"></span>
+        </div>
+    </div>
+
+    <div class="flex items-center mt-4">
+        <input asp-for="AcceptTerms" class="h-4 w-4 text-brand-brown focus:ring-brand-brown border-gray-300 rounded" />
+        <label asp-for="AcceptTerms" class="ml-2 block text-sm text-gray-900">Tôi đồng ý với <a href="#" class="text-brand-brown hover:text-brand-dark-brown underline">Điều khoản & Dịch vụ</a></label>
+    </div>
+    <span asp-validation-for="AcceptTerms" class="text-xs text-red-500 block -mt-2 mb-2"></span>
+
+    <div class="pt-2">
+        <button type="submit" class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-brown hover:bg-brand-dark-brown focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-brown transition-colors">
+            Đăng ký tài khoản
+        </button>
+    </div>
+</form>
+
+<div class="mt-6">
+    <div class="relative">
+        <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-gray-300"></div>
+        </div>
+        <div class="relative flex justify-center text-sm">
+            <span class="px-2 bg-white text-gray-500">Hoặc tiếp tục với</span>
+        </div>
+    </div>
+
+    <form asp-controller="Account" asp-action="ExternalLogin" method="post" class="mt-6 grid grid-cols-2 gap-3">
+        <div>
+            <button type="submit" name="provider" value="Google" class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors">
+                <svg class="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"/>
+                </svg>
+                Google
+            </button>
+        </div>
+        <div>
+            <button type="submit" name="provider" value="Facebook" disabled title="Tính năng đăng ký bằng Facebook đang được bảo trì" class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-gray-100 text-sm font-medium text-gray-400 cursor-not-allowed transition-colors">
+                <svg class="h-5 w-5 mr-2 text-gray-400" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V15.32h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 3.32h-2.33v6.559C18.343 21.128 22 16.991 22 12c0-5.523-4.477-10-10-10z"/>
+                </svg>
+                Facebook (Bảo trì)
+            </button>
+        </div>
+    </form>
+</div>
+
+<div class="mt-6 text-center">
+    <p class="text-sm text-gray-600">
+        Đã có tài khoản?
+        <a asp-controller="Account" asp-action="Login" class="font-medium text-brand-brown hover:text-brand-dark-brown">Đăng nhập</a>
+    </p>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function toggleRegPassword() {
+            var x = document.getElementById("reg_password");
+            if (x.type === "password") {
+                x.type = "text";
+            } else {
+                x.type = "password";
+            }
+        }
+
+        function toggleRegConfirmPassword() {
+            var x = document.getElementById("reg_confirm_password");
+            if (x.type === "password") {
+                x.type = "text";
+            } else {
+                x.type = "password";
+            }
+        }
+    </script>
+}

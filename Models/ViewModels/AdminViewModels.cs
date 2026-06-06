@@ -399,4 +399,28 @@ public class RegisterViewModel
     [Required(ErrorMessage = "Số điện thoại là bắt buộc.")]
     [Phone(ErrorMessage = "Số điện thoại không hợp lệ.")]
     public string Phone { get; set; } = string.Empty;
+
+    public bool AcceptTerms { get; set; }
+}
+
+public class ForgotPasswordViewModel
+{
+    [Required(ErrorMessage = "Vui lòng nhập Email.")]
+    [EmailAddress(ErrorMessage = "Email không hợp lệ.")]
+    public string Email { get; set; } = string.Empty;
+}
+
+public class ResetPasswordViewModel
+{
+    [Required]
+    public string Token { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Mật khẩu là bắt buộc.")]
+    [StringLength(100, MinimumLength = 6, ErrorMessage = "Mật khẩu ít nhất 6 ký tự.")]
+    [DataType(DataType.Password)]
+    public string Password { get; set; } = string.Empty;
+
+    [Compare(nameof(Password), ErrorMessage = "Mật khẩu xác nhận không khớp.")]
+    [DataType(DataType.Password)]
+    public string ConfirmPassword { get; set; } = string.Empty;
 }

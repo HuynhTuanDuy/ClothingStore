@@ -26,8 +26,12 @@ builder.Services.AddSession(options =>
 });
 
 // ── [BUG-03 FIX] Cookie Authentication ───────────────────────
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
+builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    })
+    .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
     {
         options.LoginPath        = "/Account/Login";
         options.LogoutPath       = "/Account/Logout";
@@ -37,6 +41,26 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.Name      = ".ClothingStore.Auth";
         options.Cookie.HttpOnly  = true;
         options.Cookie.SecurePolicy = Microsoft.AspNetCore.Http.CookieSecurePolicy.SameAsRequest;
+    })
+    .AddCookie("ExternalCookie")
+    .AddGoogle(options =>
+    {
+        options.SignInScheme = "ExternalCookie";
+        options.ClientId = builder.Configuration["Authentication:Google:ClientId"] ?? "placeholder";
+        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"] ?? "placeholder";
+        
+        // Force Google to always ask the user to select an account
+        options.Events.OnRedirectToAuthorizationEndpoint = context =>
+        {
+            context.Response.Redirect(context.RedirectUri + "&prompt=select_account");
+            return Task.CompletedTask;
+        };
+    })
+    .AddFacebook(options =>
+    {
+        options.SignInScheme = "ExternalCookie";
+        options.AppId = builder.Configuration["Authentication:Facebook:AppId"] ?? "placeholder";
+        options.AppSecret = builder.Configuration["Authentication:Facebook:AppSecret"] ?? "placeholder";
     });
 
 builder.Services.AddAuthorization();
@@ -60,6 +84,8 @@ builder.Services.AddScoped<ICouponService, CouponService>();
 builder.Services.AddScoped<IAdminProductService, AdminProductService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
+builder.Services.AddScoped<ICustomerAccountService, CustomerAccountService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 var app = builder.Build();
 

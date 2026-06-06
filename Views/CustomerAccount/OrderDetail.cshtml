@@ -1,0 +1,123 @@
+@model ClothingStore.Models.Entities.Order
+
+@{
+    ViewData["Title"] = "Chi tiết đơn hàng #" + Model.OrderCode;
+    Layout = "_AccountLayout";
+}
+
+<div class="mb-6 flex justify-between items-center">
+    <div>
+        <h1 class="text-2xl font-semibold text-brand-dark-brown">Chi tiết đơn hàng #@Model.OrderCode</h1>
+        <p class="text-gray-500 mt-1">Ngày đặt: @Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</p>
+    </div>
+    <a asp-action="Orders" class="text-sm font-medium text-brand-brown hover:underline flex items-center gap-1">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Quay lại
+    </a>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="lg:col-span-2 space-y-6">
+        <!-- Lịch sử trạng thái -->
+        <div class="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Lịch sử trạng thái</h3>
+            <div class="relative border-l border-gray-200 ml-3 space-y-6">
+                @foreach (var history in Model.StatusHistory.OrderByDescending(h => h.ChangedAt))
+                {
+                    <div class="relative pl-6">
+                        <div class="absolute -left-1.5 top-1.5 h-3 w-3 rounded-full border-2 border-white bg-brand-brown"></div>
+                        <div class="text-sm font-medium text-gray-800">@history.NewStatus</div>
+                        <div class="text-xs text-gray-500 mt-0.5">@(history.ChangedAt?.ToString("dd/MM/yyyy HH:mm"))</div>
+                        @if (!string.IsNullOrEmpty(history.Note))
+                        {
+                            <div class="text-sm text-gray-600 mt-1">@history.Note</div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Sản phẩm -->
+        <div class="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Sản phẩm đã đặt</h3>
+            <div class="space-y-4">
+                @foreach (var detail in Model.OrderDetails)
+                {
+                    <div class="flex gap-4 py-4 border-b border-gray-100 last:border-0 last:pb-0">
+                        @{
+                            // Tái sử dụng logic lấy ảnh tương tự TopProductPoint
+                            var mainImage = detail.ProductVariant?.Product?.ThumbnailUrl;
+                            if (string.IsNullOrEmpty(mainImage))
+                            {
+                                mainImage = "/images/placeholder.jpg"; // Fallback
+                            }
+                            var productName = string.IsNullOrEmpty(detail.ProductNameSnapshot) 
+                                ? detail.ProductVariant?.Product?.ProductName 
+                                : detail.ProductNameSnapshot;
+                        }
+                        <img src="@mainImage" alt="@productName" class="w-20 h-24 object-cover rounded-md border border-gray-200" />
+                        
+                        <div class="flex-1">
+                            <h4 class="text-sm font-medium text-gray-900">@productName</h4>
+                            @if (detail.ProductVariant != null)
+                            {
+                                <p class="text-xs text-gray-500 mt-1">SKU: @detail.ProductVariant.SKU</p>
+                            }
+                            <div class="flex justify-between items-center mt-2">
+                                <span class="text-sm text-gray-600">SL: @detail.Quantity</span>
+                                <span class="text-sm font-medium text-gray-900">@((detail.UnitPrice * detail.Quantity).ToString("N0"))₫</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Thông tin thanh toán & Giao hàng -->
+    <div class="space-y-6">
+        <div class="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Tổng quan</h3>
+            
+            <div class="space-y-3 text-sm">
+                <div class="flex justify-between text-gray-600">
+                    <span>Tạm tính (@Model.OrderDetails.Sum(d => d.Quantity) sản phẩm)</span>
+                    <span>@Model.TotalAmount.ToString("N0")₫</span>
+                </div>
+                
+                @if (Model.DiscountAmount > 0)
+                {
+                    <div class="flex justify-between text-green-600">
+                        <span>Giảm giá</span>
+                        <span>-@Model.DiscountAmount.ToString("N0")₫</span>
+                    </div>
+                }
+
+                <div class="border-t border-gray-100 pt-3 flex justify-between items-center">
+                    <span class="font-semibold text-gray-900">Tổng cộng</span>
+                    <span class="text-lg font-bold text-brand-brown">@Model.FinalAmount.ToString("N0")₫</span>
+                </div>
+            </div>
+
+            <div class="mt-6 pt-6 border-t border-gray-100">
+                <h4 class="text-sm font-semibold text-gray-900 mb-2">Phương thức thanh toán</h4>
+                <p class="text-sm text-gray-600">@Model.PaymentMethod</p>
+                <div class="mt-2 inline-block px-2.5 py-0.5 rounded-full text-xs font-medium @(Model.PaymentStatus == ClothingStore.Models.Entities.PaymentStatus.Paid ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800")">
+                    @Model.PaymentStatus
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Địa chỉ giao hàng</h3>
+            <div class="text-sm text-gray-600 space-y-1">
+                <p class="font-medium text-gray-900">@Model.ShippingRecipientName</p>
+                <p>@Model.ShippingPhone</p>
+                <p>@Model.ShippingAddress</p>
+                <p>@Model.ShippingWard, @Model.ShippingDistrict, @Model.ShippingProvince</p>
+            </div>
+        </div>
+    </div>
+</div>

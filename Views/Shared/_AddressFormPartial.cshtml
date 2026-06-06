@@ -1,0 +1,52 @@
+@model ClothingStore.Models.ViewModels.AddressFormViewModel
+
+<form asp-action="AddAddress" method="post">
+    @Html.AntiForgeryToken()
+    <div class="space-y-4">
+        <div>
+            <label asp-for="RecipientName" class="block text-sm font-medium text-gray-700 mb-1">Tên người nhận</label>
+            <input asp-for="RecipientName" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-brand-brown focus:border-brand-brown" />
+            <span asp-validation-for="RecipientName" class="text-red-500 text-xs mt-1 block"></span>
+        </div>
+        
+        <div>
+            <label asp-for="ReceiverPhone" class="block text-sm font-medium text-gray-700 mb-1">Số điện thoại</label>
+            <input asp-for="ReceiverPhone" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-brand-brown focus:border-brand-brown" />
+            <span asp-validation-for="ReceiverPhone" class="text-red-500 text-xs mt-1 block"></span>
+        </div>
+        
+        <div>
+            <label asp-for="AddressLine" class="block text-sm font-medium text-gray-700 mb-1">Số nhà, Tên đường</label>
+            <input asp-for="AddressLine" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-brand-brown focus:border-brand-brown" />
+            <span asp-validation-for="AddressLine" class="text-red-500 text-xs mt-1 block"></span>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label asp-for="Province" class="block text-sm font-medium text-gray-700 mb-1">Tỉnh/Thành phố</label>
+                <input asp-for="Province" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-brand-brown focus:border-brand-brown" />
+                <span asp-validation-for="Province" class="text-red-500 text-xs mt-1 block"></span>
+            </div>
+            <div>
+                <label asp-for="District" class="block text-sm font-medium text-gray-700 mb-1">Quận/Huyện</label>
+                <input asp-for="District" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-brand-brown focus:border-brand-brown" />
+                <span asp-validation-for="District" class="text-red-500 text-xs mt-1 block"></span>
+            </div>
+            <div>
+                <label asp-for="Ward" class="block text-sm font-medium text-gray-700 mb-1">Phường/Xã</label>
+                <input asp-for="Ward" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-brand-brown focus:border-brand-brown" />
+                <span asp-validation-for="Ward" class="text-red-500 text-xs mt-1 block"></span>
+            </div>
+        </div>
+        
+        <div class="flex items-center mt-2">
+            <input asp-for="IsDefault" class="h-4 w-4 text-brand-brown border-gray-300 rounded" />
+            <label asp-for="IsDefault" class="ml-2 block text-sm text-gray-900">Đặt làm địa chỉ mặc định</label>
+        </div>
+    </div>
+    
+    <div class="mt-6 flex gap-3 justify-end">
+        <button type="button" onclick="document.getElementById('addAddressModal').classList.add('hidden')" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">Hủy</button>
+        <button type="submit" class="px-4 py-2 bg-brand-brown text-white rounded-md hover:bg-brand-dark-brown">Thêm mới</button>
+    </div>
+</form>

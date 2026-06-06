@@ -1,0 +1,96 @@
+@model ClothingStore.Models.ViewModels.CustomerOrdersViewModel
+
+@{
+    ViewData["Title"] = "Đơn hàng của tôi";
+    Layout = "_AccountLayout";
+}
+
+<div class="mb-8">
+    <h1 class="text-2xl font-semibold text-brand-dark-brown">Đơn hàng của tôi</h1>
+    <p class="text-gray-500 mt-2">Xem lại danh sách và tình trạng các đơn hàng bạn đã đặt.</p>
+</div>
+
+@if (Model.Orders.Any())
+{
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="border-b border-gray-200 bg-gray-50">
+                    <th class="py-3 px-4 text-sm font-semibold text-gray-700">Mã đơn hàng</th>
+                    <th class="py-3 px-4 text-sm font-semibold text-gray-700">Ngày đặt</th>
+                    <th class="py-3 px-4 text-sm font-semibold text-gray-700">Tổng tiền</th>
+                    <th class="py-3 px-4 text-sm font-semibold text-gray-700">Trạng thái</th>
+                    <th class="py-3 px-4 text-sm font-semibold text-gray-700 text-right">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                @foreach (var order in Model.Orders)
+                {
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="py-4 px-4 text-sm font-medium text-brand-brown">
+                            #@order.OrderCode
+                        </td>
+                        <td class="py-4 px-4 text-sm text-gray-600">
+                            @order.OrderDate.ToString("dd/MM/yyyy HH:mm")
+                        </td>
+                        <td class="py-4 px-4 text-sm font-medium text-gray-800">
+                            @order.FinalAmount.ToString("N0")₫
+                        </td>
+                        <td class="py-4 px-4">
+                            @{
+                                var statusClass = order.OrderStatus switch
+                                {
+                                    ClothingStore.Models.Entities.OrderStatus.Pending => "bg-yellow-100 text-yellow-800",
+                                    ClothingStore.Models.Entities.OrderStatus.Confirmed => "bg-blue-100 text-blue-800",
+                                    ClothingStore.Models.Entities.OrderStatus.Shipping => "bg-orange-100 text-orange-800",
+                                    ClothingStore.Models.Entities.OrderStatus.Delivered => "bg-green-100 text-green-800",
+                                    ClothingStore.Models.Entities.OrderStatus.Cancelled => "bg-red-100 text-red-800",
+                                    _ => "bg-gray-100 text-gray-800"
+                                };
+                            }
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @statusClass">
+                                @order.OrderStatus
+                            </span>
+                        </td>
+                        <td class="py-4 px-4 text-right">
+                            <a asp-controller="CustomerAccount" asp-action="OrderDetail" asp-route-orderCode="@order.OrderCode" 
+                               class="text-sm font-medium text-brand-brown hover:text-brand-dark-brown hover:underline">
+                                Xem chi tiết
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    @if (Model.TotalPages > 1)
+    {
+        <div class="flex justify-center mt-8">
+            <nav class="flex items-center gap-1">
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <a asp-controller="CustomerAccount" asp-action="Orders" asp-route-page="@i"
+                       class="w-10 h-10 flex items-center justify-center rounded-md text-sm font-medium transition-colors
+                              @(i == Model.CurrentPage ? "bg-brand-brown text-white" : "text-gray-600 hover:bg-gray-100")">
+                        @i
+                    </a>
+                }
+            </nav>
+        </div>
+    }
+}
+else
+{
+    <div class="text-center py-12 bg-gray-50 rounded-lg border border-gray-100">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+        </svg>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">Bạn chưa có đơn hàng nào</h3>
+        <p class="text-gray-500 mb-6">Hãy khám phá các sản phẩm của chúng tôi và đặt đơn hàng đầu tiên!</p>
+        <a asp-controller="Home" asp-action="ShopAll" class="inline-flex items-center px-6 py-3 bg-brand-brown text-white font-medium rounded-md hover:bg-brand-dark-brown transition-colors">
+            Khám phá ngay
+        </a>
+    </div>
+}

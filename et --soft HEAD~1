@@ -1,0 +1,35 @@
+[33mcommit 27534641f4c1a8804cc38dc41075cc643c1912d4[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/auth-security-fix[m[33m, [m[1;32mmain[m[33m)[m
+Author: Duy <duyhuynh180105@gmail.com>
+Date:   Sat Jun 6 16:40:15 2026 +0700
+
+    feat: implement comprehensive user authentication and customer account management system
+
+ ClothingStore.csproj                            |   2 [32m+[m
+ Controllers/AccountController.cs                | 120 [32m++++++++++[m[31m-[m
+ Controllers/CustomerAccountController.cs        | 187 [32m++++++++++++++++[m
+ Models/ViewModels/AdminViewModels.cs            |  24 [32m+++[m
+ Models/ViewModels/CustomerAccountViewModels.cs  |  81 [32m+++++++[m
+ Program.cs                                      |  30 [32m++[m[31m-[m
+ Properties/launchSettings.json                  |   6 [32m+[m[31m-[m
+ Services/AuthService.cs                         | 181 [32m+++++++++++++++[m[31m-[m
+ Services/CustomerAccountService.cs              | 270 [32m++++++++++++++++++++++++[m
+ Services/EmailService.cs                        |  62 [32m++++++[m
+ Services/IEmailService.cs                       |   6 [32m+[m
+ Views/Account/AccessDenied.cshtml               |  18 [32m++[m
+ Views/Account/ForgotPassword.cshtml             |  42 [32m++++[m
+ Views/Account/ForgotPasswordConfirmation.cshtml |  20 [32m++[m
+ Views/Account/Login.cshtml                      | 123 [32m+++++++++++[m
+ Views/Account/Register.cshtml                   | 153 [32m++++++++++++++[m
+ Views/Account/ResetPassword.cshtml              |  74 [32m+++++++[m
+ Views/CustomerAccount/Addresses.cshtml          | 176 [32m+++++++++++++++[m
+ Views/CustomerAccount/ChangePassword.cshtml     |  46 [32m++++[m
+ Views/CustomerAccount/Index.cshtml              |  47 [32m+++++[m
+ Views/CustomerAccount/OrderDetail.cshtml        | 123 [32m+++++++++++[m
+ Views/CustomerAccount/Orders.cshtml             |  96 [32m+++++++++[m
+ Views/CustomerAccount/Profile.cshtml            |  45 [32m++++[m
+ Views/Shared/_AccountLayout.cshtml              |  65 [32m++++++[m
+ Views/Shared/_AddressFormPartial.cshtml         |  52 [32m+++++[m
+ Views/Shared/_AuthLayout.cshtml                 |  73 [32m+++++++[m
+ Views/Shared/_StoreLayout.cshtml                |  43 [32m+++[m[31m-[m
+ appsettings.json                                |  22 [32m+[m[31m-[m
+ 28 files changed, 2175 insertions(+), 12 deletions(-)
