@@ -90,6 +90,8 @@
             @{
                 var ctrl = ViewContext.RouteData.Values["controller"]?.ToString();
             }
+            @if (Context.HasPermission("Dashboard.View"))
+            {
             <li>
                 <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 @(ctrl == "Dashboard" ? "bg-surface-container-high text-primary font-semibold" : "text-on-surface-variant hover:bg-surface-container-high")"
                    asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
@@ -97,6 +99,9 @@
                     Dashboard
                 </a>
             </li>
+            }
+            @if (Context.HasPermission("Product.View"))
+            {
             <li>
                 <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 @(ctrl == "Products" ? "bg-surface-container-high text-primary font-semibold" : "text-on-surface-variant hover:bg-surface-container-high")"
                    asp-area="Admin" asp-controller="Products" asp-action="Index">
@@ -104,6 +109,9 @@
                     Sản phẩm
                 </a>
             </li>
+            }
+            @if (Context.HasPermission("Category.Manage"))
+            {
             <li>
                 <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 @(ctrl == "Categories" ? "bg-surface-container-high text-primary font-semibold" : "text-on-surface-variant hover:bg-surface-container-high")"
                    asp-area="Admin" asp-controller="Categories" asp-action="Index">
@@ -111,6 +119,9 @@
                     Danh mục
                 </a>
             </li>
+            }
+            @if (Context.HasPermission("Order.View"))
+            {
             <li>
                 <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 @(ctrl == "Orders" ? "bg-surface-container-high text-primary font-semibold" : "text-on-surface-variant hover:bg-surface-container-high")"
                    asp-area="Admin" asp-controller="Orders" asp-action="Index">
@@ -118,6 +129,9 @@
                     Đơn hàng
                 </a>
             </li>
+            }
+            @if (Context.HasPermission("Coupon.Manage"))
+            {
             <li>
                 <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 @(ctrl == "Coupons" ? "bg-surface-container-high text-primary font-semibold" : "text-on-surface-variant hover:bg-surface-container-high")"
                    asp-area="Admin" asp-controller="Coupons" asp-action="Index">
@@ -125,6 +139,9 @@
                     Khuyến mãi
                 </a>
             </li>
+            }
+            @if (Context.HasPermission("Review.Manage"))
+            {
             <li>
                 <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 @(ctrl == "Reviews" ? "bg-surface-container-high text-primary font-semibold" : "text-on-surface-variant hover:bg-surface-container-high")"
                    asp-area="Admin" asp-controller="Reviews" asp-action="Index">
@@ -132,6 +149,7 @@
                     Đánh giá
                 </a>
             </li>
+            }
         </ul>
         <div class="mt-auto border-t border-outline-variant pt-6">
             <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors"

@@ -4,10 +4,13 @@ using ClothingStore.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+
+using ClothingStore.Attributes;
+
 namespace ClothingStore.Areas.Admin.Controllers;
 
 [Area("Admin")]
-// [Authorize(Roles = "Admin")]
+[RequirePermission("Coupon.Manage")]
 public class CouponsController(ICouponService couponService) : Controller
 {
     // ── GET /Admin/Coupons ──────────────────────────────────────

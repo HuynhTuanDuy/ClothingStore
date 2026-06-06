@@ -2,10 +2,13 @@ using ClothingStore.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+
+using ClothingStore.Attributes;
+
 namespace ClothingStore.Areas.Admin.Controllers;
 
 [Area("Admin")]
-[Authorize(Roles = "Admin,Employee")]
+[RequirePermission("Review.Manage")]
 public class ReviewsController(IReviewService reviewService) : Controller
 {
     public async Task<IActionResult> Index(int page = 1)

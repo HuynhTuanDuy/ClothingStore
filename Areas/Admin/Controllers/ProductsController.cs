@@ -2,11 +2,16 @@ using ClothingStore.Models.ViewModels;
 using ClothingStore.Services;
 using Microsoft.AspNetCore.Mvc;
 
+
+using ClothingStore.Attributes;
+
 namespace ClothingStore.Areas.Admin.Controllers;
 
 [Area("Admin")]
+[RequirePermission("Product.Manage")]
 public class ProductsController(IAdminProductService productService) : Controller
 {
+    [RequirePermission("Product.View")]
     public async Task<IActionResult> Index([FromQuery] AdminProductFilter filter)
     {
         var model = await productService.GetProductsFilteredAsync(filter);

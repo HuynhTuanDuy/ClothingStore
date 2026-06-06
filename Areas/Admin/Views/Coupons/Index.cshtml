@@ -7,183 +7,244 @@
     var filter = ViewBag.CurrentFilter as CouponFilter;
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="mb-0 text-gray-800">Mã giảm giá (Coupons)</h2>
-    <a asp-action="Create" class="btn btn-primary shadow-sm">
-        <i class="fas fa-plus fa-sm text-white-50"></i> Thêm mã mới
+@section Styles {
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <style>
+        .font-headline-lg { font-family: 'Playfair Display', serif; }
+        .font-headline-md { font-family: 'Playfair Display', serif; }
+        .font-display-lg { font-family: 'Playfair Display', serif; }
+        .font-label-caps { text-transform: uppercase; letter-spacing: 0.1em; }
+    </style>
+}
+
+<!-- Header Section -->
+<header class="flex justify-between items-end mb-12">
+    <div>
+        <nav class="flex items-center gap-2 mb-2">
+            <span class="font-label-caps text-[10px] text-outline">ADMIN</span>
+            <span class="material-symbols-outlined text-[12px] text-outline">chevron_right</span>
+            <span class="font-label-caps text-[10px] text-primary">DISCOUNTS</span>
+        </nav>
+        <h2 class="font-headline-lg text-[40px] leading-[48px] font-semibold text-primary">Discount Management</h2>
+    </div>
+    <a asp-action="Create" class="bg-primary-container text-on-primary px-8 py-4 font-label-caps text-[12px] font-semibold tracking-[0.1em] hover:bg-primary transition-all duration-300 shadow-sm active:scale-95 inline-block">
+        CREATE NEW DISCOUNT
     </a>
-</div>
+</header>
 
-<!-- Dashboard Stats -->
-<div class="row mb-4">
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-primary shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Tổng số mã</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">@(stats?.TotalCoupons ?? 0)</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-tags fa-2x text-gray-300"></i>
-                    </div>
-                </div>
+<!-- Stats Widgets (Top) -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    <!-- Active Discounts -->
+    <div class="bg-surface border border-outline-variant p-6 flex flex-col justify-between h-40 rounded-sm">
+        <div class="flex justify-between items-start">
+            <span class="font-label-caps text-[12px] font-semibold tracking-[0.1em] text-outline">ACTIVE DISCOUNTS</span>
+            <span class="material-symbols-outlined text-outline">local_activity</span>
+        </div>
+        <div class="flex items-baseline gap-2">
+            <span class="font-display-lg text-[48px] leading-tight font-bold">@(stats?.ActiveCoupons ?? 0)</span>
+            <span class="font-body-sm text-secondary">/ @(stats?.TotalCoupons ?? 0) total</span>
+        </div>
+    </div>
+    <!-- Used Up Discounts -->
+    <div class="bg-surface border border-outline-variant p-6 flex flex-col justify-between h-40 rounded-sm">
+        <div class="flex justify-between items-start">
+            <span class="font-label-caps text-[12px] font-semibold tracking-[0.1em] text-outline">USED UP DISCOUNTS</span>
+            <span class="material-symbols-outlined text-outline">block</span>
+        </div>
+        <div>
+            <span class="font-display-lg text-[48px] leading-tight font-bold">@(stats?.UsedUpCoupons ?? 0)</span>
+            <span class="font-headline-md text-[28px] font-medium ml-1">Coupons</span>
+        </div>
+    </div>
+    <!-- Expired Discounts -->
+    <div class="bg-surface border border-outline-variant p-6 flex flex-col justify-between h-40 rounded-sm">
+        <div class="flex justify-between items-start">
+            <span class="font-label-caps text-[12px] font-semibold tracking-[0.1em] text-outline">EXPIRED DISCOUNTS</span>
+            <span class="material-symbols-outlined text-outline">history</span>
+        </div>
+        <div class="flex items-center gap-4">
+            <span class="font-display-lg text-[48px] leading-tight font-bold">@(stats?.ExpiredCoupons ?? 0)</span>
+            <div class="flex-1 h-1.5 bg-surface-container rounded-full overflow-hidden">
+                @{
+                    var expiredPct = stats?.TotalCoupons > 0 ? (stats.ExpiredCoupons * 100 / stats.TotalCoupons) : 0;
+                }
+                <div class="bg-error h-full" style="width: @expiredPct%"></div>
             </div>
         </div>
     </div>
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-success shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Đang hoạt động</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">@(stats?.ActiveCoupons ?? 0)</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-check-circle fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-danger shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Đã hết hạn</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">@(stats?.ExpiredCoupons ?? 0)</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-clock fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-warning shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Hết lượt dùng</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">@(stats?.UsedUpCoupons ?? 0)</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-exclamation-circle fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+</section>
 
-<!-- Filter -->
-<div class="card shadow mb-4">
-    <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">Bộ lọc & Tìm kiếm</h6>
-    </div>
-    <div class="card-body">
-        <form method="get" class="form-inline">
-            <div class="form-group mr-2 mb-2">
-                <input type="text" name="SearchKeyword" value="@filter?.SearchKeyword" class="form-control" placeholder="Mã Coupon..." />
+<!-- Main Section: Table & Filters -->
+<section class="bg-surface border border-outline-variant rounded-sm">
+    <!-- Table Header / Filters -->
+    <div class="p-6 border-b border-outline-variant flex flex-wrap gap-4 items-center justify-between">
+        <form method="get" class="flex items-center gap-4 flex-1 max-w-xl">
+            <div class="relative flex-1">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">search</span>
+                <input name="SearchKeyword" value="@filter?.SearchKeyword" class="w-full bg-transparent border-b border-outline-variant focus:border-primary focus:ring-0 pl-10 py-2 font-body-md text-sm transition-all outline-none" placeholder="Search codes..." type="text"/>
             </div>
-            <div class="form-group mr-2 mb-2">
-                <select name="Status" class="form-control">
-                    <option value="">-- Tất cả trạng thái --</option>
-                    <option value="Active" selected="@(filter?.Status == "Active")">Đang hoạt động</option>
-                    <option value="Inactive" selected="@(filter?.Status == "Inactive")">Không hoạt động</option>
-                    <option value="Expired" selected="@(filter?.Status == "Expired")">Đã hết hạn</option>
-                    <option value="Valid" selected="@(filter?.Status == "Valid")">Còn hiệu lực (Chưa hết hạn/lượt)</option>
-                    <option value="UsedUp" selected="@(filter?.Status == "UsedUp")">Đã dùng hết lượt</option>
-                </select>
-            </div>
-            <button type="submit" class="btn btn-primary mb-2">Lọc</button>
-            <a asp-action="Index" class="btn btn-secondary mb-2 ml-2">Xóa lọc</a>
+            <select name="Status" onchange="this.form.submit()" class="bg-transparent border-none font-label-caps text-[11px] font-semibold tracking-[0.1em] text-outline cursor-pointer focus:ring-0 uppercase">
+                <option value="">Status: All</option>
+                <option value="Active" selected="@(filter?.Status == "Active")">Active</option>
+                <option value="Inactive" selected="@(filter?.Status == "Inactive")">Inactive</option>
+                <option value="Expired" selected="@(filter?.Status == "Expired")">Expired</option>
+                <option value="UsedUp" selected="@(filter?.Status == "UsedUp")">Used Up</option>
+            </select>
+            <noscript><button type="submit" class="hidden"></button></noscript>
         </form>
+        <div class="flex items-center gap-2">
+            <a asp-action="Index" class="p-2 text-outline hover:text-primary transition-colors text-[12px] uppercase tracking-widest font-semibold" title="Clear Filters">
+                Clear
+            </a>
+            <button class="p-2 text-outline hover:text-primary transition-colors">
+                <span class="material-symbols-outlined">download</span>
+            </button>
+        </div>
     </div>
-</div>
 
-<div class="card shadow mb-4">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover" width="100%" cellspacing="0">
-                <thead>
-                    <tr>
-                        <th>Mã Coupon</th>
-                        <th>Loại / Giá trị giảm</th>
-                        <th>Đơn tối thiểu</th>
-                        <th>Lượt dùng</th>
-                        <th>Hiệu lực</th>
-                        <th>Trạng thái</th>
-                        <th>Hành động</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model)
+    <!-- Table -->
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="border-b border-outline-variant">
+                    <th class="px-6 py-4 font-label-caps text-[12px] font-semibold tracking-[0.1em] text-outline">CODE NAME</th>
+                    <th class="px-6 py-4 font-label-caps text-[12px] font-semibold tracking-[0.1em] text-outline">TYPE</th>
+                    <th class="px-6 py-4 font-label-caps text-[12px] font-semibold tracking-[0.1em] text-outline">VALUE</th>
+                    <th class="px-6 py-4 font-label-caps text-[12px] font-semibold tracking-[0.1em] text-outline">USAGE</th>
+                    <th class="px-6 py-4 font-label-caps text-[12px] font-semibold tracking-[0.1em] text-outline">STATUS</th>
+                    <th class="px-6 py-4 font-label-caps text-[12px] font-semibold tracking-[0.1em] text-outline text-right">ACTIONS</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant/30">
+                @foreach (var item in Model)
+                {
+                    var isExpired = DateTime.UtcNow > item.ValidTo;
+                    var isScheduled = DateTime.UtcNow < item.ValidFrom;
+                    var isUsedUp = item.UsageLimit.HasValue && item.UsedCount >= item.UsageLimit.Value;
+                    
+                    var statusColor = "bg-secondary/10 text-secondary";
+                    var dotColor = "bg-secondary";
+                    var statusText = "ACTIVE";
+                    
+                    if (isExpired) {
+                        statusColor = "bg-error/5 text-error opacity-60";
+                        dotColor = "bg-error";
+                        statusText = "EXPIRED";
+                    } else if (isScheduled) {
+                        statusColor = "bg-surface-container-high text-outline";
+                        dotColor = "bg-outline";
+                        statusText = "SCHEDULED";
+                    } else if (isUsedUp) {
+                        statusColor = "bg-outline-variant text-on-surface-variant";
+                        dotColor = "bg-on-surface-variant";
+                        statusText = "DEPLETED";
+                    } else if (!item.IsActive) {
+                        statusColor = "bg-surface-container-high text-outline";
+                        dotColor = "bg-outline";
+                        statusText = "INACTIVE";
+                    }
+
+                    var usagePct = 0;
+                    if (item.UsageLimit.HasValue && item.UsageLimit.Value > 0)
                     {
-                        var isExpired = DateTime.UtcNow > item.ValidTo;
-                        var isUsedUp = item.UsageLimit.HasValue && item.UsedCount >= item.UsageLimit.Value;
-                        <tr>
-                            <td class="font-weight-bold text-primary">@item.CouponCode</td>
-                            <td>
+                        usagePct = (int)((double)item.UsedCount / item.UsageLimit.Value * 100);
+                        if (usagePct > 100) usagePct = 100;
+                    }
+
+                    <tr class="hover:bg-surface-container-lowest transition-colors group">
+                        <td class="px-6 py-5">
+                            <span class="font-body-md font-semibold tracking-wider @(isExpired ? "text-outline" : "text-primary")">@item.CouponCode</span>
+                            <p class="text-[11px] text-outline mt-0.5">Min. order: @item.MinOrderValue.ToString("N0")đ</p>
+                        </td>
+                        <td class="px-6 py-5">
+                            <span class="font-body-sm @(isExpired ? "text-outline" : "text-on-surface-variant")">
+                                @(item.DiscountType == "Percentage" ? "Percentage" : "Fixed Amount")
+                            </span>
+                        </td>
+                        <td class="px-6 py-5">
+                            <span class="font-body-md @(isExpired ? "text-outline" : "text-on-surface")">
                                 @if (item.DiscountType == "Percentage")
                                 {
-                                    <span class="badge badge-info">Giảm @item.DiscountValue.ToString("0.##")%</span>
+                                    <text>@item.DiscountValue.ToString("0.##")% Off</text>
                                 }
                                 else
                                 {
-                                    <span class="badge badge-success">Giảm @item.DiscountValue.ToString("N0")đ</span>
+                                    <text>@item.DiscountValue.ToString("N0")đ</text>
                                 }
-                            </td>
-                            <td>@item.MinOrderValue.ToString("N0")đ</td>
-                            <td>
-                                @item.UsedCount / @(item.UsageLimit.HasValue ? item.UsageLimit.ToString() : "∞")
-                                @if (isUsedUp)
-                                {
-                                    <span class="badge badge-danger">Hết lượt</span>
-                                }
-                            </td>
-                            <td>
-                                <small>
-                                    Từ: @item.ValidFrom.ToLocalTime().ToString("dd/MM/yyyy")<br />
-                                    Đến: @item.ValidTo.ToLocalTime().ToString("dd/MM/yyyy")
-                                </small>
-                                @if (isExpired)
-                                {
-                                    <br /><span class="badge badge-warning">Hết hạn</span>
-                                }
-                            </td>
-                            <td>
-                                @if (item.IsActive)
-                                {
-                                    <span class="badge badge-success">Hoạt động</span>
-                                }
-                                else
-                                {
-                                    <span class="badge badge-secondary">Tạm khóa</span>
-                                }
-                            </td>
-                            <td>
-                                <div class="btn-group">
-                                    <a asp-action="Edit" asp-route-id="@item.CouponID" class="btn btn-sm btn-outline-primary">Sửa</a>
-                                    <form asp-action="Toggle" asp-route-id="@item.CouponID" method="post" class="d-inline">
-                                        <button type="submit" class="btn btn-sm @(item.IsActive ? "btn-outline-warning" : "btn-outline-success")">
-                                            @(item.IsActive ? "Khóa" : "Mở khóa")
-                                        </button>
-                                    </form>
+                            </span>
+                        </td>
+                        <td class="px-6 py-5">
+                            <div class="w-32">
+                                <div class="flex justify-between text-[10px] font-label-caps font-semibold tracking-[0.1em] mb-1 text-outline">
+                                    <span>@item.UsedCount USED</span>
+                                    <span>@(item.UsageLimit?.ToString() ?? "∞") LIMIT</span>
                                 </div>
-                            </td>
-                        </tr>
-                    }
-                    @if (!Model.Any())
-                    {
-                        <tr>
-                            <td colspan="7" class="text-center">Chưa có mã giảm giá nào.</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+                                <div class="h-1 @(isUsedUp ? "bg-error/10" : "bg-surface-container") rounded-full overflow-hidden">
+                                    <div class="@(isUsedUp ? "bg-error" : (usagePct == 0 ? "bg-outline" : "bg-secondary")) h-full" style="width: @(item.UsageLimit.HasValue ? usagePct : 100)%"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-5">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full @statusColor font-label-caps text-[10px] font-semibold tracking-[0.1em]">
+                                <span class="w-1.5 h-1.5 rounded-full @dotColor"></span>
+                                @statusText
+                            </span>
+                        </td>
+                        <td class="px-6 py-5 text-right">
+                            <div class="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <a asp-action="Edit" asp-route-id="@item.CouponID" class="text-outline hover:text-primary">
+                                    <span class="material-symbols-outlined text-[18px]">edit</span>
+                                </a>
+                                <form asp-action="Toggle" asp-route-id="@item.CouponID" method="post" class="inline" onsubmit="return confirm('Bạn có chắc muốn đổi trạng thái mã giảm giá này?');">
+                                    <button type="submit" class="text-outline hover:text-error" title="@(item.IsActive ? "Khóa" : "Mở khóa")">
+                                        <span class="material-symbols-outlined text-[18px]">@(item.IsActive ? "lock" : "lock_open")</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="6" class="px-6 py-8 text-center text-outline font-body-md">
+                            No coupons found matching your criteria.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination (Placeholder for UI) -->
+    <div class="p-6 border-t border-outline-variant flex justify-between items-center font-label-caps text-[11px] font-semibold tracking-[0.1em] text-outline">
+        <span>SHOWING @Model.Count() RESULTS</span>
+    </div>
+</section>
+
+<!-- Subtle Atmospheric Decoration -->
+<div class="mt-section-gap grid grid-cols-2 gap-6 items-center opacity-40 grayscale mt-12 mb-8">
+    <div class="aspect-[16/6] bg-surface border border-outline-variant relative overflow-hidden rounded-sm">
+        <img alt="Atmospheric brand image" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCC7ceeF2ZkbCUOd3mXVxPn8i6ZqpSpJ3SvF2aF4mUFHCU1MrY68DWBRUk7iR1SHZvD23wuUPtw_3gESRK78QKDbGh8yvixA4DH65O89OvpAgqqylEUSErOnVhVZEyIafU03jVOh7EwnHqSavtXYtFbV4oQk-b7nD3uDDLQOIi231GQm6dL2Opt7q0M8xkwv-lpxg2NuwuNH76ASmJa_A_opqswIJ0lzqClE3ab5P1S_X0sB0h_4Ej4NKnNfSZKScY8VRbumletk30"/>
+        <div class="absolute inset-0 bg-primary/10 mix-blend-multiply"></div>
+    </div>
+    <div class="p-8">
+        <p class="font-headline-md italic text-primary leading-relaxed text-[28px]">"Intentional design is the thread that binds our heritage with the future of sustainable elegance."</p>
+        <p class="font-label-caps text-[12px] font-semibold tracking-[0.1em] mt-4">— WEARWHATEVER MANIFESTO</p>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        // Micro-interaction: Table row hover effect enhancements
+        document.querySelectorAll('tbody tr').forEach(row => {
+            row.addEventListener('mouseenter', () => {
+                row.style.transform = 'translateX(4px)';
+                row.style.transition = 'transform 0.2s ease-out';
+            });
+            row.addEventListener('mouseleave', () => {
+                row.style.transform = 'translateX(0)';
+            });
+        });
+    </script>
+}

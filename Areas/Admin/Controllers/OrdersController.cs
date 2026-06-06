@@ -5,10 +5,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
+
+using ClothingStore.Attributes;
+
 namespace ClothingStore.Areas.Admin.Controllers;
 
 [Area("Admin")]
-// [Authorize(Roles = "Admin")] // Tạm thời comment lại để bạn có thể xem trang Orders mà không cần đăng nhập
+[RequirePermission("Order.View")]
 public class OrdersController(
     IOrderRepository orderRepository,
     IUnitOfWork unitOfWork) : Controller
@@ -156,6 +159,7 @@ public class OrdersController(
 
     // ── POST /Admin/Orders/UpdateStatus ─────────────────────────
     [HttpPost, ValidateAntiForgeryToken]
+    [RequirePermission("Order.Manage")]
     public async Task<IActionResult> UpdateStatus(UpdateOrderStatusInputModel input)
     {
         if (!ModelState.IsValid)

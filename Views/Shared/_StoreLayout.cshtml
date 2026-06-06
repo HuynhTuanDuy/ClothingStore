@@ -143,6 +143,10 @@
                             <div class="py-1">
                                 @if (User.Identity?.IsAuthenticated == true)
                                 {
+                                    @if (Context.HasPermission("Dashboard.View"))
+                                    {
+                                        <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index" class="block px-4 py-2 text-sm text-brand-brown font-bold bg-brand-cream/50 hover:bg-brand-cream hover:text-brand-dark-brown border-b border-gray-100">Quản trị hệ thống</a>
+                                    }
                                     <a asp-controller="CustomerAccount" asp-action="Index" class="block px-4 py-2 text-sm text-gray-700 hover:bg-brand-cream hover:text-brand-brown">Tài khoản của tôi</a>
                                     <a asp-controller="CustomerAccount" asp-action="Orders" class="block px-4 py-2 text-sm text-gray-700 hover:bg-brand-cream hover:text-brand-brown">Đơn hàng của tôi</a>
                                     <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-brand-cream hover:text-brand-brown">Danh sách yêu thích</a>

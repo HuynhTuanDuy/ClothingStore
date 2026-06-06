@@ -3,9 +3,13 @@ using ClothingStore.Models.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
+
+using ClothingStore.Attributes;
+
 namespace ClothingStore.Areas.Admin.Controllers
 {
     [Area("Admin")]
+    [RequirePermission("Category.Manage")]
     public class CategoriesController : Controller
     {
         private readonly StoreDbContext _context;

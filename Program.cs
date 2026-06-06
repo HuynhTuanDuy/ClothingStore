@@ -10,6 +10,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddMemoryCache();
 
+// ── Security & Options ─────────────────────────────────────────
+builder.Services.Configure<ClothingStore.Models.Security.SecurityOptions>(
+    builder.Configuration.GetSection("SecurityOptions"));
 
 // ── Database ──────────────────────────────────────────────────
 builder.Services.AddDbContext<StoreDbContext>(options =>
@@ -86,8 +89,12 @@ builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<ICustomerAccountService, CustomerAccountService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IPermissionService, PermissionService>();
 
 var app = builder.Build();
+
+// Seed data
+await ClothingStore.Data.TestAccountSeeder.SeedAsync(app.Services);
 
 // ── Pipeline ──────────────────────────────────────────────────
 if (!app.Environment.IsDevelopment())
@@ -104,6 +111,9 @@ app.UseSession();
 // [BUG-03 FIX] Authentication MUST come before Authorization
 app.UseAuthentication();
 app.UseAuthorization();
+
+// ── Permission Middleware ─────────────────────────────────────
+app.UseMiddleware<ClothingStore.Middleware.PermissionMiddleware>();
 
 // ── Routes ────────────────────────────────────────────────────
 app.MapControllerRoute(

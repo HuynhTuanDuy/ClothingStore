@@ -43,7 +43,9 @@ public class AuthService(
     StoreDbContext dbContext,
     IHttpContextAccessor httpContextAccessor,
     Microsoft.Extensions.Caching.Memory.IMemoryCache memoryCache,
-    IEmailService emailService) : IAuthService
+    IEmailService emailService,
+    IPermissionService permissionService,
+    ILogger<AuthService> logger) : IAuthService
 {
     public async Task<(bool Success, string? Error)> LoginAsync(
         string usernameOrEmail, string password, bool rememberMe, HttpContext httpContext)
@@ -76,8 +78,18 @@ public class AuthService(
         if (account.Status != AccountStatus.Active)
             return (false, "Tài khoản của bạn đã bị vô hiệu hóa.");
 
-        if (!BCrypt.Net.BCrypt.Verify(password, account.PasswordHash))
+        try
         {
+            if (!BCrypt.Net.BCrypt.Verify(password, account.PasswordHash))
+            {
+                RecordFailedLogin();
+                return (false, "Tên đăng nhập hoặc mật khẩu không đúng.");
+            }
+        }
+        catch (Exception ex)
+        {
+            // E.g., SaltParseException for legacy accounts with plain text passwords
+            logger.LogWarning(ex, "Failed to verify password for user {Username} due to invalid hash format.", account.UserName);
             RecordFailedLogin();
             return (false, "Tên đăng nhập hoặc mật khẩu không đúng.");
         }
@@ -147,6 +159,9 @@ public class AuthService(
 
         foreach (var role in account.Roles)
             claims.Add(new Claim(ClaimTypes.Role, role));
+
+        // Note: Permissions are no longer stored in cookies to optimize cookie size.
+        // They will be loaded dynamically via IMemoryCache & PermissionMiddleware.
 
         if (memoryCache.TryGetValue(verifiedKey, out bool isClaimVerified) && isClaimVerified)
         {
@@ -231,6 +246,12 @@ public class AuthService(
 
     public async Task LogoutAsync(HttpContext httpContext)
     {
+        var userIdStr = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!string.IsNullOrEmpty(userIdStr))
+        {
+            memoryCache.Remove($"UserPermissions_{userIdStr}");
+        }
+
         await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         httpContext.Session.Clear();
     }
@@ -275,6 +296,8 @@ public class AuthService(
 
         foreach (var role in account.Roles)
             claims.Add(new Claim(ClaimTypes.Role, role));
+
+        // Note: Permissions are no longer stored in cookies.
 
         claims.Add(new Claim("EmailVerified", "true")); // External auth is pre-verified
 
