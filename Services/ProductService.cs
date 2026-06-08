@@ -16,6 +16,9 @@ public class ProductService(
         var sizes      = await productRepository.GetActiveSizesAsync();
         var colors     = await productRepository.GetActiveColorsAsync();
 
+        var bestSellers = await productRepository.GetDynamicBestSellerProductsAsync(8);
+        var bestSellerIds = bestSellers.Select(x => x.ProductID).ToHashSet();
+
         return new ProductListViewModel
         {
             Search     = filter.Search,
@@ -35,7 +38,12 @@ public class ProductService(
             }).ToList(),
             Sizes  = sizes.Select(x => new SizeFilterViewModel  { SizeID = x.SizeID, SizeCode = x.SizeCode }).ToList(),
             Colors = colors.Select(x => new ColorFilterViewModel { ColorID = x.ColorID, ColorName = x.ColorName, HexCode = x.HexCode }).ToList(),
-            Products = products.Select(MapCard).ToList()
+            Products = products.Select(p => 
+            {
+                var card = MapCard(p);
+                if (bestSellerIds.Contains(p.ProductID)) card.IsBestSeller = true;
+                return card;
+            }).ToList()
         };
     }
 
@@ -49,7 +57,9 @@ public class ProductService(
         var bestSelling = await productRepository.GetDynamicBestSellerProductsAsync(8);
         var inStock = await productRepository.GetInStockProductsAsync(8);
         vm.RelatedProducts = related.Select(MapCard).ToList();
-        vm.BestSellingProducts = bestSelling.Select(MapCard).ToList();
+        var bestSellingModels = bestSelling.Select(MapCard).ToList();
+        foreach (var m in bestSellingModels) m.IsBestSeller = true;
+        vm.BestSellingProducts = bestSellingModels;
         vm.InStockProducts = inStock.Select(MapCard).ToList();
         
         // Fetch Review Stats and Reviews
@@ -70,7 +80,9 @@ public class ProductService(
         var bestSelling = await productRepository.GetDynamicBestSellerProductsAsync(8);
         var inStock = await productRepository.GetInStockProductsAsync(8);
         vm.RelatedProducts = related.Select(MapCard).ToList();
-        vm.BestSellingProducts = bestSelling.Select(MapCard).ToList();
+        var bestSellingModels = bestSelling.Select(MapCard).ToList();
+        foreach (var m in bestSellingModels) m.IsBestSeller = true;
+        vm.BestSellingProducts = bestSellingModels;
         vm.InStockProducts = inStock.Select(MapCard).ToList();
 
         // Fetch Review Stats and Reviews
@@ -105,7 +117,9 @@ public class ProductService(
     public async Task<List<ProductCardViewModel>> GetDynamicBestSellingProductsAsync(int count = 4)
     {
         var products = await productRepository.GetDynamicBestSellerProductsAsync(count);
-        return products.Select(MapCard).ToList();
+        var models = products.Select(MapCard).ToList();
+        foreach (var m in models) m.IsBestSeller = true;
+        return models;
     }
 
     /// <summary>

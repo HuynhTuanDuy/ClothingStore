@@ -44,7 +44,6 @@ public class AuthService(
     IHttpContextAccessor httpContextAccessor,
     Microsoft.Extensions.Caching.Memory.IMemoryCache memoryCache,
     IEmailService emailService,
-    IPermissionService permissionService,
     ILogger<AuthService> logger) : IAuthService
 {
     public async Task<(bool Success, string? Error)> LoginAsync(

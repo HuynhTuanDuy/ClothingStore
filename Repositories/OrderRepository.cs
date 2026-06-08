@@ -43,7 +43,7 @@ public class OrderRepository(StoreDbContext dbContext) : IOrderRepository
                     .ThenInclude(pv => pv.Product)
             .Include(x => x.StatusHistory.OrderByDescending(h => h.ChangedAt))
             .Include(x => x.CouponUsages).ThenInclude(x => x.Coupon)
-            .Include(x => x.Customer).ThenInclude(c => c.Membership)
+            .Include(x => x.Customer).ThenInclude(c => c!.Membership)
             .FirstOrDefaultAsync(x => x.OrderID == orderId);
     }
 
@@ -62,7 +62,7 @@ public class OrderRepository(StoreDbContext dbContext) : IOrderRepository
         var query = dbContext.Orders
             .AsNoTracking()
             .Include(x => x.Customer)
-                .ThenInclude(c => c.Membership)
+                .ThenInclude(c => c!.Membership)
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(status))

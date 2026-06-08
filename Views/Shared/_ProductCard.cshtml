@@ -11,6 +11,11 @@
             <span class="absolute top-2 right-2 bg-red-500 text-white text-[9px] px-2 py-0.5 tracking-tighter uppercase font-medium z-10">Sale</span>
         }
 
+        @if (Model.IsBestSeller)
+        {
+            <span class="absolute top-2 left-2 bg-black text-white text-[9px] px-2 py-0.5 tracking-tighter uppercase font-medium z-10">Bán chạy</span>
+        }
+
         @if (!string.IsNullOrWhiteSpace(Model.ThumbnailUrl))
         {
             <img alt="@Model.ProductName" class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="@Model.ThumbnailUrl"/>

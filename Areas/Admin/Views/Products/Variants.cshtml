@@ -52,19 +52,33 @@
     </div>
 
     <!-- Table Container -->
-    <div class="bg-surface rounded-xl p-8 border border-outline-variant shadow-[0_4px_24px_rgba(121,87,63,0.04)] mb-8">
-        <div class="flex justify-between items-center mb-8">
-            <div>
-                <h3 class="font-headline-md text-on-background">Danh sách biến thể</h3>
-                <p class="font-body-sm text-on-surface-variant mt-1">Các biến thể dựa trên thuộc tính đã chọn.</p>
-            </div>
-            <div class="flex gap-4">
-                <button type="submit" class="px-6 py-2.5 bg-primary text-on-primary rounded font-label-caps text-label-caps transition-colors hover:bg-primary-container shadow-sm flex items-center gap-2 uppercase tracking-widest">
-                    <span class="material-symbols-outlined text-[18px]">save</span>
-                    Lưu thay đổi
-                </button>
-            </div>
+    @if (Model.ProductID == 0)
+    {
+        <div class="bg-surface-container-low rounded-xl p-8 border border-outline-variant text-center mb-8">
+            <span class="material-symbols-outlined text-4xl text-outline mb-4">info</span>
+            <h3 class="font-headline-md text-on-background mb-2">Chưa thể thêm biến thể</h3>
+            <p class="font-body-md text-on-surface-variant">Vui lòng lưu thông tin cơ bản của sản phẩm trước khi bạn có thể thêm các biến thể (màu sắc, kích thước).</p>
         </div>
+    }
+    else
+    {
+        <div class="bg-surface rounded-xl p-8 border border-outline-variant shadow-[0_4px_24px_rgba(121,87,63,0.04)] mb-8">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h3 class="font-headline-md text-on-background">Danh sách biến thể</h3>
+                    <p class="font-body-sm text-on-surface-variant mt-1">Các biến thể dựa trên thuộc tính đã chọn.</p>
+                </div>
+                <div class="flex gap-4">
+                    <a asp-action="CreateVariant" asp-route-productId="@Model.ProductID" class="px-6 py-2.5 border border-primary text-primary rounded font-label-caps text-label-caps transition-colors hover:bg-surface-container shadow-sm flex items-center gap-2 uppercase tracking-widest">
+                        <span class="material-symbols-outlined text-[18px]">add</span>
+                        Thêm biến thể
+                    </a>
+                    <button type="submit" class="px-6 py-2.5 bg-primary text-on-primary rounded font-label-caps text-label-caps transition-colors hover:bg-primary-container shadow-sm flex items-center gap-2 uppercase tracking-widest">
+                        <span class="material-symbols-outlined text-[18px]">save</span>
+                        Lưu thay đổi
+                    </button>
+                </div>
+            </div>
 
         <!-- Matrix Table -->
         <div class="overflow-x-auto">
@@ -101,10 +115,10 @@
                                 <input name="Variants[@i].SKU" type="text" value="@variant.SKU" class="w-full bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 text-body-md py-1 px-0 transition-colors @(!variant.IsActive ? "text-on-surface-variant" : "")" />
                             </td>
                             <td class="py-4 px-4">
-                                <input name="Variants[@i].SellingPrice" type="number" step="1000" value="@variant.SellingPrice" class="w-full bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 text-body-md py-1 px-0 transition-colors @(!variant.IsActive ? "text-on-surface-variant" : "")" />
+                                <input name="Variants[@i].SellingPrice" type="number" step="1000" value="@variant.SellingPrice.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)" class="w-full bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 text-body-md py-1 px-0 transition-colors @(!variant.IsActive ? "text-on-surface-variant" : "")" />
                             </td>
                             <td class="py-4 px-4">
-                                <input name="Variants[@i].StockQuantity" type="number" value="@variant.StockQuantity" class="w-full bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 text-body-md py-1 px-0 transition-colors @(!variant.IsActive ? "text-on-surface-variant" : "")" />
+                                <input name="Variants[@i].StockQuantity" type="number" value="@variant.StockQuantity.ToString(System.Globalization.CultureInfo.InvariantCulture)" class="w-full bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 text-body-md py-1 px-0 transition-colors @(!variant.IsActive ? "text-on-surface-variant" : "")" />
                             </td>
                         </tr>
                     }
@@ -112,6 +126,7 @@
             </table>
         </div>
     </div>
+    }
 
     <!-- Action Buttons -->
     <div class="flex justify-between items-center pb-24">

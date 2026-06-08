@@ -82,7 +82,7 @@ public class ProductsController(IAdminProductService productService) : Controlle
         {
             var pName = $"\"{p.ProductName.Replace("\"", "\"\"")}\"";
             var status = p.IsActive ? "Active" : "Hidden";
-            var createdAt = p.CreatedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? "";
+            var createdAt = p.CreatedAt?.ToString("dd/MM/yyyy ss:mm:HH") ?? "";
             
             sb.AppendLine($"{p.ProductID},{p.SKU},{pName},\"{p.CategoryName}\",{p.MinPrice},{p.MaxPrice},{p.TotalStock},{p.TotalSold},{status},{createdAt}");
         }
@@ -124,7 +124,7 @@ public class ProductsController(IAdminProductService productService) : Controlle
             worksheet.Cell(row, 7).Value = p.TotalStock;
             worksheet.Cell(row, 8).Value = p.TotalSold;
             worksheet.Cell(row, 9).Value = p.IsActive ? "Active" : "Hidden";
-            worksheet.Cell(row, 10).Value = p.CreatedAt?.ToString("yyyy-MM-dd HH:mm:ss");
+            worksheet.Cell(row, 10).Value = p.CreatedAt?.ToString("dd/MM/yyyy ss:mm:HH");
             row++;
         }
 
@@ -196,11 +196,29 @@ public class ProductsController(IAdminProductService productService) : Controlle
         return model is null ? NotFound() : View(model);
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Attributes(ProductEditViewModel model)
+    {
+        if (model.ProductID == 0) return NotFound();
+        await productService.SaveAttributesAsync(model);
+        return RedirectToAction(nameof(Variants), new { id = model.ProductID });
+    }
+
     public async Task<IActionResult> Variants(int id)
     {
         if (id == 0) return View(new AdminVariantListViewModel { ProductID = 0, ProductName = "Sản phẩm mới" });
         var model = await productService.GetVariantsAsync(id);
         return model is null ? NotFound() : View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> BulkUpdateVariants(AdminVariantListViewModel model)
+    {
+        await productService.BulkUpdateVariantsAsync(model);
+        TempData["Success"] = "Đã lưu thông tin các biến thể thành công.";
+        return RedirectToAction(nameof(Variants), new { id = model.ProductID });
     }
 
     public async Task<IActionResult> CreateVariant(int productId)

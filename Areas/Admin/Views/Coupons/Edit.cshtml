@@ -60,7 +60,7 @@
                                             @if(usage.CustomerId.HasValue) { <small class="d-block text-muted">ID: @usage.CustomerId</small> }
                                         </td>
                                         <td class="text-success font-weight-bold">@usage.DiscountAmount.ToString("N0")đ</td>
-                                        <td>@usage.UsedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>@usage.UsedAt.ToString("dd/MM/yyyy ss:mm:HH")</td>
                                         <td>
                                             @if (usage.OrderStatus == "Cancelled" || usage.OrderStatus == "Returned")
                                             {

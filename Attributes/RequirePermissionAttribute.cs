@@ -80,7 +80,7 @@ public class RequirePermissionFilter : IAsyncAuthorizationFilter
             }
         }
 
-        _logger.LogWarning("AUDIT: User {UserId} ({UserName}) denied access to {Permission}", userId, user.Identity.Name, permissionToCheck);
+        _logger.LogWarning("AUDIT: User {UserId} ({UserName}) denied access to {Permission}", userId, user.Identity?.Name, permissionToCheck);
         context.Result = new ForbidResult();
     }
 }

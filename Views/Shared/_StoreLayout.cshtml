@@ -1,3 +1,5 @@
+@using ClothingStore.Services
+@inject ICartService CartService
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -165,7 +167,8 @@
                     <a href="/Cart" aria-label="Cart" class="hover:text-black flex items-center">
                         <div id="cart-anchor" class="relative inline-block">
                             <svg class="h-6 w-6 transition-transform duration-200" id="cart-icon-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
-                            <span id="cart-badge" class="absolute -top-1 -right-2 bg-brand-brown text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full hidden transition-transform duration-300">0</span>
+                            @{ var cartCount = await CartService.GetCartItemCountAsync(); }
+                            <span id="cart-badge" class="absolute -top-1 -right-2 bg-brand-brown text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full @(cartCount > 0 ? "" : "hidden") transition-transform duration-300">@cartCount</span>
                         </div>
                     </a>
                 </div>

@@ -83,7 +83,10 @@ public class AdminProductService(
             ProgramID = product.ProgramID,
             IsActive = product.IsActive,
             IsBestSeller = product.IsBestSeller,
-            SelectedRelatedProductIds = product.RelatedProducts.Select(r => r.LinkedProductID).ToList()
+            SelectedRelatedProductIds = product.RelatedProducts.Select(r => r.LinkedProductID).ToList(),
+            DefaultSellingPrice = product.ProductVariants.FirstOrDefault()?.SellingPrice ?? 0,
+            SelectedColors = product.ProductVariants.Select(v => v.ColorID).Distinct().ToList(),
+            SelectedSizes = product.ProductVariants.Select(v => v.SizeID).Distinct().ToList()
         };
 
         await PopulateProductListsAsync(model);
@@ -214,6 +217,61 @@ public class AdminProductService(
         await unitOfWork.SaveChangesAsync();
     }
 
+    public async Task<bool> SaveAttributesAsync(ProductEditViewModel model)
+    {
+        if (model.ProductID == 0) return false;
+        var product = await products.FindAsync(model.ProductID);
+        if (product == null) return false;
+
+        var existingVariants = await variants.ListAsync(v => v.ProductID == model.ProductID);
+        var activeColors = await productRepository.GetActiveColorsAsync();
+        var activeSizes = await productRepository.GetActiveSizesAsync();
+        
+        var now = DateTime.UtcNow;
+
+        var colorIds = model.SelectedColors ?? new List<int>();
+        var sizeIds = model.SelectedSizes ?? new List<int>();
+
+        foreach (var cId in colorIds)
+        {
+            foreach (var sId in sizeIds)
+            {
+                var variant = existingVariants.FirstOrDefault(v => v.ColorID == cId && v.SizeID == sId);
+                if (variant == null)
+                {
+                    var color = activeColors.FirstOrDefault(c => c.ColorID == cId);
+                    var size = activeSizes.FirstOrDefault(s => s.SizeID == sId);
+                    
+                    var newSku = $"{product.Slug.ToUpper()}-{color?.ColorName.ToUpper().Replace(" ", "")}-{size?.SizeCode.ToUpper()}";
+                    if (newSku.Length > 50) newSku = newSku.Substring(0, 50);
+
+                    var newVariant = new ProductVariant
+                    {
+                        ProductID = model.ProductID,
+                        ColorID = cId,
+                        SizeID = sId,
+                        SellingPrice = model.DefaultSellingPrice,
+                        StockQuantity = 0,
+                        IsActive = true,
+                        SKU = newSku,
+                        CreatedAt = now,
+                        UpdatedAt = now
+                    };
+                    await variants.AddAsync(newVariant);
+                }
+                else
+                {
+                    variant.SellingPrice = model.DefaultSellingPrice;
+                    variant.UpdatedAt = now;
+                    variants.Update(variant);
+                }
+            }
+        }
+
+        await unitOfWork.SaveChangesAsync();
+        return true;
+    }
+
     public async Task<bool> ToggleProductActiveStatusAsync(int productId)
     {
         var product = await products.FindAsync(productId);
@@ -321,6 +379,30 @@ public class AdminProductService(
             Text = x.ColorName,
             Selected = x.ColorID == model.ColorID
         }).ToList();
+    }
+
+    public async Task BulkUpdateVariantsAsync(AdminVariantListViewModel model)
+    {
+        if (model.Variants == null || !model.Variants.Any()) return;
+        
+        var variantIds = model.Variants.Select(v => v.VariantID).ToList();
+        var existingVariants = await variants
+            .ListAsync(v => variantIds.Contains(v.VariantID) && v.ProductID == model.ProductID);
+
+        foreach (var vModel in model.Variants)
+        {
+            var existing = existingVariants.FirstOrDefault(x => x.VariantID == vModel.VariantID);
+            if (existing != null)
+            {
+                existing.SKU = vModel.SKU?.Trim() ?? string.Empty;
+                existing.SellingPrice = vModel.SellingPrice;
+                existing.StockQuantity = vModel.StockQuantity;
+                existing.IsActive = vModel.IsActive;
+                existing.UpdatedAt = DateTime.UtcNow;
+            }
+        }
+        
+        await unitOfWork.SaveChangesAsync();
     }
 
     public async Task<bool> SaveVariantAsync(VariantEditViewModel model)

@@ -14,6 +14,20 @@ builder.Services.AddMemoryCache();
 builder.Services.Configure<ClothingStore.Models.Security.SecurityOptions>(
     builder.Configuration.GetSection("SecurityOptions"));
 
+// ── Localization (Date Format) ─────────────────────────────────
+var defaultCulture = new System.Globalization.CultureInfo("vi-VN");
+defaultCulture.DateTimeFormat.ShortDatePattern = "dd/MM/yyyy";
+defaultCulture.DateTimeFormat.DateSeparator = "/";
+defaultCulture.DateTimeFormat.LongTimePattern = "ss:mm:HH";
+defaultCulture.DateTimeFormat.ShortTimePattern = "ss:mm:HH";
+defaultCulture.DateTimeFormat.TimeSeparator = ":";
+var localizationOptions = new Microsoft.AspNetCore.Builder.RequestLocalizationOptions
+{
+    DefaultRequestCulture = new Microsoft.AspNetCore.Localization.RequestCulture(defaultCulture),
+    SupportedCultures = new[] { defaultCulture },
+    SupportedUICultures = new[] { defaultCulture }
+};
+
 // ── Database ──────────────────────────────────────────────────
 builder.Services.AddDbContext<StoreDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -26,6 +40,7 @@ builder.Services.AddSession(options =>
     options.IdleTimeout     = TimeSpan.FromDays(14);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
+    options.Cookie.MaxAge   = TimeSpan.FromDays(14);
 });
 
 // ── [BUG-03 FIX] Cookie Authentication ───────────────────────
@@ -92,6 +107,8 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 
 var app = builder.Build();
+
+app.UseRequestLocalization(localizationOptions);
 
 // Seed data
 await ClothingStore.Data.TestAccountSeeder.SeedAsync(app.Services);

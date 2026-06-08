@@ -243,52 +243,7 @@ public class ProductRepository(StoreDbContext dbContext, IMemoryCache cache) : I
 
     public async Task<List<Product>> GetDynamicBestSellerProductsAsync(int count = 4)
     {
-        var cacheKey = $"BestSellerProducts_{count}";
-        if (cache.TryGetValue(cacheKey, out List<Product>? cachedProducts) && cachedProducts != null)
-        {
-            return cachedProducts;
-        }
-
-        var bestSellingProductIds = await dbContext.OrderDetails
-            .AsNoTracking()
-            .Where(od => od.Order.OrderStatus == OrderStatus.Delivered ||
-                         od.Order.OrderStatus == OrderStatus.Shipping ||
-                         od.Order.OrderStatus == OrderStatus.Processing ||
-                         od.Order.OrderStatus == OrderStatus.Confirmed)
-            .GroupBy(od => od.ProductVariant.ProductID)
-            .Select(g => new { ProductID = g.Key, TotalSold = g.Sum(od => od.Quantity) })
-            .OrderByDescending(x => x.TotalSold)
-            .Take(count)
-            .Select(x => x.ProductID)
-            .ToListAsync();
-
-        if (!bestSellingProductIds.Any())
-        {
-            return await GetBestSellingProductsAsync(count);
-        }
-
-        var products = await dbContext.Products
-            .AsNoTracking()
-            .Include(x => x.Category)
-            .Include(x => x.DiscountProgram)
-            .Include(x => x.ProductVariants.Where(v => v.IsActive))
-                .ThenInclude(v => v.Color)
-            .Include(x => x.ProductVariants.Where(v => v.IsActive))
-                .ThenInclude(v => v.ProductImages.OrderBy(i => i.DisplayOrder).Take(1))
-            .Where(x => bestSellingProductIds.Contains(x.ProductID) && x.IsActive)
-            .ToListAsync();
-
-        var sortedProducts = products
-            .OrderBy(p => bestSellingProductIds.IndexOf(p.ProductID))
-            .ToList();
-
-        var cacheOptions = new MemoryCacheEntryOptions
-        {
-            AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(4)
-        };
-        cache.Set(cacheKey, sortedProducts, cacheOptions);
-
-        return sortedProducts;
+        return await GetBestSellingProductsAsync(count);
     }
 
     public async Task<List<Product>> GetInStockProductsAsync(int count = 4)

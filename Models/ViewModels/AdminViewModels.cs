@@ -101,6 +101,9 @@ public class ProductEditViewModel
     public List<SelectListItem> AvailableProducts { get; set; } = [];
     
     // For Attributes page
+    public decimal DefaultSellingPrice { get; set; }
+    public List<int> SelectedColors { get; set; } = [];
+    public List<int> SelectedSizes { get; set; } = [];
     public List<ColorFilterViewModel> AvailableColors { get; set; } = [];
     public List<SizeFilterViewModel> AvailableSizes { get; set; } = [];
 }
@@ -135,7 +138,7 @@ public class AdminVariantListViewModel
 {
     public int ProductID { get; set; }
     public string ProductName { get; set; } = string.Empty;
-    public IReadOnlyList<ProductVariantViewModel> Variants { get; set; } = [];
+    public List<ProductVariantViewModel> Variants { get; set; } = [];
 }
 
 public class ProductImageUploadViewModel

@@ -17,7 +17,7 @@
             StockStatus = f.StockStatus, MinPrice = f.MinPrice, MaxPrice = f.MaxPrice,
             HasDiscount = f.HasDiscount, DateFrom = f.DateFrom, DateTo = f.DateTo,
             SortBy = sortBy, SortDesc = isDesc, PageSize = f.PageSize 
-        });
+        }) ?? "";
     }
 
     string GetSortIcon(string sortBy)

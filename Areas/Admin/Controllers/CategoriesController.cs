@@ -129,7 +129,7 @@ namespace ClothingStore.Areas.Admin.Controllers
             await _context.SaveChangesAsync();
 
             // Lấy tên parent để trả về UI
-            string parentName = null;
+            string? parentName = null;
             if (category.ParentCategoryID.HasValue)
             {
                 var parent = await _context.Categories.FindAsync(category.ParentCategoryID.Value);
@@ -211,8 +211,8 @@ namespace ClothingStore.Areas.Admin.Controllers
                 var parentName = cat.ParentCategory?.CategoryName ?? "";
                 var productCount = cat.Products.Count;
                 var status = cat.IsActive ? "Active" : "Archived";
-                var createdAt = cat.CreatedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? "";
-                var updatedAt = cat.UpdatedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? "";
+                var createdAt = cat.CreatedAt?.ToString("dd/MM/yyyy ss:mm:HH") ?? "";
+                var updatedAt = cat.UpdatedAt?.ToString("dd/MM/yyyy ss:mm:HH") ?? "";
 
                 // Escape commas in names
                 var catName = $"\"{cat.CategoryName.Replace("\"", "\"\"")}\"";

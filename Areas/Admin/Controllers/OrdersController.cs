@@ -79,7 +79,7 @@ public class OrdersController(
         {
             var customerName = $"\"{o.Customer?.FullName?.Replace("\"", "\"\"")}\"";
             var totalAmount = o.TotalAmount.ToString("N0").Replace(",", "");
-            var orderDate = o.OrderDate.ToString("yyyy-MM-dd HH:mm:ss");
+            var orderDate = o.OrderDate.ToString("dd/MM/yyyy ss:mm:HH");
 
             sb.AppendLine($"{o.OrderID},{o.OrderCode},{customerName},{o.OrderStatus},{totalAmount},{orderDate}");
         }

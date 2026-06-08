@@ -8,7 +8,7 @@
 <div class="mb-6 flex justify-between items-center">
     <div>
         <h1 class="text-2xl font-semibold text-brand-dark-brown">Chi tiết đơn hàng #@Model.OrderCode</h1>
-        <p class="text-gray-500 mt-1">Ngày đặt: @Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</p>
+        <p class="text-gray-500 mt-1">Ngày đặt: @Model.OrderDate.ToString("dd/MM/yyyy ss:mm:HH")</p>
     </div>
     <a asp-action="Orders" class="text-sm font-medium text-brand-brown hover:underline flex items-center gap-1">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -29,7 +29,7 @@
                     <div class="relative pl-6">
                         <div class="absolute -left-1.5 top-1.5 h-3 w-3 rounded-full border-2 border-white bg-brand-brown"></div>
                         <div class="text-sm font-medium text-gray-800">@history.NewStatus</div>
-                        <div class="text-xs text-gray-500 mt-0.5">@(history.ChangedAt?.ToString("dd/MM/yyyy HH:mm"))</div>
+                        <div class="text-xs text-gray-500 mt-0.5">@(history.ChangedAt?.ToString("dd/MM/yyyy ss:mm:HH"))</div>
                         @if (!string.IsNullOrEmpty(history.Note))
                         {
                             <div class="text-sm text-gray-600 mt-1">@history.Note</div>

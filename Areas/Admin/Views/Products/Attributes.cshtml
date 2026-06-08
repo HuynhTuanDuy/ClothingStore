@@ -17,8 +17,8 @@
             <a asp-action="Index" class="border border-primary text-primary px-6 py-2.5 font-label-caps text-label-caps rounded-DEFAULT hover:bg-surface-container transition-colors">
                 Hủy
             </a>
-            <!-- Note: Form submission is not fully wired yet -->
-            <button type="submit" class="bg-primary text-on-primary px-6 py-2.5 font-label-caps text-label-caps rounded-DEFAULT hover:bg-on-primary-fixed-variant transition-colors flex items-center gap-2 shadow-sm uppercase tracking-widest">
+            <!-- Note: Form submission is now fully wired -->
+            <button type="button" onclick="document.querySelector('form').submit()" class="bg-primary text-on-primary px-6 py-2.5 font-label-caps text-label-caps rounded-DEFAULT hover:bg-on-primary-fixed-variant transition-colors flex items-center gap-2 shadow-sm uppercase tracking-widest">
                 Lưu thuộc tính
                 <span class="material-symbols-outlined text-[18px]">save</span>
             </button>
@@ -47,7 +47,21 @@
     </div>
 
     <!-- Form Container -->
-    <form class="space-y-12">
+    <form asp-action="Attributes" method="post" class="space-y-12">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="ProductID" />
+        
+        <!-- Section: Price -->
+        <section class="bg-surface rounded-xl border border-outline-variant p-8 shadow-[0_4px_20px_rgba(121,87,63,0.03)]">
+            <div class="mb-6">
+                <h3 class="font-headline-md text-headline-md text-on-background mb-1">Giá bán chung</h3>
+                <p class="font-body-sm text-body-sm text-on-surface-variant">Giá bán sẽ được áp dụng cho tất cả các biến thể được tạo ra.</p>
+            </div>
+            <div class="space-y-2 max-w-sm">
+                <label asp-for="DefaultSellingPrice" class="block font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">Giá bán (₫)</label>
+                <input asp-for="DefaultSellingPrice" type="number" step="1000" class="w-full bg-surface-container-low border-b border-x-0 border-t-0 border-outline-variant px-4 py-3 font-body-md text-body-md text-on-background focus:ring-0 focus:border-primary transition-colors" />
+            </div>
+        </section>
         <!-- Section: Color Management -->
         <section class="bg-surface rounded-xl border border-outline-variant p-8 shadow-[0_4px_20px_rgba(121,87,63,0.03)] relative overflow-hidden">
             <!-- Decorative subtle gradient -->
@@ -60,10 +74,10 @@
             </div>
             <!-- Color Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
-                @foreach(var color in Model.AvailableColors)
+                @foreach(var color in Model?.AvailableColors ?? Enumerable.Empty<ClothingStore.Models.ViewModels.ColorFilterViewModel>())
                 {
                     <label class="cursor-pointer relative block">
-                        <input type="checkbox" name="SelectedColors" value="@color.ColorID" class="peer hidden" />
+                        <input type="checkbox" name="SelectedColors" value="@color.ColorID" class="peer hidden" @(Model.SelectedColors?.Contains(color.ColorID) == true ? "checked" : "") />
                         <div class="group border border-outline-variant rounded-lg p-4 bg-background transition-all peer-checked:border-blue-500 peer-checked:ring-2 peer-checked:ring-blue-500 hover:border-blue-500/50">
                             <div class="w-full h-24 rounded-md mb-4 shadow-sm swatch-texture" style="background-color: @color.HexCode;"></div>
                             <h4 class="font-body-md text-body-md font-medium text-on-background">@color.ColorName</h4>
@@ -88,10 +102,10 @@
             <div class="border-b border-outline-variant pb-6 mb-6">
                 <!-- Size Grid -->
                 <div class="flex flex-wrap gap-3">
-                    @foreach(var size in Model.AvailableSizes)
+                    @foreach(var size in Model?.AvailableSizes ?? Enumerable.Empty<ClothingStore.Models.ViewModels.SizeFilterViewModel>())
                     {
                         <label class="cursor-pointer relative inline-block">
-                            <input type="checkbox" name="SelectedSizes" value="@size.SizeID" class="peer hidden" />
+                            <input type="checkbox" name="SelectedSizes" value="@size.SizeID" class="peer hidden" @(Model.SelectedSizes?.Contains(size.SizeID) == true ? "checked" : "") />
                             <div class="px-6 py-3 border border-outline-variant rounded-lg bg-surface-container-low transition-all peer-checked:border-blue-500 peer-checked:ring-2 peer-checked:ring-blue-500 peer-checked:bg-blue-50 hover:border-blue-500/50 flex items-center gap-2">
                                 <span class="font-body-md text-body-md font-medium text-on-background peer-checked:text-blue-600 transition-colors">@size.SizeCode</span>
                             </div>
@@ -115,10 +129,10 @@
                 <span class="material-symbols-outlined" style="font-size: 18px;">arrow_back</span>
                 Trở lại
             </a>
-            <a asp-action="Variants" asp-route-id="@Model?.ProductID" class="px-8 py-3 bg-primary text-on-primary rounded font-label-caps text-label-caps hover:bg-primary-container hover:text-on-primary-container transition-colors shadow-sm uppercase tracking-widest flex items-center gap-2">
+            <button type="button" onclick="document.querySelector('form').submit()" class="px-8 py-3 bg-primary text-on-primary rounded font-label-caps text-label-caps hover:bg-primary-container hover:text-on-primary-container transition-colors shadow-sm uppercase tracking-widest flex items-center gap-2">
                 Tạo biến thể
                 <span class="material-symbols-outlined" style="font-size: 18px;">arrow_forward</span>
-            </a>
+            </button>
         </div>
     </form>
 </div>
