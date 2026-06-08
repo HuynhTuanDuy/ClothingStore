@@ -30,8 +30,14 @@ public class OrderRepository(StoreDbContext dbContext) : IOrderRepository
         return dbContext.Orders
             .AsNoTracking()
             .Include(x => x.OrderDetails)
+                .ThenInclude(od => od.ProductVariant)
+                    .ThenInclude(pv => pv.Product)
+            .Include(x => x.OrderDetails)
+                .ThenInclude(od => od.ProductVariant)
+                    .ThenInclude(pv => pv.ProductImages)
             .Include(x => x.StatusHistory.OrderByDescending(h => h.ChangedAt))
             .Include(x => x.CouponUsages).ThenInclude(x => x.Coupon)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(x => x.OrderCode == orderCode);
     }
 
@@ -41,6 +47,9 @@ public class OrderRepository(StoreDbContext dbContext) : IOrderRepository
             .Include(x => x.OrderDetails)
                 .ThenInclude(od => od.ProductVariant)
                     .ThenInclude(pv => pv.Product)
+            .Include(x => x.OrderDetails)
+                .ThenInclude(od => od.ProductVariant)
+                    .ThenInclude(pv => pv.ProductImages)
             .Include(x => x.StatusHistory.OrderByDescending(h => h.ChangedAt))
             .Include(x => x.CouponUsages).ThenInclude(x => x.Coupon)
             .Include(x => x.Customer).ThenInclude(c => c!.Membership)

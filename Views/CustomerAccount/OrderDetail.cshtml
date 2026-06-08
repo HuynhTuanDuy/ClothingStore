@@ -51,8 +51,17 @@
                             var mainImage = detail.ProductVariant?.Product?.ThumbnailUrl;
                             if (string.IsNullOrEmpty(mainImage))
                             {
+                                mainImage = detail.ProductVariant?.ProductImages?.FirstOrDefault(i => i.IsMain)?.ImageURL;
+                            }
+                            if (string.IsNullOrEmpty(mainImage))
+                            {
+                                mainImage = detail.ProductVariant?.ProductImages?.FirstOrDefault()?.ImageURL;
+                            }
+                            if (string.IsNullOrEmpty(mainImage))
+                            {
                                 mainImage = "/images/placeholder.jpg"; // Fallback
                             }
+                            
                             var productName = string.IsNullOrEmpty(detail.ProductNameSnapshot) 
                                 ? detail.ProductVariant?.Product?.ProductName 
                                 : detail.ProductNameSnapshot;

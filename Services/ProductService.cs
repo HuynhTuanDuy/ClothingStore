@@ -62,11 +62,8 @@ public class ProductService(
         vm.BestSellingProducts = bestSellingModels;
         vm.InStockProducts = inStock.Select(MapCard).ToList();
         
-        // Fetch Review Stats and Reviews
         var stats = await reviewService.GetReviewStatsAsync(productId);
-        vm.AverageRating = stats.AverageRating;
-        vm.TotalReviews = stats.TotalReviews;
-        vm.Reviews = await reviewService.GetProductReviewsAsync(productId);
+        vm.ReviewStats = stats;
 
         return vm;
     }
@@ -85,11 +82,8 @@ public class ProductService(
         vm.BestSellingProducts = bestSellingModels;
         vm.InStockProducts = inStock.Select(MapCard).ToList();
 
-        // Fetch Review Stats and Reviews
         var stats = await reviewService.GetReviewStatsAsync(product.ProductID);
-        vm.AverageRating = stats.AverageRating;
-        vm.TotalReviews = stats.TotalReviews;
-        vm.Reviews = await reviewService.GetProductReviewsAsync(product.ProductID);
+        vm.ReviewStats = stats;
 
         return vm;
     }

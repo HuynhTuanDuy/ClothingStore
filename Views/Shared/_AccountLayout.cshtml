@@ -24,6 +24,11 @@
                        class="block px-4 py-2.5 rounded-md transition-colors text-sm font-medium @(action.StartsWith("Order") ? "bg-brand-cream text-brand-brown" : "text-gray-600 hover:bg-gray-50 hover:text-brand-brown")">
                         Đơn hàng của tôi
                     </a>
+
+                    <a asp-controller="CustomerAccount" asp-action="Reviews"
+                       class="block px-4 py-2.5 rounded-md transition-colors text-sm font-medium @(action == "Reviews" ? "bg-brand-cream text-brand-brown" : "text-gray-600 hover:bg-gray-50 hover:text-brand-brown")">
+                        Quản lý đánh giá
+                    </a>
                     
                     <a asp-controller="CustomerAccount" asp-action="Profile"
                        class="block px-4 py-2.5 rounded-md transition-colors text-sm font-medium @(action == "Profile" ? "bg-brand-cream text-brand-brown" : "text-gray-600 hover:bg-gray-50 hover:text-brand-brown")">

@@ -33,6 +33,7 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
     public DbSet<PaymentTransaction> Transactions => Set<PaymentTransaction>();
     public DbSet<Review> Reviews => Set<Review>();
     public DbSet<ReviewImage> ReviewImages => Set<ReviewImage>();
+    public DbSet<ReviewHelpfulVote> ReviewHelpfulVotes => Set<ReviewHelpfulVote>();
     public DbSet<ChatSession> ChatSessions => Set<ChatSession>();
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
     public DbSet<ProductImage> ProductImages => Set<ProductImage>();
@@ -419,6 +420,28 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
             .WithMany(x => x.ReviewImages)
             .HasForeignKey(x => x.ReviewID)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // ── REVIEW HELPFUL VOTES ─────────────────────────────────────
+        modelBuilder.Entity<ReviewHelpfulVote>()
+            .HasIndex(x => new { x.ReviewID, x.CustomerId })
+            .IsUnique()
+            .HasDatabaseName("UX_ReviewHelpfulVote_Unique");
+
+        modelBuilder.Entity<ReviewHelpfulVote>()
+            .HasIndex(x => x.ReviewID)
+            .HasDatabaseName("IX_ReviewHelpfulVotes_ReviewId");
+
+        modelBuilder.Entity<ReviewHelpfulVote>()
+            .HasOne(x => x.Review)
+            .WithMany(x => x.ReviewHelpfulVotes)
+            .HasForeignKey(x => x.ReviewID)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ReviewHelpfulVote>()
+            .HasOne(x => x.Customer)
+            .WithMany(x => x.ReviewHelpfulVotes)
+            .HasForeignKey(x => x.CustomerId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         // ── CHAT ─────────────────────────────────────────────────────
         modelBuilder.Entity<ChatSession>()

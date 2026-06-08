@@ -16,6 +16,33 @@ public class CustomerAccountController(
     private int GetCustomerId() => currentCustomerService.GetCustomerId() ?? 0;
     private int GetAccountId() => currentCustomerService.GetUserId() ?? 0;
 
+    [HttpGet("Reviews")]
+    public async Task<IActionResult> Reviews([FromServices] IReviewService reviewService)
+    {
+        var customerId = GetCustomerId();
+        if (customerId == 0) return RedirectToAction("Login", "Account");
+
+        var reviews = await reviewService.GetCustomerReviewsAsync(customerId);
+        return View(reviews);
+    }
+
+    [HttpPost("UpdateReview")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateReview(UpdateReviewViewModel model, [FromServices] IReviewService reviewService)
+    {
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+            return Json(new { success = false, message = "Dữ liệu không hợp lệ", errors });
+        }
+
+        var customerId = GetCustomerId();
+        if (customerId == 0) return Unauthorized(new { success = false, message = "Vui lòng đăng nhập" });
+
+        var (success, message) = await reviewService.UpdateReviewAsync(model.ReviewID, customerId, model);
+        return Json(new { success, message });
+    }
+
     [HttpGet("")]
     public async Task<IActionResult> Index()
     {

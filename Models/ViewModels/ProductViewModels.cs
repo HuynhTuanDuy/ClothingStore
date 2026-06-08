@@ -101,8 +101,7 @@ public class ProductDetailViewModel
     public List<ProductCardViewModel> InStockProducts { get; set; } = [];
 
     // Reviews Stats
-    public double AverageRating { get; set; }
-    public int TotalReviews { get; set; }
+    public ReviewStatsViewModel ReviewStats { get; set; } = new();
     public bool CanReview { get; set; }
 
     // Helpers for the view
@@ -134,4 +133,6 @@ public class ReviewViewModel
     public DateTime ReviewDate { get; set; }
     public string CustomerName { get; set; } = string.Empty;
     public List<string> Images { get; set; } = [];
+    public int HelpfulCount { get; set; }
+    public bool IsCurrentUserVoted { get; set; }
 }

@@ -269,15 +269,15 @@
     </div>
 
     <!-- Customer Reviews -->
-    <section class="mt-[80px] pt-12 border-t border-gray-100">
-        <div class="flex flex-col md:flex-row justify-between items-center mb-8">
+    <section class="mt-[80px] pt-12 border-t border-gray-100" id="reviews-section">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div>
                 <h2 class="font-['Playfair_Display'] text-[28px] font-medium text-[#553722] mb-2">Đánh giá sản phẩm</h2>
                 <div class="flex items-center gap-3">
                     <div class="flex text-yellow-400 text-lg">
                         @for (int i = 1; i <= 5; i++)
                         {
-                            if (i <= Math.Round(Model.AverageRating))
+                            if (i <= Math.Round(Model.ReviewStats.AverageRating))
                             {
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
                             }
@@ -287,7 +287,8 @@
                             }
                         }
                     </div>
-                    <span class="text-sm text-gray-500">@Model.AverageRating.ToString("0.0") / 5 (@Model.TotalReviews đánh giá)</span>
+                    <span class="text-sm text-gray-500 font-medium">@Model.ReviewStats.AverageRating.ToString("0.0") / 5</span>
+                    <span class="text-sm text-gray-400">(@Model.ReviewStats.TotalReviews đánh giá)</span>
                 </div>
             </div>
             
@@ -295,52 +296,85 @@
             {
                 if (Model.CanReview)
                 {
-                    <button type="button" onclick="openReviewModal()" class="mt-4 md:mt-0 px-6 py-2.5 bg-white border border-[#553722] text-[#553722] text-sm font-semibold uppercase tracking-widest hover:bg-[#553722] hover:text-white transition-colors rounded">
+                    <button type="button" onclick="openReviewModal()" class="px-6 py-2.5 bg-white border border-[#553722] text-[#553722] text-sm font-semibold uppercase tracking-widest hover:bg-[#553722] hover:text-white transition-colors rounded">
                         Viết đánh giá
                     </button>
                 }
             }
             else
             {
-                <a href="/Account/Login?returnUrl=@Uri.EscapeDataString(Context.Request.Path + Context.Request.QueryString)" class="mt-4 md:mt-0 px-6 py-2.5 bg-white border border-[#553722] text-[#553722] text-sm font-semibold uppercase tracking-widest hover:bg-[#553722] hover:text-white transition-colors rounded">
+                <a href="/Account/Login?returnUrl=@Uri.EscapeDataString(Context.Request.Path + Context.Request.QueryString)" class="px-6 py-2.5 bg-white border border-[#553722] text-[#553722] text-sm font-semibold uppercase tracking-widest hover:bg-[#553722] hover:text-white transition-colors rounded">
                     Đăng nhập để đánh giá
                 </a>
             }
         </div>
 
-        @if (Model.Reviews != null && Model.Reviews.Any())
+        @if (Model.ReviewStats.TotalReviews > 0)
         {
-            <div class="grid grid-cols-1 gap-6">
-                @foreach (var review in Model.Reviews)
-                {
-                    <div class="bg-[#fcfaf9] p-6 rounded-lg border border-[#f0eded]">
-                        <div class="flex justify-between items-start mb-3">
-                            <div>
-                                <span class="font-semibold text-[#553722] text-sm">@review.CustomerName</span>
-                                <span class="text-xs text-gray-400 ml-2">@review.ReviewDate.ToString("dd/MM/yyyy")</span>
-                            </div>
-                            <div class="flex text-yellow-400 text-sm">
-                                @for (int i = 1; i <= 5; i++)
-                                {
-                                    if (i <= review.Rating)
-                                    {
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                                    }
-                                }
-                            </div>
-                        </div>
-                        <p class="text-sm text-gray-600 leading-relaxed mb-3">@review.Comment</p>
-                        @if (review.Images != null && review.Images.Any())
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10 bg-[#fcfaf9] p-6 rounded-lg border border-[#f0eded]">
+                <!-- Rating Breakdown -->
+                <div class="col-span-1 border-r border-gray-200 pr-0 md:pr-8">
+                    <div class="space-y-2">
+                        @foreach (var star in new[] { 5, 4, 3, 2, 1 })
                         {
-                            <div class="flex gap-2 mt-2">
-                                @foreach (var img in review.Images)
-                                {
-                                    <img src="@img" loading="lazy" class="w-16 h-16 object-cover rounded border border-gray-200 cursor-pointer" onclick="window.open(this.src)" />
-                                }
+                            var count = star switch { 5 => Model.ReviewStats.Star5Count, 4 => Model.ReviewStats.Star4Count, 3 => Model.ReviewStats.Star3Count, 2 => Model.ReviewStats.Star2Count, _ => Model.ReviewStats.Star1Count };
+                            var pct = Model.ReviewStats.TotalReviews > 0 ? (count * 100) / Model.ReviewStats.TotalReviews : 0;
+                            <div class="flex items-center text-sm">
+                                <span class="w-10 text-gray-600 font-medium">@star Sao</span>
+                                <div class="flex-grow mx-3 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                    <div class="h-full bg-yellow-400 rounded-full" style="width: @pct%"></div>
+                                </div>
+                                <span class="w-8 text-right text-gray-500">@count</span>
                             </div>
                         }
                     </div>
-                }
+                </div>
+
+                <!-- Filters -->
+                <div class="col-span-1 md:col-span-2 flex flex-col justify-center">
+                    <div class="mb-4">
+                        <span class="text-xs font-semibold uppercase tracking-widest text-gray-400 block mb-2">Lọc theo số sao</span>
+                        <div class="flex flex-wrap gap-2" id="rating-filters">
+                            <button type="button" aria-pressed="true" data-val="" class="filter-btn active px-4 py-1.5 text-sm border rounded transition-colors bg-[#553722] text-white border-[#553722]">Tất cả</button>
+                            <button type="button" aria-pressed="false" data-val="5" class="filter-btn px-4 py-1.5 text-sm border rounded transition-colors bg-white text-gray-600 hover:bg-gray-50 border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#553722] focus:ring-offset-1">5 Sao</button>
+                            <button type="button" aria-pressed="false" data-val="4" class="filter-btn px-4 py-1.5 text-sm border rounded transition-colors bg-white text-gray-600 hover:bg-gray-50 border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#553722] focus:ring-offset-1">4 Sao</button>
+                            <button type="button" aria-pressed="false" data-val="3" class="filter-btn px-4 py-1.5 text-sm border rounded transition-colors bg-white text-gray-600 hover:bg-gray-50 border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#553722] focus:ring-offset-1">3 Sao</button>
+                            <button type="button" aria-pressed="false" data-val="2" class="filter-btn px-4 py-1.5 text-sm border rounded transition-colors bg-white text-gray-600 hover:bg-gray-50 border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#553722] focus:ring-offset-1">2 Sao</button>
+                            <button type="button" aria-pressed="false" data-val="1" class="filter-btn px-4 py-1.5 text-sm border rounded transition-colors bg-white text-gray-600 hover:bg-gray-50 border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#553722] focus:ring-offset-1">1 Sao</button>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="text-xs font-semibold uppercase tracking-widest text-gray-400 block mb-2">Cảm xúc</span>
+                        <div class="flex flex-wrap gap-2" id="sentiment-filters">
+                            <button type="button" aria-pressed="false" data-val="positive" class="sentiment-btn px-4 py-1.5 text-sm border rounded transition-colors bg-white text-gray-600 hover:bg-gray-50 border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#553722] focus:ring-offset-1">Tích cực (@Model.ReviewStats.PositivePercent%)</button>
+                            <button type="button" aria-pressed="false" data-val="neutral" class="sentiment-btn px-4 py-1.5 text-sm border rounded transition-colors bg-white text-gray-600 hover:bg-gray-50 border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#553722] focus:ring-offset-1">Trung tính (@Model.ReviewStats.NeutralPercent%)</button>
+                            <button type="button" aria-pressed="false" data-val="negative" class="sentiment-btn px-4 py-1.5 text-sm border rounded transition-colors bg-white text-gray-600 hover:bg-gray-50 border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#553722] focus:ring-offset-1">Tiêu cực (@Model.ReviewStats.NegativePercent%)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sorting -->
+            <div class="flex justify-end mb-6">
+                <select id="review-sort" class="text-sm border-gray-300 rounded focus:ring-[#553722] focus:border-[#553722]" onchange="changeSort()">
+                    <option value="newest">Mới nhất</option>
+                    <option value="mosthelpful">Hữu ích nhất</option>
+                    <option value="oldest">Cũ nhất</option>
+                    <option value="highest">Điểm cao nhất</option>
+                    <option value="lowest">Điểm thấp nhất</option>
+                </select>
+            </div>
+
+            <!-- Review Container -->
+            <div id="reviews-container" class="min-h-[200px] relative">
+                <!-- Loader -->
+                <div id="reviews-loader" class="absolute inset-0 bg-white/80 flex items-center justify-center z-10 hidden">
+                    <svg class="animate-spin h-8 w-8 text-[#553722]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </div>
+                <div id="reviews-content"></div>
             </div>
         }
         else
@@ -661,6 +695,229 @@ function previewImages(input) {
             reader.readAsDataURL(file);
         }
     }
+}
+
+// ---------------------------------------------------------
+// Review Filtering, Sorting & Pagination with AJAX
+// ---------------------------------------------------------
+let reviewState = {
+    productId: @Model.ProductID,
+    rating: '',
+    sentiment: '',
+    sort: 'newest',
+    page: 1
+};
+let abortController = null;
+
+function fetchReviews() {
+    const container = document.getElementById('reviews-content');
+    const loader = document.getElementById('reviews-loader');
+    if (!container || !loader) return;
+
+    // Abort previous request if pending
+    if (abortController) {
+        abortController.abort();
+    }
+    abortController = new AbortController();
+    const signal = abortController.signal;
+
+    loader.classList.remove('hidden');
+    container.style.opacity = '0.5';
+
+    const params = new URLSearchParams({
+        productId: reviewState.productId,
+        page: reviewState.page,
+        sort: reviewState.sort
+    });
+    if (reviewState.rating) params.append('rating', reviewState.rating);
+    if (reviewState.sentiment) params.append('sentiment', reviewState.sentiment);
+
+    // Update URL without reloading (Deep Linking)
+    const newUrl = new URL(window.location);
+    newUrl.searchParams.set('page', reviewState.page);
+    newUrl.searchParams.set('sort', reviewState.sort);
+    if (reviewState.rating) newUrl.searchParams.set('rating', reviewState.rating);
+    else newUrl.searchParams.delete('rating');
+    if (reviewState.sentiment) newUrl.searchParams.set('sentiment', reviewState.sentiment);
+    else newUrl.searchParams.delete('sentiment');
+    window.history.replaceState({}, '', newUrl);
+
+    fetch(`/Reviews/ProductReviews?${params.toString()}`, { signal })
+        .then(res => res.text())
+        .then(html => {
+            container.innerHTML = html;
+            container.style.opacity = '1';
+            loader.classList.add('hidden');
+        })
+        .catch(err => {
+            if (err.name !== 'AbortError') {
+                console.error('Error fetching reviews:', err);
+                loader.classList.add('hidden');
+                container.style.opacity = '1';
+            }
+        });
+}
+
+function loadReviews(page) {
+    reviewState.page = page;
+    fetchReviews();
+    document.getElementById('reviews-section').scrollIntoView({ behavior: 'smooth' });
+}
+
+function changeSort() {
+    const sel = document.getElementById('review-sort');
+    reviewState.sort = sel.value;
+    reviewState.page = 1; // Reset to page 1 on sort change
+    fetchReviews();
+}
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        // Reset sentiment when filtering by rating
+        document.querySelectorAll('.sentiment-btn').forEach(b => {
+            b.classList.remove('bg-[#553722]', 'text-white', 'border-[#553722]');
+            b.classList.add('bg-white', 'text-gray-600', 'border-gray-200');
+            b.setAttribute('aria-pressed', 'false');
+        });
+        reviewState.sentiment = '';
+
+        // Handle rating filter
+        document.querySelectorAll('.filter-btn').forEach(b => {
+            b.classList.remove('bg-[#553722]', 'text-white', 'border-[#553722]');
+            b.classList.add('bg-white', 'text-gray-600', 'border-gray-200');
+            b.setAttribute('aria-pressed', 'false');
+        });
+        this.classList.remove('bg-white', 'text-gray-600', 'border-gray-200');
+        this.classList.add('bg-[#553722]', 'text-white', 'border-[#553722]');
+        this.setAttribute('aria-pressed', 'true');
+
+        reviewState.rating = this.dataset.val;
+        reviewState.page = 1;
+        fetchReviews();
+    });
+});
+
+document.querySelectorAll('.sentiment-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        // Reset rating when filtering by sentiment
+        document.querySelectorAll('.filter-btn').forEach(b => {
+            b.classList.remove('bg-[#553722]', 'text-white', 'border-[#553722]');
+            b.classList.add('bg-white', 'text-gray-600', 'border-gray-200');
+            b.setAttribute('aria-pressed', 'false');
+        });
+        reviewState.rating = '';
+
+        // Handle sentiment filter
+        document.querySelectorAll('.sentiment-btn').forEach(b => {
+            b.classList.remove('bg-[#553722]', 'text-white', 'border-[#553722]');
+            b.classList.add('bg-white', 'text-gray-600', 'border-gray-200');
+            b.setAttribute('aria-pressed', 'false');
+        });
+        this.classList.remove('bg-white', 'text-gray-600', 'border-gray-200');
+        this.classList.add('bg-[#553722]', 'text-white', 'border-[#553722]');
+        this.setAttribute('aria-pressed', 'true');
+
+        reviewState.sentiment = this.dataset.val;
+        reviewState.page = 1;
+        fetchReviews();
+    });
+});
+
+// Sync UI buttons with state
+function syncUIWithState() {
+    document.getElementById('review-sort').value = reviewState.sort;
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        if (btn.dataset.val === reviewState.rating) {
+            btn.classList.add('bg-[#553722]', 'text-white', 'border-[#553722]');
+            btn.classList.remove('bg-white', 'text-gray-600', 'border-gray-200');
+            btn.setAttribute('aria-pressed', 'true');
+        } else {
+            btn.classList.remove('bg-[#553722]', 'text-white', 'border-[#553722]');
+            btn.classList.add('bg-white', 'text-gray-600', 'border-gray-200');
+            btn.setAttribute('aria-pressed', 'false');
+        }
+    });
+
+    document.querySelectorAll('.sentiment-btn').forEach(btn => {
+        if (btn.dataset.val === reviewState.sentiment) {
+            btn.classList.add('bg-[#553722]', 'text-white', 'border-[#553722]');
+            btn.classList.remove('bg-white', 'text-gray-600', 'border-gray-200');
+            btn.setAttribute('aria-pressed', 'true');
+        } else {
+            btn.classList.remove('bg-[#553722]', 'text-white', 'border-[#553722]');
+            btn.classList.add('bg-white', 'text-gray-600', 'border-gray-200');
+            btn.setAttribute('aria-pressed', 'false');
+        }
+    });
+}
+
+// Initial load
+document.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById('reviews-container')) {
+        // Read URL params for Deep Linking
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('page')) reviewState.page = parseInt(urlParams.get('page')) || 1;
+        if (urlParams.has('sort')) reviewState.sort = urlParams.get('sort');
+        if (urlParams.has('rating')) reviewState.rating = urlParams.get('rating');
+        if (urlParams.has('sentiment')) reviewState.sentiment = urlParams.get('sentiment');
+
+        syncUIWithState();
+        fetchReviews();
+    }
+});
+
+function toggleHelpful(reviewId, btn) {
+    if (btn.disabled) return;
+
+    const form = document.getElementById('review-form');
+    const token = form ? form.querySelector('input[name="__RequestVerificationToken"]')?.value : null;
+    if (!token) {
+        alert("Có lỗi xảy ra, vui lòng tải lại trang.");
+        return;
+    }
+
+    btn.disabled = true;
+    const originalText = btn.innerHTML;
+
+    const formData = new FormData();
+    formData.append("reviewId", reviewId);
+    formData.append("__RequestVerificationToken", token);
+
+    fetch('/Reviews/ToggleHelpfulVote', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => {
+        if (res.status === 401) {
+            window.location.href = '/Account/Login?returnUrl=' + encodeURIComponent(window.location.pathname + window.location.search);
+            throw new Error('Unauthorized');
+        }
+        return res.json();
+    })
+    .then(data => {
+        if (data.success) {
+            btn.setAttribute('aria-pressed', data.isVoted);
+            if (data.isVoted) {
+                btn.classList.remove('bg-white', 'text-gray-500', 'border-gray-200', 'hover:bg-gray-50');
+                btn.classList.add('bg-green-50', 'text-green-700', 'border-green-200');
+            } else {
+                btn.classList.add('bg-white', 'text-gray-500', 'border-gray-200', 'hover:bg-gray-50');
+                btn.classList.remove('bg-green-50', 'text-green-700', 'border-green-200');
+            }
+            btn.querySelector('.helpful-count').textContent = data.helpfulCount;
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(err => {
+        if (err.message !== 'Unauthorized') {
+            console.error(err);
+        }
+    })
+    .finally(() => {
+        btn.disabled = false;
+    });
 }
 </script>
 }

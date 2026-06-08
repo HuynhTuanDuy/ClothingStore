@@ -248,6 +248,7 @@ public class Customer
     public ICollection<ShippingAddress> ShippingAddresses { get; set; } = new List<ShippingAddress>();
     public ICollection<CouponUsage> CouponUsages { get; set; } = new List<CouponUsage>();
     public ICollection<Review> Reviews { get; set; } = new List<Review>();
+    public ICollection<ReviewHelpfulVote> ReviewHelpfulVotes { get; set; } = new List<ReviewHelpfulVote>();
 }
 
 [Table("ACCOUNTS")]
@@ -608,6 +609,20 @@ public class Review
     public ProductVariant? ProductVariant { get; set; }
     public Customer Customer { get; set; } = null!;
     public ICollection<ReviewImage> ReviewImages { get; set; } = new List<ReviewImage>();
+    public ICollection<ReviewHelpfulVote> ReviewHelpfulVotes { get; set; } = new List<ReviewHelpfulVote>();
+}
+
+[Table("REVIEWHELPFULVOTES")]
+public class ReviewHelpfulVote
+{
+    [Key] public int VoteID { get; set; }
+    public int ReviewID { get; set; }
+    public int CustomerId { get; set; }
+    public DateTime VotedAt { get; set; } = DateTime.UtcNow;
+
+    // Navigation
+    public Review Review { get; set; } = null!;
+    public Customer Customer { get; set; } = null!;
 }
 
 [Table("REVIEWIMAGES")]

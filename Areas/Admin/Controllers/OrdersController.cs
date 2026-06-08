@@ -120,7 +120,9 @@ public class OrdersController(
                 SizeCode    = d.SizeCodeSnapshot,
                 ColorName   = d.ColorNameSnapshot,
                 SKU         = d.SKUSnapshot,
-                ImageUrl    = d.ProductVariant?.Product?.ThumbnailUrl ?? "",
+                ImageUrl    = !string.IsNullOrEmpty(d.ProductVariant?.Product?.ThumbnailUrl) 
+                              ? d.ProductVariant.Product.ThumbnailUrl 
+                              : (d.ProductVariant?.ProductImages?.FirstOrDefault(i => i.IsMain)?.ImageURL ?? d.ProductVariant?.ProductImages?.FirstOrDefault()?.ImageURL ?? ""),
                 UnitPrice   = d.UnitPrice,
                 Quantity    = d.Quantity,
                 SubTotal    = d.SubTotal
