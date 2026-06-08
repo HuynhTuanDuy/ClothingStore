@@ -103,6 +103,7 @@ public class ProductDetailViewModel
     // Reviews Stats
     public double AverageRating { get; set; }
     public int TotalReviews { get; set; }
+    public bool CanReview { get; set; }
 
     // Helpers for the view
     public decimal MinEffectivePrice => Variants.Count > 0 ? Variants.Min(v => v.EffectivePrice) : 0;

@@ -24,12 +24,12 @@
             }
             
             <div class="mb-8" data-purpose="filter-category">
-                <h3 class="font-bold mb-3 uppercase tracking-wider text-sm">Category</h3>
+                <h3 class="font-bold mb-3 uppercase tracking-wider text-sm">Danh mục</h3>
                 <ul class="space-y-2 text-brandGray">
                     <li>
                         <label class="flex items-center space-x-2 cursor-pointer hover:text-black transition-colors">
                             <input type="radio" name="categoryId" value="" onchange="this.form.submit()" class="form-radio text-black border-gray-300 focus:ring-black h-3 w-3" @(!Model.CategoryID.HasValue ? "checked" : "") />
-                            <span>All</span>
+                            <span>Tất cả</span>
                         </label>
                     </li>
                     @foreach (var cat in Model.Categories)
@@ -45,12 +45,12 @@
             </div>
 
             <div class="mb-8" data-purpose="filter-size">
-                <h3 class="font-bold mb-3 uppercase tracking-wider text-sm">Size</h3>
+                <h3 class="font-bold mb-3 uppercase tracking-wider text-sm">Kích cỡ</h3>
                 <ul class="space-y-2 text-brandGray">
                     <li>
                         <label class="flex items-center space-x-2 cursor-pointer hover:text-black transition-colors">
                             <input type="radio" name="sizeId" value="" onchange="this.form.submit()" class="form-radio text-black border-gray-300 focus:ring-black h-3 w-3" @(!Model.SizeId.HasValue ? "checked" : "") />
-                            <span>All</span>
+                            <span>Tất cả</span>
                         </label>
                     </li>
                     @foreach (var size in Model.Sizes)
@@ -66,12 +66,12 @@
             </div>
 
             <div class="mb-8" data-purpose="filter-color">
-                <h3 class="font-bold mb-3 uppercase tracking-wider text-sm">Color</h3>
+                <h3 class="font-bold mb-3 uppercase tracking-wider text-sm">Màu sắc</h3>
                 <ul class="space-y-3">
                     <li>
                         <label class="flex items-center space-x-2 cursor-pointer text-brandGray hover:text-black transition-colors">
                             <input type="radio" name="colorId" value="" onchange="this.form.submit()" class="form-radio text-black border-gray-300 focus:ring-black h-3 w-3" @(!Model.ColorId.HasValue ? "checked" : "") />
-                            <span>All</span>
+                            <span>Tất cả</span>
                         </label>
                     </li>
                     @foreach (var color in Model.Colors)
@@ -88,9 +88,9 @@
             </div>
             
             <div class="mb-8" data-purpose="filter-sort">
-                <h3 class="font-bold mb-3 uppercase tracking-wider text-sm">Sort By</h3>
+                <h3 class="font-bold mb-3 uppercase tracking-wider text-sm">Sắp xếp</h3>
                 <select name="sortBy" onchange="this.form.submit()" asp-for="SortBy" asp-items="Model.SortOptions" class="w-full border-gray-300 rounded text-sm text-gray-700 bg-white py-2 px-3 focus:ring-black">
-                    <option value="">Default Sorting</option>
+                    <option value="">Mặc định</option>
                 </select>
             </div>
             
@@ -108,8 +108,8 @@
         @if (!Model.Products.Any())
         {
             <div class="text-center py-20 text-gray-500">
-                <p class="text-xl">No products found matching your filters.</p>
-                <a href="@Url.Action("ShopAll", "Home")" class="inline-block mt-4 text-black underline">Clear filters</a>
+                <p class="text-xl">Không tìm thấy sản phẩm nào phù hợp với bộ lọc.</p>
+                <a href="@Url.Action("ShopAll", "Home")" class="inline-block mt-4 text-black underline">Xóa bộ lọc</a>
             </div>
         }
         else
@@ -127,7 +127,7 @@
                 <div class="mt-12 flex justify-center space-x-2 text-[13px]">
                     @if (Model.Page > 1)
                     {
-                        <a href="@Url.Action("ShopAll", "Home", new { page = Model.Page - 1, categoryId = Model.CategoryID, sizeId = Model.SizeId, colorId = Model.ColorId, search = Model.Search, sortBy = Model.SortBy })" class="px-3 py-1 border border-gray-300 text-gray-600 hover:border-black hover:text-black">Previous</a>
+                        <a href="@Url.Action("ShopAll", "Home", new { page = Model.Page - 1, categoryId = Model.CategoryID, sizeId = Model.SizeId, colorId = Model.ColorId, search = Model.Search, sortBy = Model.SortBy })" class="px-3 py-1 border border-gray-300 text-gray-600 hover:border-black hover:text-black">Trước</a>
                     }
                     
                     @for (int i = 1; i <= Model.TotalPages; i++)
@@ -140,7 +140,7 @@
 
                     @if (Model.Page < Model.TotalPages)
                     {
-                        <a href="@Url.Action("ShopAll", "Home", new { page = Model.Page + 1, categoryId = Model.CategoryID, sizeId = Model.SizeId, colorId = Model.ColorId, search = Model.Search, sortBy = Model.SortBy })" class="px-3 py-1 border border-gray-300 text-gray-600 hover:border-black hover:text-black">Next</a>
+                        <a href="@Url.Action("ShopAll", "Home", new { page = Model.Page + 1, categoryId = Model.CategoryID, sizeId = Model.SizeId, colorId = Model.ColorId, search = Model.Search, sortBy = Model.SortBy })" class="px-3 py-1 border border-gray-300 text-gray-600 hover:border-black hover:text-black">Tiếp</a>
                     }
                 </div>
             }

@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ClothingStore.Controllers;
 
-public class HomeController(IProductService productService) : Controller
+public class HomeController(IProductService productService, ICurrentCustomerService currentCustomerService, IReviewService reviewService) : Controller
 {
     public async Task<IActionResult> Index(
         string? search = null,
@@ -55,12 +55,28 @@ public class HomeController(IProductService productService) : Controller
     public async Task<IActionResult> Details(int id)
     {
         var model = await productService.GetProductDetailsAsync(id);
+        if (model != null)
+        {
+            var customerId = currentCustomerService.GetCustomerId();
+            if (customerId.HasValue)
+            {
+                model.CanReview = await reviewService.CanUserReviewProductAsync(customerId.Value, id);
+            }
+        }
         return model is null ? NotFound() : View(model);
     }
 
     public async Task<IActionResult> ProductBySlug(string slug)
     {
         var model = await productService.GetProductBySlugAsync(slug);
+        if (model != null)
+        {
+            var customerId = currentCustomerService.GetCustomerId();
+            if (customerId.HasValue)
+            {
+                model.CanReview = await reviewService.CanUserReviewProductAsync(customerId.Value, model.ProductID);
+            }
+        }
         return model is null ? NotFound() : View("Details", model);
     }
 

@@ -14,6 +14,7 @@ public class CheckoutService(
     IOrderRepository orderRepository,
     IUnitOfWork unitOfWork,
     ICurrentCustomerService currentCustomerService,
+    ICustomerAccountService customerAccountService,
     IHttpContextAccessor httpContextAccessor,
     IMemoryCache memoryCache) : ICheckoutService
 {
@@ -23,11 +24,48 @@ public class CheckoutService(
 
     public async Task<CheckoutViewModel> GetCheckoutAsync(CheckoutInputModel? input = null)
     {
-        return new CheckoutViewModel
+        var vm = new CheckoutViewModel
         {
             Input = input ?? new CheckoutInputModel(),
             Cart  = await cartService.GetCartAsync()
         };
+
+        var customerId = currentCustomerService.GetCustomerId();
+        if (customerId.HasValue)
+        {
+            vm.IsAuthenticated = true;
+            vm.SavedAddresses = await customerAccountService.GetAddressesAsync(customerId.Value);
+
+            // If it's a new request and no input was provided, try to pre-fill from default address
+            if (input == null && vm.SavedAddresses.Any())
+            {
+                var defaultAddr = vm.SavedAddresses.FirstOrDefault(a => a.IsDefault) ?? vm.SavedAddresses.First();
+                vm.Input.ShippingRecipientName = defaultAddr.RecipientName;
+                vm.Input.ShippingPhone = defaultAddr.ReceiverPhone;
+                vm.Input.ShippingAddress = defaultAddr.AddressLine;
+                vm.Input.ShippingWard = defaultAddr.Ward;
+                vm.Input.ShippingDistrict = defaultAddr.District;
+                vm.Input.ShippingProvince = defaultAddr.Province;
+                
+                var profile = await customerAccountService.GetProfileAsync(customerId.Value);
+                if (profile != null)
+                {
+                    vm.Input.OrderEmail = profile.Email;
+                }
+            }
+            else if (input == null)
+            {
+                var profile = await customerAccountService.GetProfileAsync(customerId.Value);
+                if (profile != null)
+                {
+                    vm.Input.ShippingRecipientName = profile.FullName;
+                    vm.Input.ShippingPhone = profile.Phone;
+                    vm.Input.OrderEmail = profile.Email;
+                }
+            }
+        }
+
+        return vm;
     }
 
     public async Task<CouponApplyResult> ApplyCouponAsync(string couponCode, decimal subTotal, int? customerId)
@@ -75,8 +113,8 @@ public class CheckoutService(
             couponId       = couponResult.CouponId;
             appliedCode    = couponResult.CouponCode;
         }
-
-        var finalAmount = subTotal + shipping - discountAmount;
+        var vat = Math.Max(0m, (subTotal - discountAmount) * 0.1m);
+        var finalAmount = subTotal + shipping - discountAmount + vat;
 
         // ── Build order code (LOW-02 FIX) ────────────────────────────
         var orderCode = GenerateOrderCode();

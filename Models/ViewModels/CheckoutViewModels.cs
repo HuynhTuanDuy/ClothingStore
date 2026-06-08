@@ -13,7 +13,12 @@ public class CheckoutViewModel
     public decimal ShippingFee => SubTotal >= 500_000m ? 0m : 30_000m;
     public decimal DiscountAmount { get; set; }
     public string? AppliedCouponCode { get; set; }
-    public decimal FinalAmount => SubTotal + ShippingFee - DiscountAmount;
+    public decimal VAT => Math.Max(0m, (SubTotal - DiscountAmount) * 0.1m);
+    public decimal FinalAmount => SubTotal + ShippingFee - DiscountAmount + VAT;
+    
+    // New properties
+    public bool IsAuthenticated { get; set; }
+    public List<ClothingStore.Models.Entities.ShippingAddress> SavedAddresses { get; set; } = new();
 }
 
 public class CheckoutInputModel

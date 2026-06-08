@@ -4,121 +4,130 @@
     ViewData["Title"] = "Quản lý Đánh giá";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>@ViewData["Title"]</h2>
+<div class="flex justify-between items-center mb-6">
+    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">@ViewData["Title"]</h2>
 </div>
 
-<div class="card shadow-sm">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Khách hàng</th>
-                        <th>Sản phẩm</th>
-                        <th>Đánh giá</th>
-                        <th>Nội dung</th>
-                        <th>Ảnh</th>
-                        <th>Thời gian</th>
-                        <th>Trạng thái</th>
-                        <th class="text-end">Hành động</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (Model.Reviews.Any())
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-900/50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Khách hàng</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sản phẩm</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Đánh giá</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nội dung</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ảnh</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Thời gian</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Trạng thái</th>
+                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Hành động</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                @if (Model.Reviews.Any())
+                {
+                    foreach (var item in Model.Reviews)
                     {
-                        foreach (var item in Model.Reviews)
-                        {
-                            <tr>
-                                <td>@item.CustomerName</td>
-                                <td>@item.ProductName</td>
-                                <td>
-                                    <div class="text-warning">
-                                        @for (var i = 1; i <= 5; i++)
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 font-medium">@item.CustomerName</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">@item.ProductName</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex text-amber-400">
+                                    @for (var i = 1; i <= 5; i++)
+                                    {
+                                        if (i <= item.Rating)
                                         {
-                                            if (i <= item.Rating)
-                                            {
-                                                <i class="bi bi-star-fill"></i>
-                                            }
-                                            else
-                                            {
-                                                <i class="bi bi-star"></i>
-                                            }
+                                            <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">star</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 0;">star</span>
+                                        }
+                                    }
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 max-w-[300px] truncate">
+                                @item.Comment
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                @if (item.Images.Any())
+                                {
+                                    <div class="flex gap-2">
+                                        @foreach (var img in item.Images)
+                                        {
+                                            <img src="@img" alt="Review Image" loading="lazy" class="w-10 h-10 object-cover rounded-md border border-gray-200 dark:border-gray-600 shadow-sm" />
                                         }
                                     </div>
-                                </td>
-                                <td style="max-width: 300px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
-                                    @item.Comment
-                                </td>
-                                <td>
-                                    @if (item.Images.Any())
+                                }
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                @item.ReviewDate.ToString("dd/MM/yyyy HH:mm")
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                @if (item.IsApproved)
+                                {
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                                        Đã duyệt
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                                        Chờ duyệt
+                                    </span>
+                                }
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <div class="flex justify-end gap-2">
+                                    @if (!item.IsApproved)
                                     {
-                                        <div class="d-flex gap-1">
-                                            @foreach (var img in item.Images)
-                                            {
-                                                <img src="@img" alt="Review Image" loading="lazy" class="rounded" style="width: 40px; height: 40px; object-fit: cover;" />
-                                            }
-                                        </div>
-                                    }
-                                </td>
-                                <td>@item.ReviewDate.ToString("dd/MM/yyyy HH:mm")</td>
-                                <td>
-                                    @if (item.IsApproved)
-                                    {
-                                        <span class="badge bg-success">Đã duyệt</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-warning text-dark">Chờ duyệt</span>
-                                    }
-                                </td>
-                                <td class="text-end">
-                                    <div class="btn-group">
-                                        @if (!item.IsApproved)
-                                        {
-                                            <form asp-action="Approve" method="post" class="d-inline">
-                                                <input type="hidden" name="id" value="@item.ReviewID" />
-                                                <button type="submit" class="btn btn-sm btn-outline-success" title="Duyệt">
-                                                    <i class="bi bi-check-circle"></i>
-                                                </button>
-                                            </form>
-                                        }
-                                        <form asp-action="Delete" method="post" class="d-inline ms-1" onsubmit="return confirm('Bạn có chắc chắn muốn xóa đánh giá này?');">
+                                        <form asp-action="Approve" method="post" class="inline">
                                             <input type="hidden" name="id" value="@item.ReviewID" />
-                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa">
-                                                <i class="bi bi-trash"></i>
+                                            <button type="submit" class="p-1 text-green-600 hover:text-green-900 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-md transition-colors" title="Duyệt">
+                                                <span class="material-symbols-outlined text-[20px]">check_circle</span>
                                             </button>
                                         </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    }
-                    else
-                    {
-                        <tr>
-                            <td colspan="8" class="text-center py-4 text-muted">
-                                Không có đánh giá nào.
+                                    }
+                                    <form asp-action="Delete" method="post" class="inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa đánh giá này?');">
+                                        <input type="hidden" name="id" value="@item.ReviewID" />
+                                        <button type="submit" class="p-1 text-red-600 hover:text-red-900 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors" title="Xóa">
+                                            <span class="material-symbols-outlined text-[20px]">delete</span>
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     }
-                </tbody>
-            </table>
-        </div>
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                            <span class="material-symbols-outlined text-4xl mb-2 text-gray-300 dark:text-gray-600">rate_review</span>
+                            <p>Không có đánh giá nào.</p>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
     </div>
     
     @if (Model.TotalPages > 1)
     {
-        <div class="card-footer bg-white">
-            <nav aria-label="Page navigation">
-                <ul class="pagination mb-0 justify-content-center">
-                    @for (var i = 1; i <= Model.TotalPages; i++)
+        <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex justify-center">
+            <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                @for (var i = 1; i <= Model.TotalPages; i++)
+                {
+                    if (i == Model.Page)
                     {
-                        <li class="page-item @(i == Model.Page ? "active" : "")">
-                            <a class="page-link" asp-action="Index" asp-route-page="@i">@i</a>
-                        </li>
+                        <span aria-current="page" class="relative z-10 inline-flex items-center bg-primary px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">@i</span>
                     }
-                </ul>
+                    else
+                    {
+                        var roundedClass = i == 1 ? "rounded-l-md" : (i == Model.TotalPages ? "rounded-r-md" : "");
+                        <a asp-action="Index" asp-route-page="@i" class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 dark:text-gray-300 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 focus:z-20 focus:outline-offset-0 @roundedClass">@i</a>
+                    }
+                }
             </nav>
         </div>
     }

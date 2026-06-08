@@ -7,7 +7,7 @@ using System.Security.Claims;
 namespace ClothingStore.Controllers;
 
 [Authorize]
-public class ReviewsController(IReviewService reviewService) : Controller
+public class ReviewsController(IReviewService reviewService, ICurrentCustomerService currentCustomerService) : Controller
 {
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -19,13 +19,13 @@ public class ReviewsController(IReviewService reviewService) : Controller
             return RedirectToAction("Details", "Home", new { id = model.ProductID });
         }
 
-        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!int.TryParse(userIdClaim, out int customerId))
+        var customerId = currentCustomerService.GetCustomerId();
+        if (!customerId.HasValue)
         {
             return Forbid();
         }
 
-        var result = await reviewService.CreateReviewAsync(customerId, model);
+        var result = await reviewService.CreateReviewAsync(customerId.Value, model);
         
         if (result.Success)
         {

@@ -134,11 +134,11 @@
                         <div class="aspect-[4/5] bg-surface-container-low mb-4 overflow-hidden rounded-DEFAULT relative">
                             @if (!rec.HasStock)
                             {
-                                <span class="absolute top-2 right-2 bg-gray-500 text-white text-[9px] px-2 py-0.5 tracking-tighter uppercase font-medium z-10">Sold Out</span>
+                                <span class="absolute top-2 right-2 bg-gray-500 text-white text-[9px] px-2 py-0.5 tracking-tighter uppercase font-medium z-10">Hết hàng</span>
                             }
                             else if (rec.HasDiscount)
                             {
-                                <span class="absolute top-2 right-2 bg-red-500 text-white text-[9px] px-2 py-0.5 tracking-tighter uppercase font-medium z-10">Sale</span>
+                                <span class="absolute top-2 right-2 bg-red-500 text-white text-[9px] px-2 py-0.5 tracking-tighter uppercase font-medium z-10">Giảm giá</span>
                             }
 
                             @if (!string.IsNullOrWhiteSpace(rec.ThumbnailUrl))

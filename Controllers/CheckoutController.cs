@@ -4,7 +4,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ClothingStore.Controllers;
 
-public class CheckoutController(ICheckoutService checkoutService) : Controller
+public class CheckoutController(
+    ICheckoutService checkoutService,
+    ICartService cartService,
+    ICurrentCustomerService currentCustomerService,
+    ICouponService couponService) : Controller
 {
     public async Task<IActionResult> Index([FromQuery] bool guest = false)
     {
@@ -21,6 +25,42 @@ public class CheckoutController(ICheckoutService checkoutService) : Controller
         }
 
         return View(model);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ApplyCoupon([FromBody] ApplyCouponRequest request)
+    {
+        var cart = await cartService.GetCartAsync();
+        if (cart.IsEmpty) return BadRequest("Cart is empty");
+
+        var customerId = currentCustomerService.GetCustomerId();
+        var subTotal = cart.SubTotal;
+        var shippingFee = subTotal >= 500_000m ? 0m : 30_000m;
+        
+        decimal discountAmount = 0;
+        if (!string.IsNullOrWhiteSpace(request.CouponCode))
+        {
+            var result = await couponService.ValidateAsync(request.CouponCode, subTotal, customerId);
+            if (!result.IsValid)
+            {
+                return Json(new { success = false, message = result.ErrorMessage });
+            }
+            discountAmount = result.DiscountAmount;
+        }
+
+        var vat = (subTotal - discountAmount) * 0.1m;
+        if (vat < 0) vat = 0;
+        
+        var finalAmount = subTotal + shippingFee - discountAmount + vat;
+
+        return Json(new {
+            success = true,
+            subTotal,
+            shippingFee,
+            discountAmount,
+            vat,
+            finalAmount
+        });
     }
 
     [HttpPost]
@@ -68,4 +108,9 @@ public class CheckoutController(ICheckoutService checkoutService) : Controller
         var model = await checkoutService.GetPaymentPendingAsync(orderCode, paymentMethod);
         return model is null ? NotFound() : View(model);
     }
+}
+
+public class ApplyCouponRequest
+{
+    public string CouponCode { get; set; } = string.Empty;
 }

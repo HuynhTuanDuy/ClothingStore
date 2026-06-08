@@ -8,16 +8,16 @@
 <section class="container mx-auto px-4 py-12 md:py-20 flex flex-col md:flex-row items-center">
     <!-- Hero Left: Lifestyle Image -->
     <div class="md:w-1/2 p-4">
-        <img alt="Lifestyle image - Woman with stuffed animals" class="w-full h-auto object-cover rounded-sm shadow-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCIK9oBxvMgBEykb_H62mTicay9VoZEMd8HcVATs27wNanMJ06B5bbVGC80otMfNC0roKj75si-Q-zXA0hHUY57hjBEOjzfRflqamtYygZHUvzk3ibDK9ER31EKyQTS_T3CSwVBCxxLBPZ3R0XoFejzFOgA6fZG8cSCmGOtmDs9s_QP-XF9jfovFBiVKM1q6B6iy-DmOfk13v3SuDEtBtQjgfphM1KdnUpjpCwhaAzjU6Qw3sxM0uwSXuOsR-fNRxkXh3tcVaJ3Igc" style="max-height: 600px;"/>
+        <img alt="Hình ảnh lối sống - Cô gái cùng thú nhồi bông" class="w-full h-auto object-cover rounded-sm shadow-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCIK9oBxvMgBEykb_H62mTicay9VoZEMd8HcVATs27wNanMJ06B5bbVGC80otMfNC0roKj75si-Q-zXA0hHUY57hjBEOjzfRflqamtYygZHUvzk3ibDK9ER31EKyQTS_T3CSwVBCxxLBPZ3R0XoFejzFOgA6fZG8cSCmGOtmDs9s_QP-XF9jfovFBiVKM1q6B6iy-DmOfk13v3SuDEtBtQjgfphM1KdnUpjpCwhaAzjU6Qw3sxM0uwSXuOsR-fNRxkXh3tcVaJ3Igc" style="max-height: 600px;"/>
     </div>
     <!-- Hero Right: Text Content -->
     <div class="md:w-1/2 p-8 md:p-16">
-        <h1 class="text-5xl md:text-6xl font-serif text-brand-dark-brown mb-6 leading-tight">Never lose your sense of wonder</h1>
+        <h1 class="text-5xl md:text-6xl font-serif text-brand-dark-brown mb-6 leading-tight">Đừng bao giờ đánh mất sự tò mò của bạn</h1>
         <p class="text-gray-600 mb-8 leading-relaxed text-lg italic">
-            Never lose your sense of wonder. Understated and plush comfort even if it's rainy and overcast outside. Let ourselves travel to a cozy corner and wonder, this is where we feel at home.
+            Sự thoải mái tối giản và ấm áp ngay cả khi thời tiết bên ngoài nhiều mây và mưa. Hãy để bản thân trôi dạt vào một góc nhỏ ấm cúng và tự hỏi, đây chính là nơi ta gọi là nhà.
         </p>
         <a href="#product-section" class="inline-block bg-brand-brown text-white px-8 py-3 hover:bg-brand-dark-brown transition-colors font-medium rounded">
-            Shop Now
+            Mua Sắm Ngay
         </a>
     </div>
 </section>
@@ -32,7 +32,7 @@
         </div>
         <div class="h-80 bg-brand-brown flex items-center justify-center p-8 text-center">
             <p class="font-serif text-white text-xl italic leading-relaxed">
-                A little corner of calm, wrapped in muted shades and mindful comfort.
+                Một góc nhỏ tĩnh lặng, được bao bọc bởi những sắc màu dịu nhẹ và sự thoải mái vô tận.
             </p>
         </div>
         <div class="h-80">
@@ -50,7 +50,7 @@
         </div>
         <div class="h-80 bg-brand-brown flex items-center justify-center p-8 text-center">
             <p class="font-serif text-white text-xl italic leading-relaxed">
-                For the one who embraces bold choices and the never ending journey of self-discovery.
+                Dành cho những người dám đưa ra những lựa chọn táo bạo và hành trình khám phá bản thân không ngừng nghỉ.
             </p>
         </div>
         <div class="h-80">
@@ -67,7 +67,7 @@
 {
     <section class="container mx-auto px-4 py-12">
         <div class="flex justify-between items-end mb-8">
-            <h2 class="text-4xl font-serif text-brand-dark-brown">Best Sellers</h2>
+            <h2 class="text-4xl font-serif text-brand-dark-brown">Sản phẩm bán chạy</h2>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
             @foreach (var product in Model.BestSellers)
@@ -87,14 +87,14 @@
         <!-- Filter Form (Minimal version) -->
         <form method="get" class="flex gap-4">
             <select name="categoryId" onchange="this.form.submit()" class="border-gray-300 rounded text-sm text-gray-700 bg-white">
-                <option value="">All Categories</option>
+                <option value="">Tất cả danh mục</option>
                 @foreach (var cat in Model.ShopProducts.Categories)
                 {
                     <option value="@cat.CategoryID" selected="@(cat.CategoryID == Model.ShopProducts.CategoryID)">@cat.CategoryName</option>
                 }
             </select>
             <select name="sortBy" onchange="this.form.submit()" asp-for="ShopProducts.SortBy" asp-items="Model.ShopProducts.SortOptions" class="border-gray-300 rounded text-sm text-gray-700 bg-white">
-                <option value="">Sort By</option>
+                <option value="">Sắp xếp theo</option>
             </select>
         </form>
     </div>
@@ -102,7 +102,7 @@
     @if (!Model.ShopProducts.Products.Any())
     {
         <div class="text-center py-20 text-gray-500">
-            <p class="text-xl">No products found.</p>
+            <p class="text-xl">Không tìm thấy sản phẩm nào.</p>
         </div>
     }
     else
@@ -136,12 +136,12 @@
     <div class="container mx-auto flex justify-center">
         <div class="bg-brand-lavender max-w-2xl w-full p-10 relative rounded shadow-sm">
             <div class="text-center">
-                <h2 class="text-3xl font-serif text-brand-dark-brown mb-2">Sign up and save</h2>
-                <p class="text-gray-600 mb-8 text-sm">Enter your email to sign up to newsletter and update!</p>
+                <h2 class="text-3xl font-serif text-brand-dark-brown mb-2">Đăng ký và nhận ưu đãi</h2>
+                <p class="text-gray-600 mb-8 text-sm">Nhập email của bạn để đăng ký nhận bản tin và cập nhật mới nhất!</p>
                 <form class="flex flex-col sm:flex-row gap-0 justify-center">
-                    <input class="w-full sm:w-80 border-none px-4 py-3 bg-white/80 focus:ring-0 focus:outline-none text-sm" placeholder="Email" required type="email" />
+                    <input class="w-full sm:w-80 border-none px-4 py-3 bg-white/80 focus:ring-0 focus:outline-none text-sm" placeholder="Email của bạn" required type="email" />
                     <button class="bg-brand-dark-brown text-white px-8 py-3 uppercase text-xs font-bold tracking-widest hover:bg-black transition-colors" type="submit">
-                        Subscribe
+                        Đăng ký ngay
                     </button>
                 </form>
             </div>

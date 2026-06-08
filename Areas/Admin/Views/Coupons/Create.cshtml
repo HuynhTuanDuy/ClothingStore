@@ -4,19 +4,21 @@
     ViewData["Title"] = "Thêm mã giảm giá mới";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="mb-0 text-gray-800">Thêm mã giảm giá mới</h2>
-    <a asp-action="Index" class="btn btn-secondary shadow-sm">
-        <i class="fas fa-arrow-left fa-sm text-white-50"></i> Quay lại
+<div class="flex justify-between items-center mb-6">
+    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Thêm mã giảm giá mới</h2>
+    <a asp-action="Index" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-medium rounded-md transition-colors dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 shadow-sm">
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span> Quay lại
     </a>
 </div>
 
-<div class="card shadow mb-4">
-    <div class="card-body">
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+    <div class="p-6">
         <form asp-action="Create" method="post">
             <partial name="_CouponForm" model="Model" />
-            <div class="mt-4">
-                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Tạo mã</button>
+            <div class="mt-6 flex justify-end">
+                <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary-dark text-white text-sm font-medium rounded-md transition-colors shadow-sm">
+                    <span class="material-symbols-outlined text-[18px]">save</span> Tạo mã
+                </button>
             </div>
         </form>
     </div>

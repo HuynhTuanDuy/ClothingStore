@@ -68,9 +68,9 @@
 
     <!-- Breadcrumb -->
     <nav class="text-[10px] uppercase tracking-widest text-gray-400 mb-6 font-medium">
-        <a href="@Url.Action("Index","Home")" class="hover:text-[#553722]">Home</a>
+        <a href="@Url.Action("Index","Home")" class="hover:text-[#553722]">Trang chủ</a>
         <span class="mx-2">/</span>
-        <a href="@Url.Action("ShopAll","Home")" class="hover:text-[#553722]">Shop All</a>
+        <a href="@Url.Action("ShopAll","Home")" class="hover:text-[#553722]">Tất cả sản phẩm</a>
         <span class="mx-2">/</span>
         <span class="text-[#553722]">@Model.ProductName</span>
     </nav>
@@ -293,9 +293,12 @@
             
             @if (User.Identity?.IsAuthenticated == true)
             {
-                <button type="button" onclick="openReviewModal()" class="mt-4 md:mt-0 px-6 py-2.5 bg-white border border-[#553722] text-[#553722] text-sm font-semibold uppercase tracking-widest hover:bg-[#553722] hover:text-white transition-colors rounded">
-                    Viết đánh giá
-                </button>
+                if (Model.CanReview)
+                {
+                    <button type="button" onclick="openReviewModal()" class="mt-4 md:mt-0 px-6 py-2.5 bg-white border border-[#553722] text-[#553722] text-sm font-semibold uppercase tracking-widest hover:bg-[#553722] hover:text-white transition-colors rounded">
+                        Viết đánh giá
+                    </button>
+                }
             }
             else
             {
@@ -352,7 +355,7 @@
     @if (Model.RelatedProducts.Any() || Model.BestSellingProducts.Any() || Model.InStockProducts.Any())
     {
         <section class="mt-[120px] pt-12">
-            <h2 class="font-['Playfair_Display'] text-[28px] font-medium text-[#553722] text-center mb-6">Style with</h2>
+            <h2 class="font-['Playfair_Display'] text-[28px] font-medium text-[#553722] text-center mb-6">Gợi ý phối đồ</h2>
             <!-- Filter Tabs -->
             <div class="flex justify-center mb-12">
                 <div class="flex space-x-8 border-b border-gray-200">

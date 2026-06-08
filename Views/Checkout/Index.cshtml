@@ -7,13 +7,16 @@
 <head>
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <title>Guest Checkout - WearWhatever</title>
+    <title>Thanh toán - WearWhatever</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com" rel="preconnect">
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
     <!-- Use Kanit font as requested globally -->
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <style>
         .material-symbols-outlined {
             font-family: 'Material Symbols Outlined' !important;
@@ -148,8 +151,8 @@
     <main class="flex-grow w-full max-w-[1440px] mx-auto px-margin-mobile md:px-margin-desktop py-12 md:py-24">
         <!-- Page Title -->
         <div class="mb-12">
-            <h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-[#1b1c1c]">Checkout</h1>
-            <p class="font-body-md text-body-md text-on-surface-variant mt-2 text-[#1b1c1c]">Complete your order details below.</p>
+            <h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-[#1b1c1c]">Thanh toán</h1>
+            <p class="font-body-md text-body-md text-on-surface-variant mt-2 text-[#1b1c1c]">Vui lòng hoàn tất thông tin đơn hàng dưới đây.</p>
         </div>
 
         <form asp-action="PlaceOrder" method="post" id="checkoutForm">
@@ -158,18 +161,50 @@
                 <!-- Left Column: Form & Payment -->
                 <div class="w-full lg:w-7/12 flex flex-col gap-12">
                     <!-- Notice Badge -->
-                    <div class="bg-secondary-container/30 border border-secondary-container text-on-secondary-container p-4 flex items-start gap-3 rounded-sm">
-                        <span class="material-symbols-outlined mt-0.5" style="font-variation-settings: 'FILL' 0, 'wght' 200;">loyalty</span>
-                        <p class="font-body-sm text-body-sm">
-                            Khách hàng mới sẽ nhận ưu đãi đặc biệt khi <a href="@Url.Action("Register", "Account")" class="text-primary underline font-medium">đăng ký tài khoản</a>.
-                        </p>
-                    </div>
+                    @if (!Model.IsAuthenticated)
+                    {
+                        <div class="bg-secondary-container/30 border border-secondary-container text-on-secondary-container p-4 flex items-start gap-3 rounded-sm">
+                            <span class="material-symbols-outlined mt-0.5" style="font-variation-settings: 'FILL' 0, 'wght' 200;">loyalty</span>
+                            <p class="font-body-sm text-body-sm">
+                                Khách hàng mới sẽ nhận ưu đãi đặc biệt khi <a href="@Url.Action("Register", "Account")" class="text-primary underline font-medium">đăng ký tài khoản</a>.
+                            </p>
+                        </div>
+                    }
 
 
 
                     <!-- Shipping Information Form -->
                     <section>
-                        <h2 class="font-headline-md text-headline-md mb-6 text-[#1b1c1c]">Shipping Information</h2>
+                        <h2 class="font-headline-md text-headline-md mb-6 text-[#1b1c1c]">Thông tin giao hàng</h2>
+                        
+                        @if (Model.IsAuthenticated && Model.SavedAddresses.Any())
+                        {
+                            <div class="mb-6">
+                                <label class="block text-xs text-on-surface-variant uppercase tracking-wider mb-2" for="savedAddressSelect">Chọn địa chỉ đã lưu</label>
+                                <select id="savedAddressSelect" class="w-full bg-surface-container-lowest border border-outline-variant p-3 rounded-sm font-body-md text-[#1b1c1c] focus:outline-none focus:border-primary transition-colors">
+                                    <option value="">-- Nhập địa chỉ mới --</option>
+                                    @foreach (var addr in Model.SavedAddresses)
+                                    {
+                                        var isSelected = (addr.AddressLine == Model.Input.ShippingAddress && addr.Province == Model.Input.ShippingProvince);
+                                        if (isSelected)
+                                        {
+                                            <option value="@addr.AddressID" data-name="@addr.RecipientName" data-phone="@addr.ReceiverPhone" data-address="@addr.AddressLine" data-ward="@addr.Ward" data-district="@addr.District" data-province="@addr.Province" selected>
+                                                @addr.RecipientName - @addr.ReceiverPhone, @addr.FullAddress
+                                            </option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@addr.AddressID" data-name="@addr.RecipientName" data-phone="@addr.ReceiverPhone" data-address="@addr.AddressLine" data-ward="@addr.Ward" data-district="@addr.District" data-province="@addr.Province">
+                                                @addr.RecipientName - @addr.ReceiverPhone, @addr.FullAddress
+                                            </option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        }
+
+
+
                         <div class="space-y-8">
                             <div>
                                 <label class="sr-only" for="fullName">Họ và tên người nhận</label>
@@ -245,11 +280,18 @@
                                 </p>
                             </div>
                         </div>
+
+                        <!-- Map -->
+                        <div class="mt-8 mb-8">
+                            <label class="block text-xs text-on-surface-variant uppercase tracking-wider mb-2">Chọn vị trí trên bản đồ</label>
+                            <div id="shipping-map" class="h-64 w-full bg-gray-100 rounded-sm border border-outline-variant z-0 relative" style="z-index: 1;"></div>
+                            <p class="text-xs text-on-surface-variant mt-1">Nhấp vào bản đồ để tự động điền địa chỉ</p>
+                        </div>
                     </section>
 
                     <!-- Payment Methods -->
                     <section>
-                        <h2 class="font-headline-md text-headline-md mb-6 text-[#1b1c1c]">Payment Method</h2>
+                        <h2 class="font-headline-md text-headline-md mb-6 text-[#1b1c1c]">Phương thức thanh toán</h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <!-- COD Card -->
                             <label class="relative flex items-center p-4 border border-outline-variant rounded-sm cursor-pointer hover:border-primary transition-colors bg-surface-container-lowest">
@@ -264,7 +306,7 @@
                                 <input class="h-4 w-4 text-primary border-outline focus:ring-primary focus:ring-offset-background" name="PaymentMethod" type="radio" value="BankTransfer" @(Model.Input.PaymentMethod == "BankTransfer" ? "checked" : "")>
                                 <div class="ml-4 flex flex-col">
                                     <span class="font-body-md text-body-md text-[#1b1c1c]">Chuyển khoản ngân hàng</span>
-                                    <span class="font-body-sm text-body-sm text-on-surface-variant">Bank Transfer</span>
+                                    <span class="font-body-sm text-body-sm text-on-surface-variant">(Bank Transfer)</span>
                                 </div>
                             </label>
                             <!-- MoMo Card -->
@@ -288,7 +330,7 @@
                 <!-- Right Column: Order Summary -->
                 <div class="w-full lg:w-5/12">
                     <div class="bg-[#f4f2fd] border border-outline-variant p-6 md:p-8 lg:sticky lg:top-8">
-                        <h3 class="font-headline-md text-headline-md text-[#1b1c1c] mb-6">Order Summary</h3>
+                        <h3 class="font-headline-md text-headline-md text-[#1b1c1c] mb-6">Tóm tắt đơn hàng</h3>
                         
                         <!-- Product List -->
                         <div class="space-y-6 mb-8">
@@ -302,13 +344,13 @@
                                         }
                                         else
                                         {
-                                            <div class="w-full h-full bg-gray-200 flex items-center justify-center text-[10px] text-gray-500">No Image</div>
+                                            <div class="w-full h-full bg-gray-200 flex items-center justify-center text-[10px] text-gray-500">Chưa có ảnh</div>
                                         }
                                         <span class="absolute top-0 right-0 bg-secondary/80 text-on-secondary font-label-caps text-[10px] px-1.5 py-0.5">@item.Quantity</span>
                                     </div>
                                     <div class="flex flex-col flex-grow">
                                         <span class="font-body-md text-body-md text-[#1b1c1c]">@item.ProductName</span>
-                                        <span class="font-body-sm text-body-sm text-on-surface-variant mb-2">Color: @item.ColorName | Size: @item.SizeCode</span>
+                                        <span class="font-body-sm text-body-sm text-on-surface-variant mb-2">Màu sắc: @item.ColorName | Kích cỡ: @item.SizeCode</span>
                                         <span class="font-body-md text-body-md text-primary mt-auto text-[#1b1c1c]">@item.LineTotal.ToString("N0")đ ‣</span>
                                     </div>
                                 </div>
@@ -319,20 +361,42 @@
                         <!-- Totals -->
                         <div class="space-y-3 mb-6">
                             <div class="flex justify-between font-body-sm text-body-sm text-on-surface-variant">
-                                <span>Subtotal</span>
-                                <span class="text-[#1b1c1c]">@Model.SubTotal.ToString("N0")đ ‣</span>
+                                <span>Tạm tính</span>
+                                <span class="text-[#1b1c1c]" id="lbl-subtotal">@Model.SubTotal.ToString("N0")đ</span>
                             </div>
                             <div class="flex justify-between font-body-sm text-body-sm text-on-surface-variant">
-                                <span>Shipping</span>
-                                <span>@Model.ShippingFee.ToString("N0")đ</span>
+                                <span>Phí vận chuyển</span>
+                                <span id="lbl-shipping">@Model.ShippingFee.ToString("N0")đ</span>
+                            </div>
+                            <div class="flex justify-between font-body-sm text-body-sm text-on-surface-variant @(Model.DiscountAmount > 0 ? "" : "hidden")" id="row-discount">
+                                <span>Giảm giá</span>
+                                <span class="text-error" id="lbl-discount">-@Model.DiscountAmount.ToString("N0")đ</span>
+                            </div>
+                            <div class="flex justify-between font-body-sm text-body-sm text-on-surface-variant">
+                                <span>Thuế VAT (10%)</span>
+                                <span id="lbl-vat">@Model.VAT.ToString("N0")đ</span>
                             </div>
                         </div>
 
                         <hr class="border-t border-outline-variant/50 mb-6">
                         <div class="flex justify-between items-end mb-8">
-                            <span class="font-body-lg text-body-lg text-[#1b1c1c]">Total</span>
-                            <span class="font-headline-md text-headline-md text-primary">@Model.FinalAmount.ToString("N0")đ ‣</span>
+                            <span class="font-body-lg text-body-lg text-[#1b1c1c]">Tổng cộng</span>
+                            <span class="font-headline-md text-headline-md text-primary" id="lbl-final">@Model.FinalAmount.ToString("N0")đ ‣</span>
                         </div>
+
+                        @if (Model.IsAuthenticated)
+                        {
+                            <div class="mb-6">
+                                <label class="block text-xs text-on-surface-variant uppercase tracking-wider mb-1" for="couponCode">Mã giảm giá (nếu có)</label>
+                                <div class="flex gap-2">
+                                    <input class="input-minimal flex-grow font-body-md text-body-md text-on-background placeholder:text-outline" 
+                                           id="couponCode" name="Input.CouponCode" value="@Model.Input.CouponCode" 
+                                           placeholder="Nhập mã giảm giá..." type="text">
+                                    <button type="button" id="btnApplyCoupon" class="bg-primary text-on-primary px-4 rounded-sm font-label-caps uppercase text-sm hover:opacity-90 transition-opacity">Áp dụng</button>
+                                </div>
+                                <span id="coupon-msg" class="text-sm mt-1 block"></span>
+                            </div>
+                        }
 
                         <!-- CTA -->
                         <button class="w-full bg-[#6f4e37] text-[#fbf9f8] font-label-caps text-label-caps uppercase py-4 px-6 hover:opacity-90 transition-opacity duration-300" type="submit">
@@ -340,7 +404,7 @@
                         </button>
                         <p class="font-body-sm text-body-sm text-on-surface-variant text-center mt-4 flex items-center justify-center gap-1">
                             <span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 0, 'wght' 200;">lock</span>
-                            Secure Encrypted Checkout
+                            Thanh toán bảo mật và mã hóa
                         </p>
                     </div>
                 </div>
@@ -353,14 +417,14 @@
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center w-full px-margin-mobile md:px-margin-desktop py-section-gap max-w-[1440px] mx-auto">
             <div class="mb-8 md:mb-0">
                 <span class="font-headline-md text-headline-md text-primary dark:text-primary-fixed-dim block mb-4">WearWhatever</span>
-                <p class="font-body-sm text-body-sm text-primary dark:text-primary-fixed-dim">© 2024 WearWhatever. All rights reserved. Crafted for the intentional.</p>
+                <p class="font-body-sm text-body-sm text-primary dark:text-primary-fixed-dim">© 2024 WearWhatever. Bảo lưu mọi quyền.</p>
             </div>
             <nav class="flex flex-wrap gap-x-8 gap-y-4">
-                <a class="font-body-sm text-body-sm text-on-surface-variant dark:text-on-surface-variant/70 hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-300 focus:outline-none focus:ring-1 focus:ring-outline" href="#">Shipping &amp; Returns</a>
-                <a class="font-body-sm text-body-sm text-on-surface-variant dark:text-on-surface-variant/70 hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-300 focus:outline-none focus:ring-1 focus:ring-outline" href="#">Privacy Policy</a>
-                <a class="font-body-sm text-body-sm text-on-surface-variant dark:text-on-surface-variant/70 hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-300 focus:outline-none focus:ring-1 focus:ring-outline" href="#">Terms of Service</a>
-                <a class="font-body-sm text-body-sm text-on-surface-variant dark:text-on-surface-variant/70 hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-300 focus:outline-none focus:ring-1 focus:ring-outline" href="#">Sustainability</a>
-                <a class="font-body-sm text-body-sm text-on-surface-variant dark:text-on-surface-variant/70 hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-300 focus:outline-none focus:ring-1 focus:ring-outline" href="#">Contact Us</a>
+                <a class="font-body-sm text-body-sm text-on-surface-variant dark:text-on-surface-variant/70 hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-300 focus:outline-none focus:ring-1 focus:ring-outline" href="#">Giao hàng & Đổi trả</a>
+                <a class="font-body-sm text-body-sm text-on-surface-variant dark:text-on-surface-variant/70 hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-300 focus:outline-none focus:ring-1 focus:ring-outline" href="#">Chính sách bảo mật</a>
+                <a class="font-body-sm text-body-sm text-on-surface-variant dark:text-on-surface-variant/70 hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-300 focus:outline-none focus:ring-1 focus:ring-outline" href="#">Điều khoản dịch vụ</a>
+                <a class="font-body-sm text-body-sm text-on-surface-variant dark:text-on-surface-variant/70 hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-300 focus:outline-none focus:ring-1 focus:ring-outline" href="#">Bền vững</a>
+                <a class="font-body-sm text-body-sm text-on-surface-variant dark:text-on-surface-variant/70 hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-300 focus:outline-none focus:ring-1 focus:ring-outline" href="#">Liên hệ</a>
             </nav>
         </div>
     </footer>
@@ -385,11 +449,142 @@
             input.addEventListener('input', () => {
                 if (input.value.trim()) {
                     span.textContent = '';
-                    input.classList.remove('border-red-500');
-                    input.classList.add('border-gray-300');
+                    input.classList.remove('border-red-500', '!border-b-red-500');
+                    input.style.borderBottomColor = '';
                 }
             });
         });
+
+        // Address Select Logic
+        const savedAddressSelect = document.getElementById('savedAddressSelect');
+        if (savedAddressSelect) {
+            savedAddressSelect.addEventListener('change', function() {
+                const opt = this.options[this.selectedIndex];
+                if (opt.value) {
+                    document.getElementById('fullName').value = opt.getAttribute('data-name');
+                    document.getElementById('phone').value = opt.getAttribute('data-phone');
+                    document.getElementById('streetDetail').value = opt.getAttribute('data-address');
+                    document.getElementById('ward').value = opt.getAttribute('data-ward');
+                    document.getElementById('district').value = opt.getAttribute('data-district');
+                    document.getElementById('province').value = opt.getAttribute('data-province');
+                    
+                    // Trigger input event to clear validation errors
+                    ['fullName', 'phone', 'streetDetail', 'ward', 'district', 'province'].forEach(id => {
+                        document.getElementById(id).dispatchEvent(new Event('input'));
+                    });
+                } else {
+                    ['fullName', 'phone', 'streetDetail', 'ward', 'district', 'province'].forEach(id => {
+                        document.getElementById(id).value = '';
+                    });
+                }
+            });
+        }
+
+        // Leaflet Map Logic
+        document.addEventListener('DOMContentLoaded', function () {
+            // Default center: Ho Chi Minh City
+            const defaultLat = 10.762622;
+            const defaultLng = 106.660172;
+            
+            const map = L.map('shipping-map').setView([defaultLat, defaultLng], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            let marker = L.marker([defaultLat, defaultLng]).addTo(map);
+
+            map.on('click', function (e) {
+                const lat = e.latlng.lat;
+                const lng = e.latlng.lng;
+                
+                marker.setLatLng(e.latlng);
+
+                // Reverse geocoding using Nominatim API
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && data.address) {
+                            const address = data.address;
+                            // Reset select if user picks map
+                            if (savedAddressSelect) savedAddressSelect.value = "";
+                            
+                            if (address.road || address.house_number) {
+                                document.getElementById('streetDetail').value = `${address.house_number || ''} ${address.road || ''}`.trim();
+                            }
+                            if (address.suburb || address.village || address.quarter) {
+                                document.getElementById('ward').value = address.suburb || address.village || address.quarter || '';
+                            }
+                            if (address.city_district || address.county || address.district) {
+                                document.getElementById('district').value = address.city_district || address.county || address.district || '';
+                            }
+                            if (address.city || address.state || address.province) {
+                                document.getElementById('province').value = address.city || address.state || address.province || '';
+                            }
+                            
+                            // Trigger input events
+                            ['streetDetail', 'ward', 'district', 'province'].forEach(id => {
+                                const el = document.getElementById(id);
+                                if(el) el.dispatchEvent(new Event('input'));
+                            });
+                        }
+                    })
+                    .catch(err => console.error("Error reverse geocoding:", err));
+            });
+        });
+
+        // Apply Coupon Ajax
+        const btnApplyCoupon = document.getElementById('btnApplyCoupon');
+        if (btnApplyCoupon) {
+            btnApplyCoupon.addEventListener('click', function() {
+                const code = document.getElementById('couponCode').value.trim();
+                const msgEl = document.getElementById('coupon-msg');
+                if (!code) {
+                    msgEl.textContent = "Vui lòng nhập mã giảm giá.";
+                    msgEl.className = "text-sm mt-1 block text-red-500";
+                    return;
+                }
+                
+                btnApplyCoupon.disabled = true;
+                btnApplyCoupon.textContent = "Đang xử lý...";
+                
+                fetch('@Url.Action("ApplyCoupon", "Checkout")', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ CouponCode: code })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    btnApplyCoupon.disabled = false;
+                    btnApplyCoupon.textContent = "Áp dụng";
+                    
+                    if (data.success) {
+                        msgEl.textContent = "Đã áp dụng mã giảm giá!";
+                        msgEl.className = "text-sm mt-1 block text-green-600 font-medium";
+                        
+                        document.getElementById('lbl-subtotal').textContent = data.subTotal.toLocaleString('vi-VN') + "đ";
+                        document.getElementById('lbl-shipping').textContent = data.shippingFee.toLocaleString('vi-VN') + "đ";
+                        document.getElementById('lbl-vat').textContent = data.vat.toLocaleString('vi-VN') + "đ";
+                        document.getElementById('lbl-final').textContent = data.finalAmount.toLocaleString('vi-VN') + "đ ‣";
+                        
+                        if (data.discountAmount > 0) {
+                            document.getElementById('row-discount').classList.remove('hidden');
+                            document.getElementById('lbl-discount').textContent = "-" + data.discountAmount.toLocaleString('vi-VN') + "đ";
+                        } else {
+                            document.getElementById('row-discount').classList.add('hidden');
+                        }
+                    } else {
+                        msgEl.textContent = data.message || "Mã giảm giá không hợp lệ.";
+                        msgEl.className = "text-sm mt-1 block text-red-500";
+                    }
+                })
+                .catch(err => {
+                    btnApplyCoupon.disabled = false;
+                    btnApplyCoupon.textContent = "Áp dụng";
+                    msgEl.textContent = "Đã xảy ra lỗi khi kiểm tra mã.";
+                    msgEl.className = "text-sm mt-1 block text-red-500";
+                });
+            });
+        }
 
         // Email format check
         function isValidEmail(v) {
