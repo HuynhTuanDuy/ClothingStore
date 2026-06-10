@@ -9,8 +9,10 @@ public class ProductsController(IProductService productService, ILogger<Products
     [HttpGet("Products/Search")]
     public async Task<IActionResult> Search([FromQuery] ProductSearchFilter filter)
     {
-        logger.LogInformation("Product search executed. Keyword={Keyword}, Page={Page}, Sort={Sort}", filter.Keyword, filter.Page, filter.Sort);
+        var sw = System.Diagnostics.Stopwatch.StartNew();
         var result = await productService.SearchProductsAsync(filter);
+        sw.Stop();
+        logger.LogInformation("Product search executed in {ElapsedMilliseconds}ms. Keyword={Keyword}, Page={Page}, Sort={Sort}", sw.ElapsedMilliseconds, filter.Keyword, filter.Page, filter.Sort);
         return View(result);
     }
 
@@ -33,8 +35,10 @@ public class ProductsController(IProductService productService, ILogger<Products
             keyword = keyword.Substring(0, 100);
         }
 
-        logger.LogInformation("Product suggestions executed. Keyword={Keyword}", keyword);
+        var sw = System.Diagnostics.Stopwatch.StartNew();
         var result = await productService.GetSearchSuggestionsAsync(keyword);
+        sw.Stop();
+        logger.LogInformation("Product suggestions executed in {ElapsedMilliseconds}ms. Keyword={Keyword}", sw.ElapsedMilliseconds, keyword);
         return Json(new { items = result });
     }
 }

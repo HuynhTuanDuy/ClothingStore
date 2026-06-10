@@ -63,6 +63,10 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
             .HasIndex(x => x.Slug).IsUnique();
 
         modelBuilder.Entity<Product>()
+            .HasIndex(x => x.SearchNormalizedName)
+            .HasDatabaseName("IX_Products_SearchNormalizedName");
+
+        modelBuilder.Entity<Product>()
             .HasIndex(x => x.CategoryID)
             .HasDatabaseName("IX_Products_CategoryId");
 

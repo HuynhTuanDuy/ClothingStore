@@ -110,6 +110,7 @@ public class Product
 {
     [Key] public int ProductID { get; set; }
     public string ProductName { get; set; } = string.Empty;
+    [MaxLength(500)] public string? SearchNormalizedName { get; set; }
     public string Slug { get; set; } = string.Empty;
     public string? ThumbnailUrl { get; set; }
     public string? Description { get; set; }
