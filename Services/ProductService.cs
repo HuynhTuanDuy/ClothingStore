@@ -8,6 +8,45 @@ public class ProductService(
     IProductRepository productRepository,
     IReviewService reviewService) : IProductService
 {
+    public async Task<List<SearchSuggestionViewModel>> GetSearchSuggestionsAsync(string keyword)
+    {
+        if (string.IsNullOrWhiteSpace(keyword)) return new List<SearchSuggestionViewModel>();
+        
+        keyword = keyword.Trim();
+        if (keyword.Length < 2) return new List<SearchSuggestionViewModel>();
+        if (keyword.Length > 100) keyword = keyword.Substring(0, 100);
+
+        return await productRepository.GetSearchSuggestionsAsync(keyword);
+    }
+
+    public async Task<ProductSearchResultViewModel> SearchProductsAsync(ProductSearchFilter filter)
+    {
+        filter.Keyword = filter.Keyword?.Trim();
+        if (filter.Keyword?.Length > 100)
+        {
+            filter.Keyword = filter.Keyword.Substring(0, 100);
+        }
+
+        if (filter.Page < 1) filter.Page = 1;
+        if (filter.PageSize < 1) filter.PageSize = 12;
+        if (filter.PageSize > 48) filter.PageSize = 48;
+
+        var validSorts = new[] { "relevance", "newest", "price_asc", "price_desc", "name_asc", "name_desc" };
+        if (string.IsNullOrWhiteSpace(filter.Sort) || !validSorts.Contains(filter.Sort.ToLower()))
+        {
+            filter.Sort = "relevance";
+        }
+
+        var result = await productRepository.SearchProductsAsync(filter);
+
+        return new ProductSearchResultViewModel
+        {
+            Keyword = filter.Keyword ?? string.Empty,
+            Sort = filter.Sort,
+            Products = result
+        };
+    }
+
     public async Task<ProductListViewModel> GetProductListAsync(ProductFilter filter)
     {
         var products   = await productRepository.SearchProductsAsync(filter);

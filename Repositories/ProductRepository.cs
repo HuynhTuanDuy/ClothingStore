@@ -1,5 +1,6 @@
 using ClothingStore.Data;
 using ClothingStore.Models.Entities;
+using ClothingStore.Models.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -21,6 +22,164 @@ public record ProductFilter(
 
 public class ProductRepository(StoreDbContext dbContext, IMemoryCache cache) : IProductRepository
 {
+    private static string? NormalizeUrl(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return null;
+        if (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            url.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+            url.StartsWith("/"))
+            return url;
+        return "/" + url;
+    }
+
+    public async Task<List<SearchSuggestionViewModel>> GetSearchSuggestionsAsync(string keyword)
+    {
+        var escapedKeyword = keyword
+            .Replace("[", "[[]")
+            .Replace("%", "[%]")
+            .Replace("_", "[_]");
+
+        var telexKeyword = ClothingStore.Helpers.VietnameseStringHelper.NormalizeTelexForSearch(escapedKeyword);
+
+        var query = dbContext.Products.AsNoTracking().Where(x => x.IsActive);
+        
+        query = query.Where(x =>
+            (x.ProductName.Contains(escapedKeyword) ||
+             x.ProductName.Contains(telexKeyword) ||
+            x.ProductVariants.Any(v => v.SKU.Contains(escapedKeyword))) &&
+            x.ProductVariants.Any(v => v.StockQuantity > 0 && v.IsActive)
+        );
+
+        query = query.OrderByDescending(x =>
+            x.ProductName.StartsWith(escapedKeyword) || x.ProductName.StartsWith(telexKeyword) ? 3 :
+            x.ProductName.Contains(escapedKeyword) || x.ProductName.Contains(telexKeyword) ? 2 :
+            x.ProductVariants.Any(v => v.SKU.Contains(escapedKeyword)) ? 1 : 0
+        ).ThenByDescending(x => x.CreatedAt);
+
+        var today = DateTime.Today;
+
+        return await query.Take(5).Select(x => new SearchSuggestionViewModel
+        {
+            ProductId = x.ProductID,
+            ProductSlug = x.Slug,
+            Name = x.ProductName,
+            ThumbnailUrl = x.ProductVariants.Where(v => v.IsActive).SelectMany(v => v.ProductImages).OrderBy(i => i.DisplayOrder).Select(i => i.ImageURL).FirstOrDefault() ?? x.ThumbnailUrl,
+            Price = x.ProductVariants.Where(v => v.IsActive).Min(v => (decimal)v.SellingPrice) * (x.DiscountProgram != null && x.DiscountProgram.IsActive && x.DiscountProgram.StartDate <= today && x.DiscountProgram.EndDate >= today ? (1m - x.DiscountProgram.DiscountPercent / 100m) : 1m),
+            OriginalPrice = (x.DiscountProgram != null && x.DiscountProgram.IsActive && x.DiscountProgram.StartDate <= today && x.DiscountProgram.EndDate >= today) ? x.ProductVariants.Where(v => v.IsActive).Min(v => (decimal?)v.SellingPrice) : null
+        }).ToListAsync();
+    }
+
+    public async Task<PagedResult<ProductCardViewModel>> SearchProductsAsync(ProductSearchFilter filter)
+    {
+        var query = dbContext.Products.AsNoTracking().Where(x => x.IsActive);
+
+        if (!string.IsNullOrWhiteSpace(filter.Keyword))
+        {
+            // Removed .ToLower() to preserve SQL Server indexing (case-insensitive by default)
+            var kw = filter.Keyword;
+            var telexKw = ClothingStore.Helpers.VietnameseStringHelper.NormalizeTelexForSearch(kw);
+            
+            query = query.Where(x => 
+                x.ProductName.Contains(kw) || 
+                x.ProductName.Contains(telexKw) || 
+                x.ProductVariants.Any(v => v.SKU.Contains(kw)) || 
+                x.Category.CategoryName.Contains(kw) || 
+                x.Category.CategoryName.Contains(telexKw) || 
+                (x.Description != null && (x.Description.Contains(kw) || x.Description.Contains(telexKw))) // [Backlog] Future Improvement: SQL Server Full-Text Search
+            );
+
+            var isRelevanceSort = string.IsNullOrWhiteSpace(filter.Sort) || filter.Sort.ToLower() == "relevance";
+            if (isRelevanceSort)
+            {
+                query = query.OrderByDescending(x =>
+                    x.ProductName.StartsWith(kw) || x.ProductName.StartsWith(telexKw) ? 5 :
+                    x.ProductName.Contains(kw) || x.ProductName.Contains(telexKw) ? 4 :
+                    x.ProductVariants.Any(v => v.SKU.Contains(kw)) ? 3 :
+                    x.Category.CategoryName.Contains(kw) || x.Category.CategoryName.Contains(telexKw) ? 2 :
+                    (x.Description != null && (x.Description.Contains(kw) || x.Description.Contains(telexKw))) ? 1 : 0
+                ).ThenByDescending(x => x.CreatedAt);
+            }
+        }
+
+        var sort = filter.Sort?.ToLower() ?? "relevance";
+        if (sort == "relevance" && string.IsNullOrWhiteSpace(filter.Keyword))
+        {
+            sort = "newest";
+        }
+
+        if (sort != "relevance")
+        {
+            query = sort switch
+            {
+                "newest" => query.OrderByDescending(x => x.CreatedAt),
+                "price_asc" => query.OrderBy(x => x.ProductVariants.Where(v => v.IsActive).Min(v => (decimal?)v.SellingPrice) ?? 0),
+                "price_desc" => query.OrderByDescending(x => x.ProductVariants.Where(v => v.IsActive).Max(v => (decimal?)v.SellingPrice) ?? 0),
+                "name_asc" => query.OrderBy(x => x.ProductName),
+                "name_desc" => query.OrderByDescending(x => x.ProductName),
+                _ => query.OrderByDescending(x => x.CreatedAt)
+            };
+        }
+
+        var totalCount = await query.CountAsync();
+
+        var totalPages = (int)Math.Ceiling((double)totalCount / filter.PageSize);
+        if (filter.Page > totalPages && totalPages > 0)
+        {
+            filter.Page = totalPages;
+        }
+
+        var pagedQuery = query.Skip((filter.Page - 1) * filter.PageSize).Take(filter.PageSize);
+
+        var today = DateTime.Today;
+
+        var projected = await pagedQuery.Select(x => new 
+        {
+            x.ProductID,
+            x.ProductName,
+            x.Slug,
+            ThumbnailUrl = x.ProductVariants.Where(v => v.IsActive).SelectMany(v => v.ProductImages).OrderBy(i => i.DisplayOrder).Select(i => i.ImageURL).FirstOrDefault() ?? x.ThumbnailUrl,
+            CategoryName = x.Category.CategoryName,
+            OriginalMinPrice = x.ProductVariants.Where(v => v.IsActive).Min(v => (decimal?)v.SellingPrice),
+            MinPrice = x.ProductVariants.Where(v => v.IsActive).Min(v => (decimal?)v.SellingPrice),
+            MaxPrice = x.ProductVariants.Where(v => v.IsActive).Max(v => (decimal?)v.SellingPrice),
+            HasDiscount = x.DiscountProgram != null && x.DiscountProgram.IsActive && x.DiscountProgram.StartDate <= today && x.DiscountProgram.EndDate >= today,
+            DiscountPercent = (x.DiscountProgram != null && x.DiscountProgram.IsActive && x.DiscountProgram.StartDate <= today && x.DiscountProgram.EndDate >= today) ? x.DiscountProgram.DiscountPercent : 0,
+            HasStock = x.ProductVariants.Where(v => v.IsActive).Sum(v => (int?)v.StockQuantity) > 0,
+            x.IsBestSeller,
+            Colors = x.ProductVariants.Where(v => v.IsActive).Select(v => v.Color).Where(c => c != null)
+        }).ToListAsync();
+
+        var items = projected.Select(x => new ProductCardViewModel
+        {
+            ProductID = x.ProductID,
+            ProductName = x.ProductName,
+            ProductSlug = x.Slug,
+            ThumbnailUrl = NormalizeUrl(x.ThumbnailUrl),
+            CategoryName = x.CategoryName,
+            OriginalMinPrice = x.OriginalMinPrice,
+            MinPrice = x.HasDiscount ? Math.Round((x.MinPrice ?? 0) * (1 - x.DiscountPercent / 100m), 2) : x.MinPrice,
+            MaxPrice = x.HasDiscount ? Math.Round((x.MaxPrice ?? 0) * (1 - x.DiscountPercent / 100m), 2) : x.MaxPrice,
+            HasDiscount = x.HasDiscount,
+            DiscountPercent = x.DiscountPercent,
+            HasStock = x.HasStock,
+            IsBestSeller = x.IsBestSeller,
+            Colors = x.Colors.GroupBy(c => c.ColorID).Select(g => g.First()).Select(c => new ClothingStore.Models.ViewModels.ColorFilterViewModel
+            {
+                ColorID = c.ColorID,
+                ColorName = c.ColorName,
+                HexCode = c.HexCode
+            }).ToList()
+        }).ToList();
+
+        return new PagedResult<ProductCardViewModel>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            Page = filter.Page,
+            PageSize = filter.PageSize
+        };
+    }
+
     public async Task<List<Product>> SearchProductsAsync(ProductFilter filter)
     {
         if (filter.SortBy?.ToLower() == "bestselling")

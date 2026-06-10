@@ -1,9 +1,12 @@
 using ClothingStore.Models.Entities;
+using ClothingStore.Models.ViewModels;
 
 namespace ClothingStore.Repositories;
 
 public interface IProductRepository
 {
+    Task<List<SearchSuggestionViewModel>> GetSearchSuggestionsAsync(string keyword);
+    Task<PagedResult<ProductCardViewModel>> SearchProductsAsync(ProductSearchFilter filter);
     Task<List<Product>> SearchProductsAsync(ProductFilter filter);
     Task<int> CountProductsAsync(ProductFilter filter);
     Task<Product?> GetProductBySlugAsync(string slug);

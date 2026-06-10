@@ -118,17 +118,31 @@
             transition: all 0.2s ease-in-out;
         }
     </style>
+    @await RenderSectionAsync("Head", required: false)
 </head>
 <body class="bg-brand-cream">
     <!-- BEGIN: MainHeader -->
     <header class="bg-white border-b border-gray-100 sticky top-0 z-50">
         <div class="container mx-auto px-4 py-4">
             <!-- Top Bar: Logo and Icons -->
-            <div class="flex justify-between items-center mb-4">
-                <div class="w-24"></div> <!-- Spacer for centering logo -->
-                <a class="text-3xl font-serif tracking-tight text-brand-dark-brown" asp-controller="Home" asp-action="Index">WearWhatever</a>
-                <div class="flex items-center space-x-6 text-gray-600">
-                    <button aria-label="Search" class="hover:text-black">
+            <div class="grid grid-cols-3 items-center mb-4">
+                <div class="justify-self-start"></div> <!-- Spacer for left side -->
+                <div class="justify-self-center text-center">
+                    <a class="text-3xl font-serif tracking-tight text-brand-dark-brown" asp-controller="Home" asp-action="Index">WearWhatever</a>
+                </div>
+                <div class="justify-self-end flex items-center space-x-4 md:space-x-6 text-gray-600">
+                    <div class="relative hidden lg:block" id="search-container-desktop">
+                        <form method="get" asp-controller="Products" asp-action="Search" class="flex items-center border border-gray-200 rounded-full bg-gray-50 overflow-hidden focus-within:ring-1 focus-within:ring-brand-brown focus-within:border-brand-brown transition-all">
+                            <input type="text" name="keyword" id="search-input-desktop" autocomplete="off" value="@Context.Request.Query["keyword"]" placeholder="Tìm kiếm..." class="px-4 py-1.5 text-sm bg-transparent border-none focus:ring-0 w-40 lg:w-64 text-gray-700" />
+                            <button type="submit" aria-label="Search" class="pr-3 pl-1 text-gray-400 hover:text-brand-brown">
+                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                            </button>
+                        </form>
+                        <!-- Suggestions Dropdown -->
+                        <ul id="search-suggestions-desktop" class="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-lg shadow-xl hidden z-50 max-h-96 overflow-y-auto" role="listbox">
+                        </ul>
+                    </div>
+                    <button aria-label="Search" class="lg:hidden hover:text-black">
                         <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
                     </button>
                     <div class="relative" id="account-dropdown-container">
@@ -250,6 +264,224 @@
             if (container && menu && !container.contains(event.target)) {
                 menu.classList.add('hidden');
             }
+        });
+
+        // Search Autocomplete
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('search-input-desktop');
+            const searchSuggestions = document.getElementById('search-suggestions-desktop');
+            const searchContainer = document.getElementById('search-container-desktop');
+            
+            if (!searchInput || !searchSuggestions || !searchContainer) return;
+            
+            let debounceTimer;
+            let abortController = null;
+            let lastKeyword = '';
+            let currentRequestId = 0;
+            const suggestionCache = new Map();
+            const MAX_CACHE_SIZE = 20;
+            let activeIndex = -1;
+            
+            function showDropdown() {
+                searchSuggestions.classList.remove('hidden');
+            }
+            
+            function hideDropdown() {
+                searchSuggestions.classList.add('hidden');
+                activeIndex = -1;
+            }
+            
+            function formatCurrency(value) {
+                return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
+            }
+            
+            function renderSuggestions(keyword, items) {
+                searchSuggestions.innerHTML = '';
+                
+                if (items.length === 0) {
+                    const li = document.createElement('li');
+                    li.className = 'px-4 py-3 text-sm text-gray-500 text-center empty';
+                    li.textContent = 'Không tìm thấy sản phẩm phù hợp';
+                    searchSuggestions.appendChild(li);
+                } else {
+                    items.forEach((item, index) => {
+                        const li = document.createElement('li');
+                        li.className = 'border-b border-gray-50 last:border-b-0 group cursor-pointer';
+                        li.setAttribute('role', 'option');
+                        li.setAttribute('data-index', index);
+                        
+                        const a = document.createElement('a');
+                        a.href = `/Products/Details/${item.productSlug}`;
+                        a.className = 'flex items-center px-4 py-2 hover:bg-gray-50 transition-colors';
+                        
+                        // Thumbnail
+                        if (item.thumbnailUrl) {
+                            const imgContainer = document.createElement('div');
+                            imgContainer.className = 'flex-shrink-0 w-10 h-10 mr-3 overflow-hidden rounded-md border border-gray-100 bg-gray-50';
+                            const img = document.createElement('img');
+                            img.src = item.thumbnailUrl;
+                            img.alt = item.name;
+                            img.className = 'w-full h-full object-cover';
+                            imgContainer.appendChild(img);
+                            a.appendChild(imgContainer);
+                        }
+                        
+                        // Details
+                        const infoDiv = document.createElement('div');
+                        infoDiv.className = 'flex-grow min-w-0';
+                        
+                        const nameSpan = document.createElement('div');
+                        nameSpan.className = 'text-sm font-medium text-gray-900 truncate group-hover:text-brand-brown';
+                        nameSpan.textContent = item.name;
+                        infoDiv.appendChild(nameSpan);
+                        
+                        const priceSpan = document.createElement('div');
+                        priceSpan.className = 'text-xs text-brand-brown font-bold';
+                        priceSpan.textContent = formatCurrency(item.price);
+                        
+                        if (item.originalPrice) {
+                            const originalSpan = document.createElement('span');
+                            originalSpan.className = 'text-[10px] text-gray-400 line-through ml-2 font-normal';
+                            originalSpan.textContent = formatCurrency(item.originalPrice);
+                            priceSpan.appendChild(originalSpan);
+                        }
+                        
+                        infoDiv.appendChild(priceSpan);
+                        a.appendChild(infoDiv);
+                        
+                        li.appendChild(a);
+                        searchSuggestions.appendChild(li);
+                    });
+                    
+                    // Add View All link
+                    const viewAllLi = document.createElement('li');
+                    viewAllLi.className = 'view-all sticky bottom-0 bg-white border-t border-gray-100 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]';
+                    const viewAllA = document.createElement('a');
+                    viewAllA.href = `/Products/Search?keyword=${encodeURIComponent(keyword)}`;
+                    viewAllA.className = 'block w-full text-center px-4 py-2.5 text-sm font-medium text-brand-brown hover:bg-brand-cream transition-colors';
+                    viewAllA.textContent = `Xem tất cả kết quả cho "${keyword}"`;
+                    viewAllLi.appendChild(viewAllA);
+                    searchSuggestions.appendChild(viewAllLi);
+                }
+                
+                showDropdown();
+            }
+            
+            function showLoading() {
+                searchSuggestions.innerHTML = '';
+                const li = document.createElement('li');
+                li.className = 'px-4 py-3 text-sm text-gray-500 text-center flex items-center justify-center';
+                li.innerHTML = '<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-brand-brown" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Đang tìm kiếm...';
+                searchSuggestions.appendChild(li);
+                showDropdown();
+            }
+            
+            searchInput.addEventListener('input', function() {
+                const keyword = this.value.trim();
+                
+                if (keyword === lastKeyword) return;
+                lastKeyword = keyword;
+                activeIndex = -1;
+                
+                if (keyword.length < 2) {
+                    hideDropdown();
+                    if (abortController) {
+                        abortController.abort();
+                    }
+                    return;
+                }
+                
+                // Check cache
+                const cacheKey = keyword.toLowerCase();
+                if (suggestionCache.has(cacheKey)) {
+                    renderSuggestions(keyword, suggestionCache.get(cacheKey));
+                    return;
+                }
+                
+                showLoading();
+                
+                clearTimeout(debounceTimer);
+                if (abortController) {
+                    abortController.abort();
+                }
+                
+                debounceTimer = setTimeout(() => {
+                    abortController = new AbortController();
+                    const signal = abortController.signal;
+                    const reqId = ++currentRequestId;
+                    
+                    fetch(`/Products/Suggestions?keyword=${encodeURIComponent(keyword)}`, { signal })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (reqId !== currentRequestId) return;
+                            
+                            // Update cache
+                            if (suggestionCache.size >= MAX_CACHE_SIZE) {
+                                const firstKey = suggestionCache.keys().next().value;
+                                suggestionCache.delete(firstKey);
+                            }
+                            suggestionCache.set(cacheKey, data.items);
+                            
+                            // Only render if the input value still matches
+                            if (searchInput.value.trim() === keyword) {
+                                renderSuggestions(keyword, data.items);
+                            }
+                        })
+                        .catch(err => {
+                            if (err.name === 'AbortError') {
+                                console.log('Request aborted');
+                            } else {
+                                console.error('Error fetching suggestions:', err);
+                            }
+                        });
+                }, 300);
+            });
+            
+            // Keyboard navigation
+            searchInput.addEventListener('keydown', function(e) {
+                const items = searchSuggestions.querySelectorAll('li[role="option"]');
+                
+                if (searchSuggestions.classList.contains('hidden') || items.length === 0) return;
+                
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    activeIndex = (activeIndex + 1) % items.length;
+                    updateActiveItem(items);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    activeIndex = (activeIndex - 1 + items.length) % items.length;
+                    updateActiveItem(items);
+                } else if (e.key === 'Enter' && activeIndex > -1) {
+                    e.preventDefault();
+                    items[activeIndex].querySelector('a').click();
+                } else if (e.key === 'Escape') {
+                    hideDropdown();
+                }
+            });
+            
+            function updateActiveItem(items) {
+                items.forEach((item, index) => {
+                    if (index === activeIndex) {
+                        item.classList.add('bg-gray-100');
+                        item.scrollIntoView({ block: 'nearest' });
+                    } else {
+                        item.classList.remove('bg-gray-100');
+                    }
+                });
+            }
+            
+            // Focus and click outside
+            searchInput.addEventListener('focus', function() {
+                if (this.value.trim().length >= 2 && lastKeyword === this.value.trim()) {
+                    showDropdown();
+                }
+            });
+            
+            document.addEventListener('click', function(e) {
+                if (!searchContainer.contains(e.target)) {
+                    hideDropdown();
+                }
+            });
         });
     </script>
     <script src="~/js/fly-to-cart.js" asp-append-version="true"></script>
