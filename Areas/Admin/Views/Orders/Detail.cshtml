@@ -244,8 +244,10 @@
                             {
                                 string vnLabel = opt.Text switch {
                                     "Pending" => "Chờ xác nhận", "Confirmed" => "Đã xác nhận",
-                                    "Processing" => "Đang xử lý", "Shipping" => "Đang giao",
-                                    "Delivered" => "Đã giao", "Cancelled" => "Đã hủy", _ => opt.Text
+                                    "Processing" => "Đang xử lý", "ReadyToShip" => "Chờ lấy hàng", "Shipping" => "Đang giao",
+                                    "DeliveryAttemptFailed" => "Chờ giao lại", "DeliveryFailed" => "Giao thất bại",
+                                    "DeliveredPendingCOD" => "Chờ đối soát COD", "Delivered" => "Đã giao", 
+                                    "Returned" => "Đã hoàn trả", "Cancelled" => "Đã hủy", _ => opt.Text
                                 };
                                 if (opt.Selected) {
                                     <option value="@opt.Value" selected>@vnLabel</option>

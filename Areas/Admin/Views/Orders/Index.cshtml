@@ -60,8 +60,13 @@
         <a href="?status=&day=@Model.FilterDay&month=@Model.FilterMonth&year=@Model.FilterYear" class="pb-4 font-label-caps text-label-caps transition-all px-1 @(string.IsNullOrEmpty(Model.StatusFilter) ? "text-primary border-b-2 border-primary" : "text-on-surface-variant hover:text-primary")">Tất cả</a>
         <a href="?status=Pending&day=@Model.FilterDay&month=@Model.FilterMonth&year=@Model.FilterYear" class="pb-4 font-label-caps text-label-caps transition-all px-1 @(Model.StatusFilter == "Pending" ? "text-primary border-b-2 border-primary" : "text-on-surface-variant hover:text-primary")">Chờ xác nhận</a>
         <a href="?status=Processing&day=@Model.FilterDay&month=@Model.FilterMonth&year=@Model.FilterYear" class="pb-4 font-label-caps text-label-caps transition-all px-1 @(Model.StatusFilter == "Processing" ? "text-primary border-b-2 border-primary" : "text-on-surface-variant hover:text-primary")">Đang xử lý</a>
+        <a href="?status=ReadyToShip&day=@Model.FilterDay&month=@Model.FilterMonth&year=@Model.FilterYear" class="pb-4 font-label-caps text-label-caps transition-all px-1 @(Model.StatusFilter == "ReadyToShip" ? "text-primary border-b-2 border-primary" : "text-on-surface-variant hover:text-primary")">Chờ lấy hàng</a>
         <a href="?status=Shipping&day=@Model.FilterDay&month=@Model.FilterMonth&year=@Model.FilterYear" class="pb-4 font-label-caps text-label-caps transition-all px-1 @(Model.StatusFilter == "Shipping" ? "text-primary border-b-2 border-primary" : "text-on-surface-variant hover:text-primary")">Đang giao</a>
+        <a href="?status=DeliveryAttemptFailed&day=@Model.FilterDay&month=@Model.FilterMonth&year=@Model.FilterYear" class="pb-4 font-label-caps text-label-caps transition-all px-1 @(Model.StatusFilter == "DeliveryAttemptFailed" ? "text-primary border-b-2 border-primary" : "text-on-surface-variant hover:text-primary")">Chờ giao lại</a>
+        <a href="?status=DeliveryFailed&day=@Model.FilterDay&month=@Model.FilterMonth&year=@Model.FilterYear" class="pb-4 font-label-caps text-label-caps transition-all px-1 @(Model.StatusFilter == "DeliveryFailed" ? "text-primary border-b-2 border-primary" : "text-on-surface-variant hover:text-primary")">Giao thất bại</a>
+        <a href="?status=DeliveredPendingCOD&day=@Model.FilterDay&month=@Model.FilterMonth&year=@Model.FilterYear" class="pb-4 font-label-caps text-label-caps transition-all px-1 @(Model.StatusFilter == "DeliveredPendingCOD" ? "text-primary border-b-2 border-primary" : "text-on-surface-variant hover:text-primary")">Chờ đối soát</a>
         <a href="?status=Delivered&day=@Model.FilterDay&month=@Model.FilterMonth&year=@Model.FilterYear" class="pb-4 font-label-caps text-label-caps transition-all px-1 @(Model.StatusFilter == "Delivered" ? "text-primary border-b-2 border-primary" : "text-on-surface-variant hover:text-primary")">Đã giao</a>
+        <a href="?status=Returned&day=@Model.FilterDay&month=@Model.FilterMonth&year=@Model.FilterYear" class="pb-4 font-label-caps text-label-caps transition-all px-1 @(Model.StatusFilter == "Returned" ? "text-primary border-b-2 border-primary" : "text-on-surface-variant hover:text-primary")">Đã hoàn trả</a>
         <a href="?status=Cancelled&day=@Model.FilterDay&month=@Model.FilterMonth&year=@Model.FilterYear" class="pb-4 font-label-caps text-label-caps transition-all px-1 @(Model.StatusFilter == "Cancelled" ? "text-primary border-b-2 border-primary" : "text-on-surface-variant hover:text-primary")">Đã hủy</a>
     </div>
     <div class="pb-4 text-on-surface-variant font-body-sm text-body-sm">
@@ -111,8 +116,13 @@
                             "Pending" => "CHỜ XÁC NHẬN",
                             "Confirmed" => "ĐÃ XÁC NHẬN",
                             "Processing" => "ĐANG XỬ LÝ",
+                            "ReadyToShip" => "CHỜ LẤY HÀNG",
                             "Shipping" => "ĐANG GIAO",
-                            "Delivered" => "ĐĐÃ GIAO",
+                            "DeliveryAttemptFailed" => "CHỜ GIAO LẠI",
+                            "DeliveryFailed" => "GIAO THẤT BẠI",
+                            "DeliveredPendingCOD" => "CHỜ ĐỐI SOÁT COD",
+                            "Delivered" => "ĐÃ GIAO",
+                            "Returned" => "ĐÃ HOÀN TRẢ",
                             "Cancelled" => "ĐÃ HỦY",
                             _ => order.OrderStatus.ToUpper()
                         };

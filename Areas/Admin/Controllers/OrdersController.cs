@@ -25,8 +25,11 @@ public class OrdersController(
         Models.Entities.OrderStatus.Processing,
         Models.Entities.OrderStatus.ReadyToShip,
         Models.Entities.OrderStatus.Shipping,
+        Models.Entities.OrderStatus.DeliveryAttemptFailed,
+        Models.Entities.OrderStatus.DeliveryFailed,
         Models.Entities.OrderStatus.DeliveredPendingCOD,
         Models.Entities.OrderStatus.Delivered,
+        Models.Entities.OrderStatus.Returned,
         Models.Entities.OrderStatus.Cancelled
     ];
 
