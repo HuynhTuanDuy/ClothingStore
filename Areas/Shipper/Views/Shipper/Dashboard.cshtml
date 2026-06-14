@@ -1,0 +1,139 @@
+@model ClothingStore.Models.ViewModels.ShipperDashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">Tổng quan giao hàng</h1>
+    <p class="text-sm text-gray-500 mt-1">Cập nhật lúc @DateTime.Now.ToString("HH:mm - dd/MM/yyyy")</p>
+</div>
+
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">
+    <!-- Cần giao -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center">
+        <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 mr-4">
+            <span class="material-symbols-outlined">inventory_2</span>
+        </div>
+        <div>
+            <p class="text-sm font-medium text-gray-500">Cần lấy hàng</p>
+            <p class="text-2xl font-bold text-gray-900">@Model.WaitingCount</p>
+        </div>
+    </div>
+
+    <!-- Đang giao -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center">
+        <div class="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center text-amber-600 mr-4">
+            <span class="material-symbols-outlined">local_shipping</span>
+        </div>
+        <div>
+            <p class="text-sm font-medium text-gray-500">Đang giao</p>
+            <p class="text-2xl font-bold text-gray-900">@Model.ShippingCount</p>
+        </div>
+    </div>
+
+    <!-- Đã giao hôm nay -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center">
+        <div class="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center text-green-600 mr-4">
+            <span class="material-symbols-outlined">check_circle</span>
+        </div>
+        <div>
+            <p class="text-sm font-medium text-gray-500">Đã giao hôm nay</p>
+            <p class="text-2xl font-bold text-gray-900">@Model.DeliveredTodayCount</p>
+        </div>
+    </div>
+
+    <!-- Giao thất bại cuối cùng -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col justify-center">
+        <div class="flex items-center gap-3 mb-2">
+            <div class="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-red-600">
+                <span class="material-symbols-outlined">cancel</span>
+            </div>
+            <p class="text-sm font-medium text-gray-500">Giao thất bại</p>
+        </div>
+        <p class="text-2xl font-bold text-gray-900">@Model.FailedCount</p>
+    </div>
+
+    <!-- Chờ giao lại -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col justify-center">
+        <div class="flex items-center gap-3 mb-2">
+            <div class="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center text-amber-600">
+                <span class="material-symbols-outlined">schedule</span>
+            </div>
+            <p class="text-sm font-medium text-gray-500">Chờ giao lại</p>
+        </div>
+        <p class="text-2xl font-bold text-gray-900">@Model.RetryWaitingCount</p>
+    </div>
+
+    <!-- Chờ đối soát COD -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col justify-center">
+        <div class="flex items-center gap-3 mb-2">
+            <div class="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center text-purple-600">
+                <span class="material-symbols-outlined">payments</span>
+            </div>
+            <p class="text-sm font-medium text-gray-500">Chờ đối soát</p>
+        </div>
+        <p class="text-2xl font-bold text-gray-900">@Model.CodPendingCount</p>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined text-green-600">trending_up</span>
+            Thống kê tháng này
+        </h3>
+        <div class="flex items-end gap-2">
+            <span class="text-4xl font-bold text-gray-900">@Model.MonthlyDeliveredCount</span>
+            <span class="text-gray-500 mb-1">đơn hàng hoàn thành</span>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined text-blue-600">analytics</span>
+            Tỉ lệ giao thành công
+        </h3>
+        <div class="flex items-center gap-4">
+            <div class="flex-1 bg-gray-100 rounded-full h-4 overflow-hidden">
+                <div class="bg-green-500 h-full" style="width: @Model.SuccessRate.ToString(System.Globalization.CultureInfo.InvariantCulture)%"></div>
+            </div>
+            <span class="text-xl font-bold text-gray-900">@Model.SuccessRate%</span>
+        </div>
+    </div>
+</div>
+
+@if (Model.OverdueRetryCount > 0)
+{
+    <div class="mt-6 bg-red-50 border border-red-200 rounded-xl p-4 flex items-center justify-between text-red-800">
+        <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined">alarm_on</span>
+            <p class="font-medium">
+                Bạn có <strong>@Model.OverdueRetryCount</strong> đơn hàng <span class="uppercase font-bold">quá lịch giao lại</span> cần xử lý ngay!
+            </p>
+        </div>
+        <a href="@Url.Action("Orders", new { status = "DeliveryAttemptFailed" })" class="text-sm font-bold text-red-700 hover:text-red-900 underline">Xem ngay</a>
+    </div>
+}
+
+@if (Model.UpcomingRetryCount > 0)
+{
+    <div class="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-center justify-between text-blue-800">
+        <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined">event</span>
+            <p class="font-medium">
+                Bạn có <strong>@Model.UpcomingRetryCount</strong> đơn hàng sắp đến lịch hẹn giao lại trong 24 giờ tới.
+            </p>
+        </div>
+        <a href="@Url.Action("Orders", new { status = "DeliveryAttemptFailed" })" class="text-sm font-bold text-blue-700 hover:text-blue-900 underline">Xem ngay</a>
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(Model.LongestShippingOrderCode))
+{
+    <div class="mt-6 bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex items-center gap-3 text-yellow-800">
+        <span class="material-symbols-outlined">warning</span>
+        <p class="font-medium">
+            Cảnh báo: Đơn hàng <strong>@Model.LongestShippingOrderCode</strong> đã giao <strong>@Model.LongestShippingDurationDays ngày</strong>. Vui lòng kiểm tra lại.
+        </p>
+    </div>
+}

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 
 using ClothingStore.Attributes;
+using Microsoft.EntityFrameworkCore;
 
 namespace ClothingStore.Areas.Admin.Controllers;
 
@@ -16,11 +17,15 @@ public class OrdersController(
     IOrderRepository orderRepository,
     IUnitOfWork unitOfWork) : Controller
 {
+    private const int SHIPPER_OVERLOAD_THRESHOLD = 20;
+
     private static readonly List<string> AllStatuses = [
         Models.Entities.OrderStatus.Pending,
         Models.Entities.OrderStatus.Confirmed,
         Models.Entities.OrderStatus.Processing,
+        Models.Entities.OrderStatus.ReadyToShip,
         Models.Entities.OrderStatus.Shipping,
+        Models.Entities.OrderStatus.DeliveredPendingCOD,
         Models.Entities.OrderStatus.Delivered,
         Models.Entities.OrderStatus.Cancelled
     ];
@@ -89,7 +94,7 @@ public class OrdersController(
     }
 
     // ── GET /Admin/Orders/Detail/{id} ───────────────────────────
-    public async Task<IActionResult> Detail(int id)
+    public async Task<IActionResult> Detail(int id, [FromServices] ClothingStore.Data.StoreDbContext context, [FromServices] IDateTimeService dateTimeService)
     {
         var order = await orderRepository.GetOrderByIdAsync(id);
         if (order is null) return NotFound();
@@ -100,6 +105,7 @@ public class OrdersController(
             OrderCode      = order.OrderCode,
             TrackingNumber = order.TrackingNumber,
             OrderDate      = order.OrderDate,
+            OrderDateLocal = dateTimeService.ConvertUtcToLocal(order.OrderDate),
             OrderEmail     = order.OrderEmail,
             CustomerName   = order.Customer?.FullName ?? (!string.IsNullOrWhiteSpace(order.ShippingRecipientName) ? order.ShippingRecipientName : "Khách vãng lai"),
             MembershipRank = order.Customer?.Membership?.MembershipName ?? "Khách vãng lai",
@@ -114,6 +120,29 @@ public class OrdersController(
             DiscountAmount = order.DiscountAmount,
             FinalAmount    = order.FinalAmount,
             CouponCode     = order.CouponUsages.FirstOrDefault()?.Coupon?.CouponCode,
+            AssignedShipperId = order.AssignedShipperId,
+            AssignedShipperName = order.AssignedShipper?.UserName,
+            DeliveryAttemptCount = order.DeliveryAttemptCount,
+            NextDeliveryDate = order.NextDeliveryDate,
+            NextDeliveryDateLocal = order.NextDeliveryDate.HasValue ? dateTimeService.ConvertUtcToLocal(order.NextDeliveryDate.Value) : null,
+            DeliveryRescheduleReason = order.DeliveryRescheduleReason,
+            DeliveryFailureReason = order.DeliveryFailureReason,
+            DeliveryFailureReasonCode = order.DeliveryFailureReasonCode,
+            Shippers = order.OrderStatus == Models.Entities.OrderStatus.ReadyToShip 
+                ? await context.Accounts
+                    .AsNoTracking()
+                    .Where(a => a.AccountRoles.Any(ar => ar.Role.Name == "Shipper") && a.Status == Models.Entities.AccountStatus.Active)
+                    .Select(a => new {
+                        a.UserId,
+                        a.UserName,
+                        ActiveShippingCount = context.Orders.Count(o => o.AssignedShipperId == a.UserId && o.OrderStatus == Models.Entities.OrderStatus.Shipping)
+                    })
+                    .Select(a => new SelectListItem(
+                        a.ActiveShippingCount >= SHIPPER_OVERLOAD_THRESHOLD ? $"{a.UserName} (Đang có {a.ActiveShippingCount} đơn - Quá tải)" : $"{a.UserName} (Đang giao {a.ActiveShippingCount} đơn)",
+                        a.UserId.ToString()
+                    ))
+                    .ToListAsync() 
+                : [],
             Items = order.OrderDetails.Select(d => new OrderDetailItemViewModel
             {
                 ProductName = d.ProductNameSnapshot,
@@ -133,8 +162,11 @@ public class OrdersController(
                 {
                     OldStatus = h.OldStatus,
                     NewStatus = h.NewStatus,
+                    ActionType = h.ActionType,
                     Note      = h.Note,
-                    ChangedAt = h.ChangedAt
+                    ChangedAt = h.ChangedAt,
+                    ChangedAtLocal = h.ChangedAt.HasValue ? dateTimeService.ConvertUtcToLocal(h.ChangedAt.Value) : null,
+                    ChangedByName = h.ChangedByAccount?.UserName
                 }).ToList(),
             StatusOptions = AllStatuses
                 .Select(s => new SelectListItem(s, s, s == order.OrderStatus))
@@ -162,7 +194,7 @@ public class OrdersController(
     // ── POST /Admin/Orders/UpdateStatus ─────────────────────────
     [HttpPost, ValidateAntiForgeryToken]
     [RequirePermission("Order.Manage")]
-    public async Task<IActionResult> UpdateStatus(UpdateOrderStatusInputModel input)
+    public async Task<IActionResult> UpdateStatus(UpdateOrderStatusInputModel input, [FromServices] ClothingStore.Data.StoreDbContext context)
     {
         if (!ModelState.IsValid)
         {
@@ -174,6 +206,14 @@ public class OrdersController(
         if (order is null) return NotFound();
 
         var oldStatus   = order.OrderStatus;
+
+        // Prevent Admin from bypassing Shipper flow
+        if (oldStatus == Models.Entities.OrderStatus.Shipping && 
+            (input.NewStatus == Models.Entities.OrderStatus.Delivered || input.NewStatus == Models.Entities.OrderStatus.DeliveredPendingCOD))
+        {
+            TempData["Error"] = "Admin không thể xác nhận giao hàng thay Shipper. Vui lòng để Shipper cập nhật trạng thái.";
+            return RedirectToAction(nameof(Detail), new { id = input.OrderID });
+        }
         var oldPaymentStatus = order.PaymentStatus;
         var oldPaymentMethod = order.PaymentMethod;
         var oldTrackingNumber = order.TrackingNumber;
@@ -229,13 +269,58 @@ public class OrdersController(
             notes.Add(input.Note.Trim());
         }
 
+        string? actionType = null;
+        if (oldStatus == Models.Entities.OrderStatus.DeliveredPendingCOD && order.OrderStatus == Models.Entities.OrderStatus.Delivered)
+        {
+            actionType = "CODVerified";
+            notes.Add("Admin xác nhận đối soát COD");
+        }
+        else if (oldStatus != order.OrderStatus)
+        {
+            actionType = "StatusChanged";
+        }
+
+        bool assignShipperSuccess = false;
+        if (input.AssignShipperId.HasValue && input.AssignShipperId.Value > 0 && order.OrderStatus == Models.Entities.OrderStatus.ReadyToShip)
+        {
+            var rowsAffected = await context.Orders
+                .Where(o => o.OrderID == input.OrderID && o.AssignedShipperId == null && o.OrderStatus == Models.Entities.OrderStatus.ReadyToShip)
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(o => o.AssignedShipperId, input.AssignShipperId)
+                    .SetProperty(o => o.AssignedAt, DateTime.UtcNow));
+
+            if (rowsAffected == 0)
+            {
+                TempData["Error"] = "Đơn hàng đã được phân công hoặc trạng thái đã thay đổi (có thể do thao tác đồng thời).";
+                return RedirectToAction(nameof(Detail), new { id = input.OrderID });
+            }
+
+            order.AssignedShipperId = input.AssignShipperId;
+            order.AssignedAt = DateTime.UtcNow;
+            assignShipperSuccess = true;
+
+            var shipper = await context.Accounts.FindAsync(input.AssignShipperId.Value);
+            notes.Add($"Đã giao đơn cho Shipper '{shipper?.UserName}'");
+
+            order.StatusHistory.Add(new Models.Entities.OrderStatusHistory
+            {
+                OldStatus = oldStatus,
+                NewStatus = order.OrderStatus,
+                ActionType = "AssignShipper",
+                Note = $"Admin giao đơn cho shipper {shipper?.UserName}",
+                ChangedAt = DateTime.UtcNow,
+                ChangedBy = adminUserId > 0 ? adminUserId : null
+            });
+        }
+
         bool isStatusChanged = oldStatus != order.OrderStatus;
-        if (isStatusChanged || notes.Count > 0)
+        if (isStatusChanged || (notes.Count > 0 && !assignShipperSuccess))
         {
             order.StatusHistory.Add(new Models.Entities.OrderStatusHistory
             {
                 OldStatus = oldStatus,
                 NewStatus = order.OrderStatus,
+                ActionType = actionType,
                 Note      = notes.Count > 0 ? string.Join("\n", notes) : null,
                 ChangedAt = DateTime.UtcNow,
                 ChangedBy = adminUserId > 0 ? adminUserId : null

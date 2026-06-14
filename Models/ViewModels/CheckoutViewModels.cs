@@ -179,6 +179,9 @@ public class OrderStatusHistoryViewModel
 {
     public string? OldStatus { get; set; }
     public string NewStatus { get; set; } = string.Empty;
+    public string? ActionType { get; set; }
     public string? Note { get; set; }
     public DateTime? ChangedAt { get; set; }
+    public DateTime? ChangedAtLocal { get; set; }
+    public string? ChangedByName { get; set; }
 }

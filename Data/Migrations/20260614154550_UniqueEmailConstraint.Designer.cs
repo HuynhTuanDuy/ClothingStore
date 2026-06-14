@@ -4,16 +4,19 @@ using ClothingStore.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace ClothingStore.Migrations
+namespace ClothingStore.Data.Migrations
 {
     [DbContext(typeof(StoreDbContext))]
-    partial class StoreDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260614154550_UniqueEmailConstraint")]
+    partial class UniqueEmailConstraint
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -46,11 +49,6 @@ namespace ClothingStore.Migrations
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -654,16 +652,10 @@ namespace ClothingStore.Migrations
                     b.Property<DateTime?>("DeliveredAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("DeliveryAttemptCount")
-                        .HasColumnType("int");
-
                     b.Property<string>("DeliveryFailureReason")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("DeliveryFailureReasonCode")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DeliveryRescheduleReason")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("DiscountAmount")
@@ -671,12 +663,6 @@ namespace ClothingStore.Migrations
 
                     b.Property<decimal>("FinalAmount")
                         .HasColumnType("numeric(18,2)");
-
-                    b.Property<DateTime?>("LastDeliveryAttemptAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("NextDeliveryDate")
-                        .HasColumnType("datetime2");
 
                     b.Property<string>("OrderCode")
                         .IsRequired()

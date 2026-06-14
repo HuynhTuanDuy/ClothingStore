@@ -12,7 +12,7 @@
 </div>
 
 <!-- KPI Cards -->
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+<div class="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
     <div class="bg-surface border border-outline-variant p-5 hover:border-outline transition-colors">
         <div class="flex justify-between items-start mb-3">
             <p class="text-sm text-on-surface-variant uppercase tracking-wider">Doanh thu</p>
@@ -44,6 +44,22 @@
         </div>
         <p class="text-2xl font-bold text-error">@Model.LowStockVariants</p>
         <p class="text-sm text-on-surface-variant mt-1">Biến thể ≤ 5 sản phẩm</p>
+    </div>
+    <div class="bg-surface border border-outline-variant p-5 hover:border-outline transition-colors">
+        <div class="flex justify-between items-start mb-3">
+            <p class="text-sm text-on-surface-variant uppercase tracking-wider">Chờ giao lại</p>
+            <span class="material-symbols-outlined text-amber-600" style="font-size:24px">schedule</span>
+        </div>
+        <p class="text-2xl font-bold text-amber-600">@Model.RetryWaitingCount</p>
+        <p class="text-sm text-on-surface-variant mt-1">Đơn hẹn lại Shipper</p>
+    </div>
+    <div class="bg-surface border border-outline-variant p-5 hover:border-outline transition-colors">
+        <div class="flex justify-between items-start mb-3">
+            <p class="text-sm text-on-surface-variant uppercase tracking-wider">Vượt quá lần giao</p>
+            <span class="material-symbols-outlined text-red-600" style="font-size:24px">cancel</span>
+        </div>
+        <p class="text-2xl font-bold text-red-600">@Model.MaxAttemptsExceededCount</p>
+        <p class="text-sm text-on-surface-variant mt-1">Bị hủy do giao lại</p>
     </div>
 </div>
 
@@ -269,6 +285,33 @@
             </div>
         }
     </div>
+</div>
+
+<!-- Top Failure Reasons -->
+<div class="mb-8 bg-surface border border-outline-variant p-6">
+    <h3 class="text-lg font-semibold text-on-background mb-4 flex items-center gap-2">
+        <span class="material-symbols-outlined text-error">report</span>
+        Top lý do giao hàng thất bại
+    </h3>
+    @if (Model.TopFailureReasons.Any())
+    {
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            @foreach (var reason in Model.TopFailureReasons)
+            {
+                <div class="p-4 border border-outline-variant/50 bg-error/5 rounded-lg flex items-center justify-between">
+                    <span class="font-medium text-on-surface-variant">@reason.Reason</span>
+                    <span class="font-bold text-error text-lg">@reason.Count</span>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="flex flex-col items-center justify-center h-24 text-on-surface-variant">
+            <span class="material-symbols-outlined text-3xl mb-2 opacity-30">verified</span>
+            <p class="text-sm">Chưa có dữ liệu giao hàng thất bại.</p>
+        </div>
+    }
 </div>
 
 <!-- Recent Orders + Low Stock -->

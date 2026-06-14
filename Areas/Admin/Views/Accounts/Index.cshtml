@@ -1,0 +1,133 @@
+@model ClothingStore.Models.ViewModels.AdminAccountPageViewModel
+@{
+    ViewData["Title"] = "Quản lý Tài khoản Nội bộ";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-10">
+    <div>
+        <h3 class="font-headline-lg text-[40px] leading-[48px] font-semibold text-primary mb-2">Tài khoản nội bộ</h3>
+        <p class="text-on-surface-variant font-body-lg">Quản lý Admin, Manager, Shipper và Staff</p>
+    </div>
+    <div class="flex gap-4">
+        <a asp-action="Create" class="inline-flex items-center justify-center h-12 px-6 rounded-full bg-primary text-on-primary font-label-caps tracking-widest hover:bg-on-primary-fixed-variant transition-colors">
+            <span class="material-symbols-outlined mr-2">add</span>
+            TẠO TÀI KHOẢN
+        </a>
+    </div>
+</div>
+
+<div class="bg-surface-container-lowest rounded-[32px] border border-outline-variant p-6 shadow-sm mb-8">
+    <form method="get" class="flex flex-wrap gap-4 items-end">
+        <div class="flex-1 min-w-[200px]">
+            <label class="block text-sm font-medium text-on-surface-variant mb-1">Tìm kiếm</label>
+            <input asp-for="Filter.Search" class="w-full bg-surface border border-outline-variant rounded-xl px-4 py-2 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Tên đăng nhập, email..." />
+        </div>
+        <div class="w-48">
+            <label class="block text-sm font-medium text-on-surface-variant mb-1">Trạng thái</label>
+            <select asp-for="Filter.Status" class="w-full bg-surface border border-outline-variant rounded-xl px-4 py-2 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+                <option value="">Tất cả</option>
+                <option value="Active">Đang hoạt động (Active)</option>
+                <option value="Inactive">Tạm khóa (Inactive)</option>
+                <option value="Banned">Cấm (Banned)</option>
+            </select>
+        </div>
+        <div class="w-48">
+            <label class="block text-sm font-medium text-on-surface-variant mb-1">Vai trò</label>
+            <select asp-for="Filter.Role" asp-items="Model.AvailableRoles" class="w-full bg-surface border border-outline-variant rounded-xl px-4 py-2 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+            </select>
+        </div>
+        <button type="submit" class="h-[42px] px-6 rounded-xl bg-surface-container-high text-primary font-medium hover:bg-surface-variant transition-colors">
+            LỌC
+        </button>
+    </form>
+</div>
+
+<div class="bg-surface-container-lowest rounded-[32px] border border-outline-variant overflow-hidden shadow-sm">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-surface-container-low border-b border-outline-variant text-sm font-semibold text-on-surface-variant">
+                    <th class="px-6 py-4">ID</th>
+                    <th class="px-6 py-4">Tài khoản</th>
+                    <th class="px-6 py-4">Roles</th>
+                    <th class="px-6 py-4">Trạng thái</th>
+                    <th class="px-6 py-4 text-right">Hành động</th>
+                </tr>
+            </thead>
+            <tbody class="text-sm">
+                @if (Model.Accounts.Count == 0)
+                {
+                    <tr>
+                        <td colspan="5" class="px-6 py-12 text-center text-on-surface-variant">
+                            Không tìm thấy tài khoản nào.
+                        </td>
+                    </tr>
+                }
+                @foreach (var acc in Model.Accounts)
+                {
+                    <tr class="border-b border-outline-variant hover:bg-surface/50 transition-colors">
+                        <td class="px-6 py-4 font-mono text-xs text-on-surface-variant">#@acc.UserId</td>
+                        <td class="px-6 py-4">
+                            <div class="font-medium text-primary">@acc.UserName</div>
+                            <div class="text-on-surface-variant text-xs mt-0.5">@acc.Email</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex flex-wrap gap-1">
+                                @foreach (var role in acc.Roles)
+                                {
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-container/10 text-primary">
+                                        @role
+                                    </span>
+                                }
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            @if (acc.Status == "Active")
+                            {
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-secondary-container text-on-secondary-container">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-secondary mr-1.5"></span> Active
+                                </span>
+                            }
+                            else if (acc.Status == "Inactive")
+                            {
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-surface-container-high text-on-surface-variant">
+                                    Inactive
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-error-container text-on-error-container">
+                                    Banned
+                                </span>
+                            }
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <a asp-action="Edit" asp-route-id="@acc.UserId" class="inline-flex items-center justify-center w-8 h-8 rounded-full text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors" title="Chỉnh sửa">
+                                <span class="material-symbols-outlined text-[18px]">edit</span>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    
+    @if (Model.TotalPages > 1)
+    {
+        <div class="px-6 py-4 border-t border-outline-variant flex items-center justify-between">
+            <span class="text-sm text-on-surface-variant">
+                Hiển thị @((Model.Filter.Page - 1) * Model.Filter.PageSize + 1) đến @Math.Min(Model.Filter.Page * Model.Filter.PageSize, Model.TotalCount) trong số @Model.TotalCount
+            </span>
+            <div class="flex gap-1">
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <a href="?Search=@Model.Filter.Search&Status=@Model.Filter.Status&Role=@Model.Filter.Role&Page=@i" 
+                       class="w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium @(i == Model.Filter.Page ? "bg-primary text-on-primary" : "text-on-surface-variant hover:bg-surface-container")">
+                        @i
+                    </a>
+                }
+            </div>
+        </div>
+    }
+</div>

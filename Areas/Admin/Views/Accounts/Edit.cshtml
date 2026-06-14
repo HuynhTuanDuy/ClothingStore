@@ -1,0 +1,101 @@
+@model ClothingStore.Models.ViewModels.AdminAccountEditViewModel
+@using System.Security.Claims
+@{
+    ViewData["Title"] = "Chỉnh sửa Tài khoản";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    bool isSelf = currentUserId == Model.UserId.ToString();
+}
+
+<div class="mb-10">
+    <a asp-action="Index" class="inline-flex items-center text-sm font-medium text-on-surface-variant hover:text-primary transition-colors mb-4">
+        <span class="material-symbols-outlined mr-1 text-[18px]">arrow_back</span>
+        Quay lại danh sách
+    </a>
+    <h3 class="font-headline-lg text-[40px] leading-[48px] font-semibold text-primary">Chỉnh sửa tài khoản</h3>
+    <p class="text-on-surface-variant font-body-lg mt-2">Cập nhật thông tin và phân quyền cho #@Model.UserId - @Model.UserName</p>
+</div>
+
+<div class="bg-surface-container-lowest rounded-[32px] border border-outline-variant p-8 shadow-sm max-w-3xl">
+    <form asp-action="Edit" method="post">
+        <input type="hidden" asp-for="UserId" />
+        <input type="hidden" asp-for="RowVersion" />
+        
+        <div asp-validation-summary="ModelOnly" class="text-error mb-6 text-sm bg-error-container text-on-error-container p-4 rounded-xl"></div>
+
+        @if (isSelf)
+        {
+            <div class="mb-6 bg-primary-container/10 border border-primary-container text-primary-fixed-dim px-4 py-3 rounded-xl flex items-start gap-3">
+                <span class="material-symbols-outlined mt-0.5">info</span>
+                <p class="text-sm">Bạn đang chỉnh sửa tài khoản của chính mình. Một số thao tác như thay đổi trạng thái, gỡ quyền Admin, hoặc Đổi mật khẩu sẽ bị hạn chế để đảm bảo an toàn hệ thống.</p>
+            </div>
+        }
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div>
+                <label class="block text-sm font-medium text-on-surface mb-2">Tên đăng nhập</label>
+                <input value="@Model.UserName" disabled class="w-full bg-surface-container-high border border-outline-variant rounded-xl px-4 py-2.5 text-on-surface-variant cursor-not-allowed" />
+                <input type="hidden" asp-for="UserName" />
+            </div>
+            <div>
+                <label asp-for="Email" class="block text-sm font-medium text-on-surface mb-2">Email <span class="text-error">*</span></label>
+                <input asp-for="Email" type="email" class="w-full bg-surface border border-outline-variant rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+                <span asp-validation-for="Email" class="text-error text-xs mt-1 block"></span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div>
+                <label asp-for="Status" class="block text-sm font-medium text-on-surface mb-2">Trạng thái</label>
+                <select asp-for="Status" class="w-full bg-surface border border-outline-variant rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                        disabled="@(isSelf ? "disabled" : null)">
+                    <option value="Active">Đang hoạt động (Active)</option>
+                    <option value="Inactive">Tạm khóa (Inactive)</option>
+                    <option value="Banned">Cấm (Banned)</option>
+                </select>
+                @if (isSelf)
+                {
+                    <input type="hidden" asp-for="Status" />
+                }
+            </div>
+        </div>
+
+        <div class="mb-8 p-6 bg-surface-container-low rounded-2xl border border-outline-variant">
+            <label class="block text-sm font-semibold text-on-surface mb-4">Phân quyền (Roles) <span class="text-error">*</span></label>
+            <span asp-validation-for="SelectedRoleIds" class="text-error text-xs mb-3 block"></span>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                @foreach (var role in Model.AvailableRoles)
+                {
+                    bool isRoleChecked = Model.SelectedRoleIds.Contains(int.Parse(role.Value));
+                    <label class="flex items-center gap-3 p-3 rounded-xl border border-outline-variant bg-surface-container-lowest cursor-pointer hover:border-primary transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary-container/5">
+                        <input type="checkbox" name="SelectedRoleIds" value="@role.Value" @(isRoleChecked ? "checked" : "")
+                               class="w-5 h-5 text-primary border-outline-variant rounded focus:ring-primary focus:ring-2 bg-surface" />
+                        <span class="text-sm font-medium text-on-surface">@role.Text</span>
+                    </label>
+                }
+            </div>
+        </div>
+
+        <div class="mb-8 p-6 bg-error-container/20 border border-error-container/50 rounded-2xl">
+            <label class="block text-sm font-semibold text-error mb-2 flex items-center gap-2">
+                <span class="material-symbols-outlined text-[18px]">lock_reset</span> Đặt lại mật khẩu (Tùy chọn)
+            </label>
+            <p class="text-xs text-on-surface-variant mb-4">Để trống nếu không muốn thay đổi mật khẩu. Thao tác này sẽ được lưu lại trong lịch sử hệ thống.</p>
+            <input asp-for="NewPassword" type="password" disabled="@(isSelf ? "disabled" : null)" class="w-full md:w-1/2 bg-surface border border-outline-variant rounded-xl px-4 py-2.5 focus:outline-none focus:border-error focus:ring-1 focus:ring-error" placeholder="Nhập mật khẩu mới..." />
+            <span asp-validation-for="NewPassword" class="text-error text-xs mt-1 block"></span>
+        </div>
+
+        <div class="flex items-center gap-4 pt-6 border-t border-outline-variant">
+            <button type="submit" class="inline-flex items-center justify-center h-12 px-8 rounded-full bg-primary text-on-primary font-label-caps tracking-widest hover:bg-on-primary-fixed-variant transition-colors">
+                LƯU THAY ĐỔI
+            </button>
+            <a asp-action="Index" class="inline-flex items-center justify-center h-12 px-8 rounded-full text-primary font-label-caps tracking-widest hover:bg-surface-container-high transition-colors">
+                HỦY
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

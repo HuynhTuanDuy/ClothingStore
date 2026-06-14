@@ -187,6 +187,8 @@ public class DashboardViewModel
     public int ShippingOrders { get; set; }
     public double CompletionRate { get; set; }
     public int TotalProductsSold { get; set; }
+    public int RetryWaitingCount { get; set; }
+    public int MaxAttemptsExceededCount { get; set; }
 
     public IReadOnlyList<string> RevenueLabels { get; set; } = [];
     public IReadOnlyList<decimal> RevenueValues { get; set; } = [];
@@ -196,6 +198,13 @@ public class DashboardViewModel
     public IReadOnlyList<RecentOrderViewModel> RecentOrders { get; set; } = [];
     public IReadOnlyList<LowStockItemViewModel> LowStockItems { get; set; } = [];
     public IReadOnlyList<LowStockProductViewModel> LowStockProducts { get; set; } = [];
+    public IReadOnlyList<TopFailureReasonViewModel> TopFailureReasons { get; set; } = [];
+}
+
+public class TopFailureReasonViewModel
+{
+    public string Reason { get; set; } = string.Empty;
+    public int Count { get; set; }
 }
 
 public class TopProductViewModel
@@ -283,6 +292,7 @@ public class AdminOrderDetailViewModel
     public string OrderCode { get; set; } = string.Empty;
     public string? TrackingNumber { get; set; }
     public DateTime OrderDate { get; set; }
+    public DateTime OrderDateLocal { get; set; }
     public string OrderEmail { get; set; } = string.Empty;
     public string CustomerName { get; set; } = string.Empty;
     public string MembershipRank { get; set; } = string.Empty;
@@ -302,6 +312,16 @@ public class AdminOrderDetailViewModel
     public IReadOnlyList<SelectListItem> StatusOptions { get; set; } = [];
     public IReadOnlyList<SelectListItem> PaymentMethodOptions { get; set; } = [];
     public IReadOnlyList<SelectListItem> PaymentStatusOptions { get; set; } = [];
+    public int? AssignedShipperId { get; set; }
+    public string? AssignedShipperName { get; set; }
+    public IReadOnlyList<SelectListItem> Shippers { get; set; } = [];
+    
+    public int DeliveryAttemptCount { get; set; }
+    public DateTime? NextDeliveryDate { get; set; }
+    public DateTime? NextDeliveryDateLocal { get; set; }
+    public string? DeliveryRescheduleReason { get; set; }
+    public string? DeliveryFailureReason { get; set; }
+    public string? DeliveryFailureReasonCode { get; set; }
 }
 
 public class UpdateOrderStatusInputModel
@@ -312,6 +332,7 @@ public class UpdateOrderStatusInputModel
     public string? NewPaymentStatus { get; set; }
     public string? Note { get; set; }
     public string? TrackingNumber { get; set; }
+    public int? AssignShipperId { get; set; }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -387,7 +408,8 @@ public class RegisterViewModel
     public string Email { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Mật khẩu là bắt buộc.")]
-    [StringLength(100, MinimumLength = 6, ErrorMessage = "Mật khẩu ít nhất 6 ký tự.")]
+    [StringLength(100, MinimumLength = 8, ErrorMessage = "Mật khẩu ít nhất 8 ký tự.")]
+    [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$", ErrorMessage = "Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 số.")]
     [DataType(DataType.Password)]
     public string Password { get; set; } = string.Empty;
 
@@ -419,11 +441,98 @@ public class ResetPasswordViewModel
     public string Token { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Mật khẩu là bắt buộc.")]
-    [StringLength(100, MinimumLength = 6, ErrorMessage = "Mật khẩu ít nhất 6 ký tự.")]
+    [StringLength(100, MinimumLength = 8, ErrorMessage = "Mật khẩu ít nhất 8 ký tự.")]
+    [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$", ErrorMessage = "Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 số.")]
     [DataType(DataType.Password)]
     public string Password { get; set; } = string.Empty;
 
     [Compare(nameof(Password), ErrorMessage = "Mật khẩu xác nhận không khớp.")]
     [DataType(DataType.Password)]
     public string ConfirmPassword { get; set; } = string.Empty;
+}
+
+// ─────────────────────────────────────────────────────────────
+// ADMIN — ACCOUNT & ROLE MANAGEMENT
+// ─────────────────────────────────────────────────────────────
+
+public class AdminAccountListItemViewModel
+{
+    public int UserId { get; set; }
+    public string UserName { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public List<string> Roles { get; set; } = [];
+    public DateTime? LastLoginAt { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
+
+public class AdminAccountFilter
+{
+    public string? Search { get; set; }
+    public string? Role { get; set; }
+    public string? Status { get; set; }
+    public int Page { get; set; } = 1;
+    public int PageSize { get; set; } = 15;
+}
+
+public class AdminAccountPageViewModel
+{
+    public List<AdminAccountListItemViewModel> Accounts { get; set; } = [];
+    public AdminAccountFilter Filter { get; set; } = new();
+    public int TotalCount { get; set; }
+    public int TotalPages => Filter.PageSize > 0 ? (int)Math.Ceiling((double)TotalCount / Filter.PageSize) : 0;
+    
+    // For filter dropdowns
+    public List<SelectListItem> AvailableRoles { get; set; } = [];
+}
+
+public class AdminAccountCreateViewModel
+{
+    [Required(ErrorMessage = "Tên đăng nhập là bắt buộc.")]
+    [StringLength(50, MinimumLength = 3, ErrorMessage = "Tên đăng nhập từ 3-50 ký tự.")]
+    public string UserName { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Email là bắt buộc.")]
+    [EmailAddress(ErrorMessage = "Email không hợp lệ.")]
+    public string Email { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Mật khẩu là bắt buộc.")]
+    [StringLength(100, MinimumLength = 8, ErrorMessage = "Mật khẩu ít nhất 8 ký tự.")]
+    [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$", ErrorMessage = "Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 số.")]
+    [DataType(DataType.Password)]
+    public string Password { get; set; } = string.Empty;
+
+    public string Status { get; set; } = "Active";
+
+    [Required(ErrorMessage = "Vui lòng chọn ít nhất 1 quyền.")]
+    public List<int> SelectedRoleIds { get; set; } = [];
+
+    // For rendering checkboxes
+    public List<SelectListItem> AvailableRoles { get; set; } = [];
+}
+
+public class AdminAccountEditViewModel
+{
+    public int UserId { get; set; }
+    
+    public string UserName { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Email là bắt buộc.")]
+    [EmailAddress(ErrorMessage = "Email không hợp lệ.")]
+    public string Email { get; set; } = string.Empty;
+
+    public string Status { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Vui lòng chọn ít nhất 1 quyền.")]
+    public List<int> SelectedRoleIds { get; set; } = [];
+
+    [DataType(DataType.Password)]
+    [StringLength(100, MinimumLength = 8, ErrorMessage = "Mật khẩu ít nhất 8 ký tự.")]
+    [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$", ErrorMessage = "Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 số.")]
+    public string? NewPassword { get; set; }
+
+    public byte[]? RowVersion { get; set; }
+
+    // For rendering checkboxes
+    public List<SelectListItem> AvailableRoles { get; set; } = [];
 }

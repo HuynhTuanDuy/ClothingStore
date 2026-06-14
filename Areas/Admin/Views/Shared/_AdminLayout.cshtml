@@ -150,6 +150,16 @@
                 </a>
             </li>
             }
+            @if (User.IsInRole("Admin") || Context.HasPermission("Account.Manage"))
+            {
+            <li>
+                <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 @(ctrl == "Accounts" ? "bg-surface-container-high text-primary font-semibold" : "text-on-surface-variant hover:bg-surface-container-high")"
+                   asp-area="Admin" asp-controller="Accounts" asp-action="Index">
+                    <span class="material-symbols-outlined text-[20px]">manage_accounts</span>
+                    Tài khoản nội bộ
+                </a>
+            </li>
+            }
         </ul>
         <div class="mt-auto border-t border-outline-variant pt-6">
             <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors"

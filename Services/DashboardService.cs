@@ -27,6 +27,9 @@ public class DashboardService(IOrderRepository orderRepository) : IDashboardServ
         var totalProductsSold = await orderRepository.TotalProductsSoldAsync();
         var lowStockProducts = await orderRepository.GetLowStockProductsAsync(LowStockThreshold);
         var categorySales = await orderRepository.GetSalesByCategoryAsync(selectedYear);
+        var retryWaitingCount = await orderRepository.CountRetryWaitingOrdersAsync();
+        var maxAttemptsExceededCount = await orderRepository.CountMaxAttemptsExceededOrdersAsync();
+        var topFailureReasons = await orderRepository.GetTopFailureReasonsAsync();
 
         var monthlyValues = Enumerable.Range(1, 12)
             .Select(m => revenue.FirstOrDefault(x => x.Month == m)?.Revenue ?? 0m)
@@ -44,6 +47,8 @@ public class DashboardService(IOrderRepository orderRepository) : IDashboardServ
             ShippingOrders   = shippingOrders,
             CompletionRate   = completionRate,
             TotalProductsSold = totalProductsSold,
+            RetryWaitingCount = retryWaitingCount,
+            MaxAttemptsExceededCount = maxAttemptsExceededCount,
 
             RevenueLabels    = Enumerable.Range(1, 12)
                 .Select(m => new DateTime(selectedYear, m, 1).ToString("MMM"))
@@ -88,6 +93,11 @@ public class DashboardService(IOrderRepository orderRepository) : IDashboardServ
                     ColorName = v.ColorName,
                     StockQuantity = v.StockQuantity
                 }).ToList()
+            }).ToList(),
+            TopFailureReasons = topFailureReasons.Select(r => new TopFailureReasonViewModel
+            {
+                Reason = r.Reason,
+                Count = r.Count
             }).ToList()
         };
     }

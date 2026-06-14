@@ -148,6 +148,10 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
             .HasFilter("[CustomerId] IS NOT NULL");
 
         modelBuilder.Entity<Account>()
+            .HasIndex(x => x.Email)
+            .IsUnique();
+
+        modelBuilder.Entity<Account>()
             .HasOne(x => x.Customer)
             .WithOne(x => x.Account)
             .HasForeignKey<Account>(x => x.CustomerId);
@@ -255,6 +259,12 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
             .HasOne(x => x.Cart)
             .WithOne(x => x.Order)
             .HasForeignKey<Order>(x => x.CartID);
+
+        modelBuilder.Entity<Order>()
+            .HasOne(x => x.AssignedShipper)
+            .WithMany()
+            .HasForeignKey(x => x.AssignedShipperId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         // ── COUPON USAGES ────────────────────────────────────────────
         modelBuilder.Entity<CouponUsage>()

@@ -4,16 +4,19 @@ using ClothingStore.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace ClothingStore.Migrations
+namespace ClothingStore.Data.Migrations
 {
     [DbContext(typeof(StoreDbContext))]
-    partial class StoreDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260614160016_AddAccountRowVersion")]
+    partial class AddAccountRowVersion
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -654,16 +657,10 @@ namespace ClothingStore.Migrations
                     b.Property<DateTime?>("DeliveredAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("DeliveryAttemptCount")
-                        .HasColumnType("int");
-
                     b.Property<string>("DeliveryFailureReason")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("DeliveryFailureReasonCode")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DeliveryRescheduleReason")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("DiscountAmount")
@@ -671,12 +668,6 @@ namespace ClothingStore.Migrations
 
                     b.Property<decimal>("FinalAmount")
                         .HasColumnType("numeric(18,2)");
-
-                    b.Property<DateTime?>("LastDeliveryAttemptAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("NextDeliveryDate")
-                        .HasColumnType("datetime2");
 
                     b.Property<string>("OrderCode")
                         .IsRequired()

@@ -15,6 +15,14 @@
                 </div>
                 
                 <nav class="space-y-1">
+                    @if (User.IsInRole("Shipper"))
+                    {
+                        <a asp-area="Shipper" asp-controller="Shipper" asp-action="Dashboard"
+                           class="block px-4 py-2.5 rounded-md transition-colors text-sm font-bold bg-brand-cream text-brand-dark-brown border-l-4 border-brand-brown mb-4">
+                            Khu vực Shipper
+                        </a>
+                    }
+
                     <a asp-controller="CustomerAccount" asp-action="Index"
                        class="block px-4 py-2.5 rounded-md transition-colors text-sm font-medium @(action == "Index" ? "bg-brand-cream text-brand-brown" : "text-gray-600 hover:bg-gray-50 hover:text-brand-brown")">
                         Bảng điều khiển

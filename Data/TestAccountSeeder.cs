@@ -51,6 +51,13 @@ public static class TestAccountSeeder
             }
         }
 
+        // Seed Shipper role explicitly
+        var shipperRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "Shipper");
+        if (shipperRole == null)
+        {
+            context.Roles.Add(new Role { Name = "Shipper", NormalizedName = "SHIPPER" });
+        }
+
         await context.SaveChangesAsync();
     }
 }

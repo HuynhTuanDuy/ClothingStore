@@ -1,0 +1,76 @@
+@model ClothingStore.Models.ViewModels.AdminAccountCreateViewModel
+@{
+    ViewData["Title"] = "Tạo Tài khoản mới";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="mb-10">
+    <a asp-action="Index" class="inline-flex items-center text-sm font-medium text-on-surface-variant hover:text-primary transition-colors mb-4">
+        <span class="material-symbols-outlined mr-1 text-[18px]">arrow_back</span>
+        Quay lại danh sách
+    </a>
+    <h3 class="font-headline-lg text-[40px] leading-[48px] font-semibold text-primary">Tạo tài khoản</h3>
+    <p class="text-on-surface-variant font-body-lg mt-2">Cấp quyền nội bộ cho Admin, Manager, Shipper hoặc Staff.</p>
+</div>
+
+<div class="bg-surface-container-lowest rounded-[32px] border border-outline-variant p-8 shadow-sm max-w-3xl">
+    <form asp-action="Create" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-error mb-6 text-sm bg-error-container text-on-error-container p-4 rounded-xl"></div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div>
+                <label asp-for="UserName" class="block text-sm font-medium text-on-surface mb-2">Tên đăng nhập <span class="text-error">*</span></label>
+                <input asp-for="UserName" class="w-full bg-surface border border-outline-variant rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" placeholder="VD: nguyenvan_a" />
+                <span asp-validation-for="UserName" class="text-error text-xs mt-1 block"></span>
+            </div>
+            <div>
+                <label asp-for="Email" class="block text-sm font-medium text-on-surface mb-2">Email <span class="text-error">*</span></label>
+                <input asp-for="Email" type="email" class="w-full bg-surface border border-outline-variant rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" placeholder="VD: admin@wearwhatever.com" />
+                <span asp-validation-for="Email" class="text-error text-xs mt-1 block"></span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div>
+                <label asp-for="Password" class="block text-sm font-medium text-on-surface mb-2">Mật khẩu <span class="text-error">*</span></label>
+                <input asp-for="Password" type="password" class="w-full bg-surface border border-outline-variant rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+                <span asp-validation-for="Password" class="text-error text-xs mt-1 block"></span>
+            </div>
+            <div>
+                <label asp-for="Status" class="block text-sm font-medium text-on-surface mb-2">Trạng thái ban đầu</label>
+                <select asp-for="Status" class="w-full bg-surface border border-outline-variant rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+                    <option value="Active">Đang hoạt động (Active)</option>
+                    <option value="Inactive">Tạm khóa (Inactive)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="mb-8 p-6 bg-surface-container-low rounded-2xl border border-outline-variant">
+            <label class="block text-sm font-semibold text-on-surface mb-4">Phân quyền (Roles) <span class="text-error">*</span></label>
+            <span asp-validation-for="SelectedRoleIds" class="text-error text-xs mb-3 block"></span>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                @foreach (var role in Model.AvailableRoles)
+                {
+                    <label class="flex items-center gap-3 p-3 rounded-xl border border-outline-variant bg-surface-container-lowest cursor-pointer hover:border-primary transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary-container/5">
+                        <input type="checkbox" name="SelectedRoleIds" value="@role.Value" @(Model.SelectedRoleIds.Contains(int.Parse(role.Value)) ? "checked" : "")
+                               class="w-5 h-5 text-primary border-outline-variant rounded focus:ring-primary focus:ring-2 bg-surface" />
+                        <span class="text-sm font-medium text-on-surface">@role.Text</span>
+                    </label>
+                }
+            </div>
+        </div>
+
+        <div class="flex items-center gap-4 pt-6 border-t border-outline-variant">
+            <button type="submit" class="inline-flex items-center justify-center h-12 px-8 rounded-full bg-primary text-on-primary font-label-caps tracking-widest hover:bg-on-primary-fixed-variant transition-colors">
+                TẠO MỚI
+            </button>
+            <a asp-action="Index" class="inline-flex items-center justify-center h-12 px-8 rounded-full text-primary font-label-caps tracking-widest hover:bg-surface-container-high transition-colors">
+                HỦY
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -105,6 +105,8 @@ builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<ICustomerAccountService, CustomerAccountService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
+builder.Services.AddScoped<IShipperService, ShipperService>();
+builder.Services.AddSingleton<IDateTimeService, DateTimeService>();
 
 var app = builder.Build();
 

@@ -17,6 +17,7 @@ public record LowStockProductPoint(
     int ProductID, string ProductName, string ThumbnailUrl, 
     int TotalStock, List<LowStockPoint> Variants);
 public record CategorySalesPoint(string CategoryName, int TotalSold);
+public record TopFailureReasonPoint(string Reason, int Count);
 
 public class OrderRepository(StoreDbContext dbContext) : IOrderRepository
 {
@@ -51,6 +52,7 @@ public class OrderRepository(StoreDbContext dbContext) : IOrderRepository
                 .ThenInclude(od => od.ProductVariant)
                     .ThenInclude(pv => pv.ProductImages)
             .Include(x => x.StatusHistory.OrderByDescending(h => h.ChangedAt))
+                .ThenInclude(h => h.ChangedByAccount)
             .Include(x => x.CouponUsages).ThenInclude(x => x.Coupon)
             .Include(x => x.Customer).ThenInclude(c => c!.Membership)
             .FirstOrDefaultAsync(x => x.OrderID == orderId);
@@ -236,12 +238,40 @@ public class OrderRepository(StoreDbContext dbContext) : IOrderRepository
         return Math.Round((double)delivered / total * 100, 1);
     }
 
-    public Task<int> TotalProductsSoldAsync()
+    public async Task<int> TotalProductsSoldAsync()
     {
-        return dbContext.OrderDetails
-            .AsNoTracking()
-            .Where(x => x.Order.OrderStatus != OrderStatus.Cancelled)
-            .SumAsync(x => x.Quantity);
+        return await dbContext.OrderDetails
+            .Include(od => od.Order)
+            .Where(od => od.Order.OrderStatus == OrderStatus.Delivered)
+            .SumAsync(od => od.Quantity);
+    }
+
+    public async Task<int> CountRetryWaitingOrdersAsync()
+    {
+        return await dbContext.Orders
+            .Where(o => o.OrderStatus == OrderStatus.DeliveryAttemptFailed)
+            .CountAsync();
+    }
+
+    public async Task<int> CountMaxAttemptsExceededOrdersAsync()
+    {
+        return await dbContext.Orders
+            .Where(o => (o.OrderStatus == OrderStatus.DeliveryFailed || o.OrderStatus == OrderStatus.Returned) && o.DeliveryFailureReasonCode == "MaxAttemptsExceeded")
+            .CountAsync();
+    }
+
+    public async Task<List<TopFailureReasonPoint>> GetTopFailureReasonsAsync(int count = 5)
+    {
+        var grouped = await dbContext.Orders
+            .Where(o => o.OrderStatus == OrderStatus.DeliveryFailed || o.OrderStatus == OrderStatus.Returned)
+            .Where(o => o.DeliveryFailureReason != null && o.DeliveryFailureReason != "")
+            .GroupBy(o => o.DeliveryFailureReason)
+            .Select(g => new { Reason = g.Key, Count = g.Count() })
+            .OrderByDescending(x => x.Count)
+            .Take(count)
+            .ToListAsync();
+
+        return grouped.Select(x => new TopFailureReasonPoint(x.Reason!, x.Count)).ToList();
     }
 
     public async Task<List<LowStockProductPoint>> GetLowStockProductsAsync(int threshold = 5)
@@ -322,5 +352,45 @@ public class OrderRepository(StoreDbContext dbContext) : IOrderRepository
                     .ThenInclude(pv => pv.ProductImages)
             .AsSplitQuery()
             .FirstOrDefaultAsync(o => o.OrderCode == orderCode && o.ShippingPhone == phone);
+    }
+
+    public Task<List<Order>> GetOrdersByShipperAsync(int shipperId, string? status = null)
+    {
+        var query = dbContext.Orders
+            .AsNoTracking()
+            .Where(x => x.AssignedShipperId == shipperId)
+            .Include(x => x.Customer)
+            .Include(x => x.OrderDetails)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            query = query.Where(x => x.OrderStatus == status);
+        }
+
+        return query.OrderByDescending(x => x.AssignedAt).ToListAsync();
+    }
+
+    public Task<Order?> GetOrderDetailForShipperAsync(int orderId, int shipperId)
+    {
+        return dbContext.Orders
+            .AsNoTracking()
+            .Where(x => x.AssignedShipperId == shipperId)
+            .Include(x => x.Customer)
+            .Include(x => x.OrderDetails)
+                .ThenInclude(od => od.ProductVariant)
+                    .ThenInclude(pv => pv.Product)
+            .Include(x => x.OrderDetails)
+                .ThenInclude(od => od.ProductVariant)
+                    .ThenInclude(pv => pv.Color)
+            .Include(x => x.OrderDetails)
+                .ThenInclude(od => od.ProductVariant)
+                    .ThenInclude(pv => pv.Size)
+            .Include(x => x.OrderDetails)
+                .ThenInclude(od => od.ProductVariant)
+                    .ThenInclude(pv => pv.ProductImages)
+            .Include(x => x.StatusHistory.OrderByDescending(h => h.ChangedAt))
+            .AsSplitQuery()
+            .FirstOrDefaultAsync(x => x.OrderID == orderId);
     }
 }

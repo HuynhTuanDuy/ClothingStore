@@ -1,0 +1,362 @@
+@model ClothingStore.Models.ViewModels.ShipperOrderDetailViewModel
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+@{
+    ViewData["Title"] = "Chi Tiết Đơn Hàng " + Model.OrderCode;
+    int maxAttempts = Configuration.GetValue<int>("DeliverySettings:MaxDeliveryAttempts", 3);
+}
+
+<div class="mb-6 flex items-center justify-between">
+    <div class="flex items-center gap-4">
+        <a href="@Url.Action("Orders", new { status = Model.Status })" class="p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-gray-500 inline-flex shadow-sm">
+            <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+        </a>
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Đơn hàng #@Model.OrderCode</h1>
+            <p class="text-sm text-gray-500 mt-0.5">Đặt ngày: @Model.OrderDateLocal.ToString("dd/MM/yyyy HH:mm")</p>
+        </div>
+    </div>
+    
+    <span class="px-3 py-1.5 rounded-full text-sm font-semibold shadow-sm border
+        @(Model.Status == "ReadyToShip" ? "bg-blue-50 text-blue-700 border-blue-200" :
+          Model.Status == "Shipping" ? "bg-amber-50 text-amber-700 border-amber-200" :
+          Model.Status == "Delivered" ? "bg-green-50 text-green-700 border-green-200" :
+          Model.Status == "DeliveryFailed" ? "bg-red-50 text-red-700 border-red-200" : "bg-gray-50 text-gray-700 border-gray-200")">
+        @(Model.Status switch {
+            "ReadyToShip" => "Cần lấy hàng",
+            "Shipping" => "Đang giao",
+            "Delivered" => "Đã giao",
+            "DeliveryAttemptFailed" => "Chờ giao lại",
+            "DeliveryFailed" => "Giao thất bại",
+            _ => Model.Status
+        })
+    </span>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Cột trái: Thông tin -->
+    <div class="lg:col-span-2 space-y-6">
+        
+        <!-- Khách hàng & Giao hàng -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="p-4 border-b border-gray-100 bg-gray-50/50">
+                <h3 class="font-bold text-gray-900 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">person</span>
+                    Thông tin giao hàng
+                </h3>
+            </div>
+            <div class="p-5 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Người nhận</p>
+                    <p class="font-medium text-gray-900 text-lg">@Model.CustomerName</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Số điện thoại</p>
+                    <a href="tel:@Model.Phone" class="font-medium text-primary text-lg flex items-center gap-1 hover:underline">
+                        <span class="material-symbols-outlined text-[18px]">call</span>
+                        @Model.Phone
+                    </a>
+                </div>
+                <div class="sm:col-span-2">
+                    <p class="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Địa chỉ</p>
+                    <p class="text-gray-800 leading-relaxed flex items-start gap-2">
+                        <span class="material-symbols-outlined text-[20px] text-gray-400 mt-0.5">location_on</span>
+                        @Model.Address
+                    </p>
+                </div>
+                @if (Model.Status == "DeliveryFailed" && !string.IsNullOrEmpty(Model.DeliveryFailureReasonCode))
+                {
+                    <div class="sm:col-span-2 p-3 bg-red-50 border border-red-100 rounded-lg">
+                        <p class="text-xs text-red-600 uppercase tracking-wider font-semibold mb-1">Lý do giao thất bại: @(Model.DeliveryFailureReasonCode switch {
+                            "CustomerUnavailable" => "Khách không nghe máy/Không có nhà",
+                            "CustomerRefused" => "Khách từ chối nhận",
+                            "WrongAddress" => "Sai địa chỉ",
+                            "CustomerRequestedReschedule" => "Khách hẹn giao lại sau",
+                            "UnableToContact" => "Không liên lạc được nhiều lần",
+                            "Other" => "Khác",
+                            _ => Model.DeliveryFailureReasonCode
+                        })</p>
+                        @if (!string.IsNullOrEmpty(Model.DeliveryFailureReason))
+                        {
+                            <p class="text-red-800 font-medium text-sm mt-1">@Model.DeliveryFailureReason</p>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Danh sách sản phẩm -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="p-4 border-b border-gray-100 bg-gray-50/50">
+                <h3 class="font-bold text-gray-900 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">shopping_bag</span>
+                    Sản phẩm (@Model.Items.Sum(i => i.Quantity))
+                </h3>
+            </div>
+            <div class="divide-y divide-gray-100">
+                @foreach (var item in Model.Items)
+                {
+                    <div class="p-4 flex gap-4">
+                        <div class="w-16 h-16 rounded-lg bg-gray-100 border border-gray-200 overflow-hidden shrink-0">
+                            @if (!string.IsNullOrEmpty(item.ImageUrl))
+                            {
+                                <img src="@item.ImageUrl" class="w-full h-full object-cover" />
+                            }
+                            else
+                            {
+                                <div class="w-full h-full flex items-center justify-center text-gray-400">
+                                    <span class="material-symbols-outlined">image</span>
+                                </div>
+                            }
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-medium text-gray-900 truncate">@item.ProductName</p>
+                            <p class="text-sm text-gray-500 mt-0.5">@item.ColorName / @item.SizeCode</p>
+                            <div class="mt-1 flex justify-between items-center">
+                                <p class="font-medium text-primary">@item.UnitPrice.ToString("N0")đ <span class="text-gray-400 text-sm font-normal">x @item.Quantity</span></p>
+                                <p class="font-bold text-gray-900">@item.SubTotal.ToString("N0")đ</p>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="p-4 bg-gray-50/50 border-t border-gray-100">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-gray-600">Tổng tiền hàng</span>
+                    <span class="font-medium">@Model.TotalAmount.ToString("N0")đ</span>
+                </div>
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-gray-600">Phí vận chuyển</span>
+                    <span class="font-medium">@Model.ShippingFee.ToString("N0")đ</span>
+                </div>
+                <div class="flex justify-between items-center pt-3 border-t border-gray-200">
+                    <span class="font-bold text-gray-900">Khách phải trả</span>
+                    <span class="text-xl font-bold text-primary">@Model.FinalAmount.ToString("N0")đ</span>
+                </div>
+                
+                <div class="mt-4 p-3 rounded-lg border flex items-center gap-2
+                    @(Model.PaymentStatus == "Paid" ? "bg-green-50 border-green-100 text-green-700" : "bg-amber-50 border-amber-100 text-amber-700")">
+                    <span class="material-symbols-outlined text-[20px]">
+                        @(Model.PaymentStatus == "Paid" ? "check_circle" : "info")
+                    </span>
+                    <span class="font-medium">
+                        @(Model.PaymentStatus == "Paid" ? "Đơn hàng đã thanh toán" : $"Thu hộ (COD): {Model.FinalAmount.ToString("N0")}đ")
+                    </span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Cột phải: Hành động -->
+    <div class="space-y-6">
+        @if (Model.Status == "ReadyToShip" || Model.Status == "Shipping" || Model.Status == "DeliveryAttemptFailed")
+        {
+            <div class="bg-white rounded-xl shadow-sm border border-primary/30 overflow-hidden sticky top-20">
+                <div class="p-4 bg-primary text-on-primary">
+                    <h3 class="font-bold text-lg flex items-center gap-2">
+                        <span class="material-symbols-outlined">edit_square</span>
+                        Cập nhật trạng thái
+                    </h3>
+                </div>
+                <div class="p-5">
+                    <form asp-action="UpdateStatus" method="post" id="updateForm">
+                        <input type="hidden" name="id" value="@Model.OrderID" />
+                        
+                        @if (Model.Status == "ReadyToShip")
+                        {
+                            <p class="text-sm text-gray-600 mb-4">Xác nhận bạn đã lấy hàng và bắt đầu đi giao.</p>
+                            <input type="hidden" name="NewStatus" value="Shipping" />
+                            <button type="submit" class="w-full py-3 px-4 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-bold transition-colors flex items-center justify-center gap-2 shadow-sm">
+                                <span class="material-symbols-outlined text-[20px]">local_shipping</span>
+                                BẮT ĐẦU GIAO HÀNG
+                            </button>
+                        }
+                        else if (Model.Status == "Shipping")
+                        {
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Chọn kết quả giao hàng:</label>
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                        <label class="cursor-pointer">
+                                            <input type="radio" name="NewStatus" value="Delivered" class="peer sr-only" required />
+                                            <div class="p-3 border border-gray-200 rounded-lg text-center peer-checked:bg-green-50 peer-checked:border-green-500 peer-checked:text-green-700 transition-all">
+                                                <span class="material-symbols-outlined block mb-1">check_circle</span>
+                                                <span class="font-semibold block text-sm">Thành công</span>
+                                            </div>
+                                        </label>
+                                        <label class="cursor-pointer">
+                                            <input type="radio" name="NewStatus" value="DeliveryAttemptFailed" class="peer sr-only" required />
+                                            <div class="p-3 border border-gray-200 rounded-lg text-center peer-checked:bg-amber-50 peer-checked:border-amber-500 peer-checked:text-amber-700 transition-all">
+                                                <span class="material-symbols-outlined block mb-1">schedule</span>
+                                                <span class="font-semibold block text-sm">Hẹn lại</span>
+                                            </div>
+                                        </label>
+                                        <label class="cursor-pointer">
+                                            <input type="radio" name="NewStatus" value="DeliveryFailed" class="peer sr-only" required />
+                                            <div class="p-3 border border-gray-200 rounded-lg text-center peer-checked:bg-red-50 peer-checked:border-red-500 peer-checked:text-red-700 transition-all">
+                                                <span class="material-symbols-outlined block mb-1">cancel</span>
+                                                <span class="font-semibold block text-sm">Thất bại</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-lg hidden" id="codHintBlock">
+                                    <p class="text-sm text-blue-700 flex items-start gap-2">
+                                        <span class="material-symbols-outlined text-[18px]">info</span>
+                                        <span>Đơn hàng này thanh toán COD. Khi đánh dấu thành công, đơn sẽ được chuyển sang trạng thái <strong>Chờ đối soát COD</strong>.</span>
+                                    </p>
+                                </div>
+
+                                <div id="reasonBlock" class="hidden mt-4">
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Lý do <span class="text-red-500">*</span></label>
+                                    <select name="ReasonCode" class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary mb-3">
+                                        <option value="" class="opt-all">-- Chọn lý do --</option>
+                                        <option value="CustomerUnavailable" class="opt-soft">Khách không nghe máy/Không có nhà</option>
+                                        <option value="CustomerRequestedReschedule" class="opt-soft">Khách hẹn giao lại sau</option>
+                                        <option value="CustomerRefused" class="opt-hard">Khách từ chối nhận</option>
+                                        <option value="WrongAddress" class="opt-hard">Sai địa chỉ</option>
+                                        <option value="UnableToContact" class="opt-hard">Không liên lạc được nhiều lần</option>
+                                        <option value="Other" class="opt-all">Khác</option>
+                                    </select>
+                                    
+                                    <div id="reasonNoteBlock" class="hidden">
+                                        <input type="text" name="Reason" placeholder="Nhập ghi chú chi tiết..." class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary" />
+                                    </div>
+                                </div>
+                                
+                                <div id="scheduleBlock" class="hidden mt-4">
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Lịch giao lại <span class="text-red-500">*</span></label>
+                                    <input type="datetime-local" name="NextDeliveryDate" class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary" />
+                                </div>
+                                
+                                <button type="submit" class="w-full mt-4 py-3 px-4 bg-primary hover:opacity-90 text-on-primary rounded-lg font-bold transition-opacity shadow-sm">
+                                    CẬP NHẬT
+                                </button>
+                            </div>
+                        }
+                        else if (Model.Status == "DeliveryAttemptFailed")
+                        {
+                            <div class="space-y-4">
+                                <div class="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                                    <h4 class="font-bold text-amber-800 mb-2">Đang chờ giao lại</h4>
+                                    <ul class="text-sm text-amber-700 space-y-1">
+                                        <li><strong>Số lần giao:</strong> @Model.DeliveryAttemptCount / @maxAttempts</li>
+                                        @{
+                                            string displayDate = "Chưa rõ";
+                                            if (Model.NextDeliveryDateLocal.HasValue)
+                                            {
+                                                displayDate = Model.NextDeliveryDateLocal.Value.ToString("dd/MM/yyyy HH:mm");
+                                            }
+                                        }
+                                        <li><strong>Lịch hẹn:</strong> @displayDate</li>
+                                    </ul>
+                                </div>
+                                
+                                @if (Model.DeliveryAttemptCount < maxAttempts && (!Model.NextDeliveryDate.HasValue || DateTime.UtcNow >= Model.NextDeliveryDate.Value))
+                                {
+                                    <input type="hidden" name="NewStatus" value="Shipping" />
+                                    <button type="submit" class="w-full py-3 px-4 bg-primary hover:opacity-90 text-on-primary rounded-lg font-bold transition-opacity shadow-sm flex items-center justify-center gap-2">
+                                        <span class="material-symbols-outlined">restart_alt</span>
+                                        TIẾP TỤC GIAO HÀNG
+                                    </button>
+                                }
+                                else if (Model.DeliveryAttemptCount >= maxAttempts)
+                                {
+                                    <p class="text-red-600 font-medium text-sm">Đã vượt quá số lần giao tối đa.</p>
+                                }
+                                else
+                                {
+                                    <p class="text-amber-600 text-sm">Chưa đến thời gian giao lại.</p>
+                                }
+                            </div>
+                        }
+                    </form>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="bg-gray-50 rounded-xl border border-gray-200 p-6 text-center">
+                <span class="material-symbols-outlined text-4xl text-gray-400 mb-2">lock</span>
+                <p class="font-medium text-gray-700">Đơn hàng đã đóng</p>
+                <p class="text-sm text-gray-500 mt-1">Không thể thay đổi trạng thái nữa.</p>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const statusRadios = document.querySelectorAll('input[name="NewStatus"]');
+            const reasonBlock = document.getElementById('reasonBlock');
+            const reasonSelect = document.querySelector('select[name="ReasonCode"]');
+            const reasonNoteBlock = document.getElementById('reasonNoteBlock');
+            const reasonInput = document.querySelector('input[name="Reason"]');
+            const codHintBlock = document.getElementById('codHintBlock');
+            const isCOD = '@Model.PaymentMethod' === 'COD';
+            
+            const scheduleBlock = document.getElementById('scheduleBlock');
+            const nextDeliveryDate = document.querySelector('input[name="NextDeliveryDate"]');
+            
+            function filterReasons(type) {
+                if (!reasonSelect) return;
+                reasonSelect.value = '';
+                const options = reasonSelect.querySelectorAll('option');
+                options.forEach(opt => {
+                    if (opt.classList.contains('opt-all') || opt.classList.contains('opt-' + type)) {
+                        opt.style.display = '';
+                    } else {
+                        opt.style.display = 'none';
+                    }
+                });
+            }
+            
+            if (statusRadios.length > 0) {
+                statusRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        if (this.value === 'DeliveryFailed') {
+                            filterReasons('hard');
+                            if (reasonBlock) reasonBlock.classList.remove('hidden');
+                            if (reasonSelect) reasonSelect.setAttribute('required', 'required');
+                            if (codHintBlock) codHintBlock.classList.add('hidden');
+                            if (scheduleBlock) scheduleBlock.classList.add('hidden');
+                            if (nextDeliveryDate) nextDeliveryDate.removeAttribute('required');
+                        } else if (this.value === 'DeliveryAttemptFailed') {
+                            filterReasons('soft');
+                            if (reasonBlock) reasonBlock.classList.remove('hidden');
+                            if (reasonSelect) reasonSelect.setAttribute('required', 'required');
+                            if (codHintBlock) codHintBlock.classList.add('hidden');
+                            if (scheduleBlock) scheduleBlock.classList.remove('hidden');
+                            if (nextDeliveryDate) nextDeliveryDate.setAttribute('required', 'required');
+                        } else {
+                            if (reasonBlock) reasonBlock.classList.add('hidden');
+                            if (reasonSelect) reasonSelect.removeAttribute('required');
+                            if (reasonSelect) reasonSelect.value = '';
+                            if (reasonNoteBlock) reasonNoteBlock.classList.add('hidden');
+                            if (reasonInput) reasonInput.value = '';
+                            if (codHintBlock && isCOD && this.value === 'Delivered') codHintBlock.classList.remove('hidden');
+                            if (scheduleBlock) scheduleBlock.classList.add('hidden');
+                            if (nextDeliveryDate) nextDeliveryDate.removeAttribute('required');
+                        }
+                    });
+                });
+            }
+            
+            if (reasonSelect) {
+                reasonSelect.addEventListener('change', function() {
+                    if (this.value === 'Other') {
+                        reasonNoteBlock.classList.remove('hidden');
+                        reasonInput.setAttribute('required', 'required');
+                    } else {
+                        reasonNoteBlock.classList.add('hidden');
+                        reasonInput.removeAttribute('required');
+                        reasonInput.value = '';
+                    }
+                });
+            }
+        });
+    </script>
+}

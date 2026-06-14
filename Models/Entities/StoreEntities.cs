@@ -8,12 +8,17 @@ namespace ClothingStore.Models.Entities;
 // ─────────────────────────────────────────────
 public static class OrderStatus
 {
-    public const string Pending    = "Pending";
-    public const string Confirmed  = "Confirmed";
-    public const string Processing = "Processing";
-    public const string Shipping   = "Shipping";
-    public const string Delivered  = "Delivered";
-    public const string Cancelled  = "Cancelled";
+    public const string Pending        = "Pending";
+    public const string Confirmed      = "Confirmed";
+    public const string Processing     = "Processing";
+    public const string ReadyToShip    = "ReadyToShip";
+    public const string Shipping       = "Shipping";
+    public const string DeliveredPendingCOD = "DeliveredPendingCOD";
+    public const string Delivered      = "Delivered";
+    public const string DeliveryAttemptFailed = "DeliveryAttemptFailed";
+    public const string DeliveryFailed = "DeliveryFailed";
+    public const string Returned       = "Returned";
+    public const string Cancelled      = "Cancelled";
 }
 
 public static class PaymentStatus
@@ -266,6 +271,9 @@ public class Account
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? LastLoginAt { get; set; }
 
+    [Timestamp]
+    public byte[]? RowVersion { get; set; }
+
     // Navigation
     public Customer? Customer { get; set; }
     public ICollection<AccountRole> AccountRoles { get; set; } = new List<AccountRole>();
@@ -430,6 +438,19 @@ public class Order
     public ICollection<GoodsIssue> GoodsIssues { get; set; } = new List<GoodsIssue>();
     public ICollection<Review> Reviews { get; set; } = new List<Review>();
 
+    // Shipper Fields
+    public int? AssignedShipperId { get; set; }
+    public DateTime? AssignedAt { get; set; }
+    public DateTime? ShippingStartedAt { get; set; }
+    public DateTime? DeliveredAt { get; set; }
+    public string? DeliveryFailureReasonCode { get; set; }
+    public string? DeliveryFailureReason { get; set; }
+    public int DeliveryAttemptCount { get; set; }
+    public DateTime? NextDeliveryDate { get; set; }
+    public string? DeliveryRescheduleReason { get; set; }
+    public DateTime? LastDeliveryAttemptAt { get; set; }
+    public Account? AssignedShipper { get; set; }
+
     // Helper
     [NotMapped]
     public string ShippingFullAddress =>
@@ -477,12 +498,13 @@ public class OrderDetail
 public class OrderStatusHistory
 {
     [Key] public int HistoryID { get; set; }
-    public int OrderID { get; set; }
     public string? OldStatus { get; set; }
     public string NewStatus { get; set; } = string.Empty;
+    public string? ActionType { get; set; }
     public string? Note { get; set; }
     public DateTime? ChangedAt { get; set; }
     public int? ChangedBy { get; set; }
+    public int OrderID { get; set; }
 
     // Navigation
     public Order Order { get; set; } = null!;
