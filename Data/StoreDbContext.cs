@@ -6,6 +6,7 @@ namespace ClothingStore.Data;
 public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContext(options)
 {
     public DbSet<DiscountProgram> DiscountPrograms => Set<DiscountProgram>();
+    public DbSet<DiscountProgramAudit> DiscountProgramAudits => Set<DiscountProgramAudit>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<Color> Colors => Set<Color>();

@@ -82,6 +82,9 @@ public class DiscountProgram
     public bool IsActive { get; set; } = true;
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
+    
+    [Timestamp]
+    public byte[]? RowVersion { get; set; }
 
     // Navigation
     public ICollection<Product> Products { get; set; } = new List<Product>();
@@ -93,6 +96,23 @@ public class DiscountProgram
         StartDate.Date <= DateTime.Today &&
         EndDate.Date >= DateTime.Today;
 }
+
+[Table("DISCOUNTPROGRAMAUDITS")]
+public class DiscountProgramAudit
+{
+    [Key] public int AuditID { get; set; }
+    public int ProgramID { get; set; }
+    public string ActionType { get; set; } = string.Empty; // CreateProgram, UpdateProgram, ActivateProgram, DeactivateProgram
+    public string? OldValues { get; set; }
+    public string? NewValues { get; set; }
+    public int ChangedByUserId { get; set; }
+    public DateTime ChangedAt { get; set; } = DateTime.UtcNow;
+
+    // Navigation
+    public DiscountProgram DiscountProgram { get; set; } = null!;
+    public Account ChangedByAccount { get; set; } = null!;
+}
+
 
 [Table("CATEGORIES")]
 public class Category

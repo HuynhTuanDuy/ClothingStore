@@ -5,12 +5,12 @@
     
     var sortOptions = new List<SelectListItem>
     {
-        new SelectListItem { Value = "relevance", Text = "Độ liên quan" },
-        new SelectListItem { Value = "newest", Text = "Mới nhất" },
-        new SelectListItem { Value = "price_asc", Text = "Giá: Thấp đến cao" },
-        new SelectListItem { Value = "price_desc", Text = "Giá: Cao đến thấp" },
-        new SelectListItem { Value = "name_asc", Text = "Tên: A-Z" },
-        new SelectListItem { Value = "name_desc", Text = "Tên: Z-A" }
+        new SelectListItem { Value = "relevance", Text = "Nổi bật" },
+        new SelectListItem { Value = "bestselling", Text = "Bán chạy" },
+        new SelectListItem { Value = "discountdesc", Text = "% Giảm" },
+        new SelectListItem { Value = "newest", Text = "Hàng mới" },
+        new SelectListItem { Value = "priceasc", Text = "Giá thấp đến cao" },
+        new SelectListItem { Value = "pricedesc", Text = "Giá cao đến thấp" }
     };
 }
 
@@ -35,18 +35,7 @@
         <form method="get" id="search-form" asp-controller="Products" asp-action="Search">
             <input type="hidden" name="keyword" value="@Model.Keyword" />
             
-            <div class="mb-8 bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-                <h3 class="font-bold mb-4 uppercase tracking-wider text-sm flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"></path></svg>
-                    Sắp xếp theo
-                </h3>
-                <select name="sort" onchange="this.form.submit()" class="w-full border-gray-300 rounded-md text-sm text-gray-700 bg-white py-2.5 px-3 focus:border-brand-brown focus:ring-brand-brown transition-colors">
-                    @foreach (var option in sortOptions)
-                    {
-                        <option value="@option.Value" selected="@(Model.Sort == option.Value)">@option.Text</option>
-                    }
-                </select>
-            </div>
+            <!-- Sắp xếp theo được chuyển sang phía trên danh sách sản phẩm -->
             
             <div class="pt-2">
                 <a href="@Url.Action("ShopAll", "Home")" class="inline-flex items-center justify-center w-full px-4 py-2.5 text-sm font-medium text-brand-dark-brown bg-brand-cream hover:bg-brand-brown hover:text-white rounded-md transition-colors border border-brand-brown/20">
@@ -59,6 +48,22 @@
 
     <!-- BEGIN: ProductGrid -->
     <div class="flex-grow">
+        <!-- Sort Buttons -->
+        <div class="mb-6 flex flex-wrap items-center gap-2 text-sm">
+            <span class="font-medium mr-2">Sắp xếp theo:</span>
+            @{
+                var currentSort = string.IsNullOrEmpty(Model.Sort) ? "relevance" : Model.Sort;
+            }
+            @foreach(var opt in sortOptions)
+            {
+                var isActive = currentSort == opt.Value;
+                <button type="submit" name="sort" value="@opt.Value" form="search-form"
+                    class="px-3 py-1.5 border rounded transition-colors @(isActive ? "border-black bg-black text-white" : "border-gray-200 bg-white hover:border-gray-300 text-gray-600 hover:text-black")">
+                    @opt.Text
+                </button>
+            }
+        </div>
+
         @if (!Model.Products.Items.Any())
         {
             <div class="text-center py-20 bg-white rounded-lg border border-gray-100 shadow-sm">

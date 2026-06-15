@@ -55,7 +55,7 @@
 
     .sz-btn {
         min-width: 48px; padding: 6px 12px;
-        border: 1px solid #d1c4bd; font-size: 13px; font-weight: 500;
+        border: 1px solid #d1c4bd; font-size: 15px; font-weight: 500;
         transition: background .2s, border-color .2s, color .2s; cursor:pointer;
         background: white; color: #553722;
     }
@@ -116,20 +116,20 @@
         <!-- ═══ Right: Info ═══ -->
         <div class="flex flex-col">
             <!-- Category + Name -->
-            <div class="text-[10px] uppercase tracking-widest text-gray-400 mb-1">@Model.CategoryName</div>
-            <h1 class="font-['Playfair_Display'] text-2xl md:text-3xl text-[#553722] leading-snug mb-3">
+            <div class="text-xs uppercase tracking-widest text-gray-400 mb-1">@Model.CategoryName</div>
+            <h1 class="font-['Playfair_Display'] text-3xl md:text-4xl text-[#553722] leading-snug mb-4">
                 @Model.ProductName
             </h1>
 
             <!-- Price -->
-            <div class="mb-5 flex items-baseline gap-3">
+            <div class="mb-6 flex items-baseline gap-3">
                 @if (Model.HasDiscount)
                 {
-                    <span class="line-through text-gray-400 text-sm" id="orig-price">
+                    <span class="line-through text-gray-400 text-lg" id="orig-price">
                         @Model.Variants.Max(v => v.SellingPrice).ToString("N0")đ
                     </span>
                 }
-                <span id="eff-price" class="text-xl font-semibold text-[#553722]">
+                <span id="eff-price" class="text-3xl font-semibold text-[#553722]">
                     @Model.MinEffectivePrice.ToString("N0")đ
                 </span>
             </div>
@@ -137,7 +137,7 @@
             <!-- Description -->
             @if (!string.IsNullOrWhiteSpace(Model.Description))
             {
-                <p class="text-gray-500 text-sm leading-relaxed mb-5 italic font-['Playfair_Display']">
+                <p class="text-gray-600 text-lg leading-relaxed mb-6 italic font-['Playfair_Display']">
                     @Model.Description
                 </p>
             }
@@ -157,7 +157,7 @@
                     @if (distinctColors.Count > 0)
                     {
                         <div>
-                            <p class="text-[10px] uppercase tracking-widest text-[#553722] font-semibold mb-2">
+                            <p class="text-sm uppercase tracking-widest text-[#553722] font-semibold mb-3">
                                 Màu sắc: <span id="color-label" class="font-normal normal-case text-gray-500 ml-1">@distinctColors.First().ColorName</span>
                             </p>
                             <div class="flex flex-wrap gap-2" id="color-swatches">
@@ -177,7 +177,7 @@
 
                     <!-- Size -->
                     <div>
-                        <p class="text-[10px] uppercase tracking-widest text-[#553722] font-semibold mb-2">
+                        <p class="text-sm uppercase tracking-widest text-[#553722] font-semibold mb-3">
                             Kích thước: <span id="size-label" class="font-normal normal-case text-gray-500 ml-1"></span>
                         </p>
                         <div class="flex flex-wrap gap-2" id="size-btns">
@@ -199,7 +199,7 @@
                                 </button>
                             }
                         </div>
-                        <p id="stock-info" class="text-xs text-green-600 mt-1 min-h-[16px]">
+                        <p id="stock-info" class="text-sm text-green-600 mt-2 min-h-[20px]">
                             @if (firstAvail != null) { @($"Còn {firstAvail.StockQuantity} sản phẩm") }
                         </p>
                     </div>
@@ -235,33 +235,33 @@
             </div>
 
             <!-- Specs -->
-            <div class="mt-5 border-t border-gray-100 text-sm divide-y divide-gray-100">
+            <div class="mt-5 border-t border-gray-100 text-base divide-y divide-gray-100">
                 @if (!string.IsNullOrWhiteSpace(Model.Material))
                 {
                     <div class="flex justify-between py-2.5">
-                        <span class="text-[10px] uppercase tracking-widest text-gray-400">Chất liệu</span>
-                        <span class="text-[#553722] font-medium text-sm">@Model.Material</span>
+                        <span class="text-xs uppercase tracking-widest text-gray-400">Chất liệu</span>
+                        <span class="text-[#553722] font-medium text-base">@Model.Material</span>
                     </div>
                 }
                 @if (!string.IsNullOrWhiteSpace(Model.FitType))
                 {
                     <div class="flex justify-between py-2.5">
-                        <span class="text-[10px] uppercase tracking-widest text-gray-400">Dáng</span>
-                        <span class="text-[#553722] font-medium text-sm">@Model.FitType</span>
+                        <span class="text-xs uppercase tracking-widest text-gray-400">Dáng</span>
+                        <span class="text-[#553722] font-medium text-base">@Model.FitType</span>
                     </div>
                 }
                 @if (!string.IsNullOrWhiteSpace(Model.Gender))
                 {
                     <div class="flex justify-between py-2.5">
-                        <span class="text-[10px] uppercase tracking-widest text-gray-400">Giới tính</span>
-                        <span class="text-[#553722] font-medium text-sm">@Model.Gender</span>
+                        <span class="text-xs uppercase tracking-widest text-gray-400">Giới tính</span>
+                        <span class="text-[#553722] font-medium text-base">@Model.Gender</span>
                     </div>
                 }
                 @if (!string.IsNullOrWhiteSpace(Model.CareInstructions))
                 {
                     <div class="flex justify-between py-2.5">
-                        <span class="text-[10px] uppercase tracking-widest text-gray-400">Bảo quản</span>
-                        <span class="text-[#553722] font-medium text-sm text-right max-w-[60%]">@Model.CareInstructions</span>
+                        <span class="text-xs uppercase tracking-widest text-gray-400">Bảo quản</span>
+                        <span class="text-[#553722] font-medium text-base text-right max-w-[60%]">@Model.CareInstructions</span>
                     </div>
                 }
             </div>
@@ -575,12 +575,12 @@ function selectSize(btn) {
         const txtCart = document.getElementById('add-to-cart-text');
         if (v.stock > 0) {
             document.getElementById('stock-info').textContent = `Còn ${v.stock} sản phẩm`;
-            document.getElementById('stock-info').className = 'text-xs mt-1 min-h-[16px] text-green-600';
+            document.getElementById('stock-info').className = 'text-sm mt-2 min-h-[20px] text-green-600';
             if (btnCart) { btnCart.disabled = false; btnCart.classList.remove('bg-gray-400','cursor-not-allowed'); btnCart.classList.add('bg-[#553722]','hover:bg-[#3d2716]'); }
             if (txtCart) txtCart.textContent = 'Thêm vào giỏ hàng';
         } else {
             document.getElementById('stock-info').textContent = 'Hết hàng';
-            document.getElementById('stock-info').className = 'text-xs mt-1 min-h-[16px] text-red-500 font-medium';
+            document.getElementById('stock-info').className = 'text-sm mt-2 min-h-[20px] text-red-500 font-medium';
             if (btnCart) { btnCart.disabled = true; btnCart.classList.add('bg-gray-400','cursor-not-allowed'); btnCart.classList.remove('bg-[#553722]','hover:bg-[#3d2716]'); }
             if (txtCart) txtCart.textContent = 'Hết hàng';
         }
@@ -600,7 +600,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const btnCart = document.getElementById('add-to-cart-btn');
         const txtCart = document.getElementById('add-to-cart-text');
         document.getElementById('stock-info').textContent = 'Hết hàng';
-        document.getElementById('stock-info').className = 'text-xs mt-1 min-h-[16px] text-red-500 font-medium';
+        document.getElementById('stock-info').className = 'text-sm mt-2 min-h-[20px] text-red-500 font-medium';
         if (btnCart) { btnCart.disabled = true; btnCart.classList.add('bg-gray-400','cursor-not-allowed'); btnCart.classList.remove('bg-[#553722]','hover:bg-[#3d2716]'); }
         if (txtCart) txtCart.textContent = 'Hết hàng';
     }

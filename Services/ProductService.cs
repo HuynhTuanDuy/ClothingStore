@@ -214,6 +214,7 @@ public class ProductService(
             HasStock         = variants.Sum(v => v.StockQuantity) > 0,
             DiscountPercent  = product.DiscountProgram?.DiscountPercent ?? 0,
             IsBestSeller     = product.IsBestSeller,
+            DefaultVariantID = variants.Where(v => v.StockQuantity > 0).Select(v => v.VariantID).FirstOrDefault(),
             Colors           = distinctColors
         };
     }

@@ -23,12 +23,12 @@ public class ProductListViewModel
     
     public List<SelectListItem> SortOptions { get; } = new List<SelectListItem>
     {
-        new SelectListItem { Value = "newest", Text = "Mới nhất" },
-        new SelectListItem { Value = "bestselling", Text = "Bán chạy nhất" },
-        new SelectListItem { Value = "priceasc", Text = "Giá: Thấp đến cao" },
-        new SelectListItem { Value = "pricedesc", Text = "Giá: Cao đến thấp" },
-        new SelectListItem { Value = "nameasc", Text = "Tên: A-Z" },
-        new SelectListItem { Value = "namedesc", Text = "Tên: Z-A" }
+        new SelectListItem { Value = "relevance", Text = "Nổi bật" },
+        new SelectListItem { Value = "bestselling", Text = "Bán chạy" },
+        new SelectListItem { Value = "discountdesc", Text = "% Giảm" },
+        new SelectListItem { Value = "newest", Text = "Hàng mới" },
+        new SelectListItem { Value = "priceasc", Text = "Giá thấp đến cao" },
+        new SelectListItem { Value = "pricedesc", Text = "Giá cao đến thấp" }
     };
 
     public List<CategoryFilterViewModel> Categories { get; set; } = [];
@@ -74,6 +74,7 @@ public class ProductCardViewModel
     public int DiscountPercent { get; set; }
     public bool HasStock { get; set; }
     public bool IsBestSeller { get; set; }
+    public int DefaultVariantID { get; set; }
     public List<ColorFilterViewModel> Colors { get; set; } = [];
 }
 

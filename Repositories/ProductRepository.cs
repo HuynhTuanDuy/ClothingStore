@@ -166,10 +166,16 @@ public class ProductRepository(StoreDbContext dbContext, IMemoryCache cache) : I
             query = sort switch
             {
                 "newest" => query.OrderByDescending(x => x.CreatedAt),
-                "price_asc" => query.OrderBy(x => x.ProductVariants.Where(v => v.IsActive).Min(v => (decimal?)v.SellingPrice) ?? 0),
-                "price_desc" => query.OrderByDescending(x => x.ProductVariants.Where(v => v.IsActive).Max(v => (decimal?)v.SellingPrice) ?? 0),
+                "priceasc" => query.OrderBy(x => (x.ProductVariants.Where(v => v.IsActive).Min(v => (decimal?)v.SellingPrice) ?? 0) * (x.DiscountProgram != null && x.DiscountProgram.IsActive && x.DiscountProgram.StartDate <= DateTime.UtcNow && x.DiscountProgram.EndDate >= DateTime.UtcNow ? (1m - x.DiscountProgram.DiscountPercent / 100m) : 1m)),
+                "pricedesc" => query.OrderByDescending(x => (x.ProductVariants.Where(v => v.IsActive).Max(v => (decimal?)v.SellingPrice) ?? 0) * (x.DiscountProgram != null && x.DiscountProgram.IsActive && x.DiscountProgram.StartDate <= DateTime.UtcNow && x.DiscountProgram.EndDate >= DateTime.UtcNow ? (1m - x.DiscountProgram.DiscountPercent / 100m) : 1m)),
+                "price_asc" => query.OrderBy(x => (x.ProductVariants.Where(v => v.IsActive).Min(v => (decimal?)v.SellingPrice) ?? 0) * (x.DiscountProgram != null && x.DiscountProgram.IsActive && x.DiscountProgram.StartDate <= DateTime.UtcNow && x.DiscountProgram.EndDate >= DateTime.UtcNow ? (1m - x.DiscountProgram.DiscountPercent / 100m) : 1m)),
+                "price_desc" => query.OrderByDescending(x => (x.ProductVariants.Where(v => v.IsActive).Max(v => (decimal?)v.SellingPrice) ?? 0) * (x.DiscountProgram != null && x.DiscountProgram.IsActive && x.DiscountProgram.StartDate <= DateTime.UtcNow && x.DiscountProgram.EndDate >= DateTime.UtcNow ? (1m - x.DiscountProgram.DiscountPercent / 100m) : 1m)),
+                "nameasc" => query.OrderBy(x => x.ProductName),
+                "namedesc" => query.OrderByDescending(x => x.ProductName),
                 "name_asc" => query.OrderBy(x => x.ProductName),
                 "name_desc" => query.OrderByDescending(x => x.ProductName),
+                "discountdesc" => query.OrderByDescending(x => x.DiscountProgram != null && x.DiscountProgram.IsActive ? x.DiscountProgram.DiscountPercent : 0).ThenByDescending(x => x.CreatedAt),
+                "bestselling" => query.OrderByDescending(x => x.IsBestSeller).ThenByDescending(x => x.CreatedAt),
                 _ => query.OrderByDescending(x => x.CreatedAt)
             };
         }
@@ -199,6 +205,7 @@ public class ProductRepository(StoreDbContext dbContext, IMemoryCache cache) : I
             HasDiscount = x.DiscountProgram != null && x.DiscountProgram.IsActive && x.DiscountProgram.StartDate <= today && x.DiscountProgram.EndDate >= today,
             DiscountPercent = (x.DiscountProgram != null && x.DiscountProgram.IsActive && x.DiscountProgram.StartDate <= today && x.DiscountProgram.EndDate >= today) ? x.DiscountProgram.DiscountPercent : 0,
             HasStock = x.ProductVariants.Where(v => v.IsActive).Sum(v => (int?)v.StockQuantity) > 0,
+            DefaultVariantID = x.ProductVariants.Where(v => v.IsActive && v.StockQuantity > 0).Select(v => v.VariantID).FirstOrDefault(),
             x.IsBestSeller,
             Colors = x.ProductVariants.Where(v => v.IsActive).Select(v => v.Color).Where(c => c != null)
         }).ToListAsync();
@@ -217,6 +224,7 @@ public class ProductRepository(StoreDbContext dbContext, IMemoryCache cache) : I
             DiscountPercent = x.DiscountPercent,
             HasStock = x.HasStock,
             IsBestSeller = x.IsBestSeller,
+            DefaultVariantID = x.DefaultVariantID,
             Colors = x.Colors.GroupBy(c => c.ColorID).Select(g => g.First()).Select(c => new ClothingStore.Models.ViewModels.ColorFilterViewModel
             {
                 ColorID = c.ColorID,
@@ -331,16 +339,19 @@ public class ProductRepository(StoreDbContext dbContext, IMemoryCache cache) : I
         switch (f.SortBy?.ToLower())
         {
             case "priceasc":
-                return query.OrderBy(x => x.ProductVariants.Where(v => v.IsActive).Min(v => (decimal?)v.SellingPrice) ?? 0);
+                return query.OrderBy(x => (x.ProductVariants.Where(v => v.IsActive).Min(v => (decimal?)v.SellingPrice) ?? 0) * (x.DiscountProgram != null && x.DiscountProgram.IsActive && x.DiscountProgram.StartDate <= DateTime.UtcNow && x.DiscountProgram.EndDate >= DateTime.UtcNow ? (1m - x.DiscountProgram.DiscountPercent / 100m) : 1m));
             case "pricedesc":
-                return query.OrderByDescending(x => x.ProductVariants.Where(v => v.IsActive).Max(v => (decimal?)v.SellingPrice) ?? 0);
+                return query.OrderByDescending(x => (x.ProductVariants.Where(v => v.IsActive).Max(v => (decimal?)v.SellingPrice) ?? 0) * (x.DiscountProgram != null && x.DiscountProgram.IsActive && x.DiscountProgram.StartDate <= DateTime.UtcNow && x.DiscountProgram.EndDate >= DateTime.UtcNow ? (1m - x.DiscountProgram.DiscountPercent / 100m) : 1m));
             case "nameasc":
                 return query.OrderBy(x => x.ProductName);
             case "namedesc":
                 return query.OrderByDescending(x => x.ProductName);
+            case "discountdesc":
+                return query.OrderByDescending(x => x.DiscountProgram != null && x.DiscountProgram.IsActive ? x.DiscountProgram.DiscountPercent : 0).ThenByDescending(x => x.CreatedAt);
             case "bestselling":
                 // Handled in memory inside SearchProductsAsync
                 return query;
+            case "relevance":
             case "newest":
             default:
                 return query.OrderByDescending(x => x.CreatedAt).ThenBy(x => x.ProductName);

@@ -100,6 +100,14 @@
                 </a>
             </li>
             }
+
+            @if (Context.HasPermission("Product.View") || Context.HasPermission("Category.Manage") || Context.HasPermission("Order.View") || Context.HasPermission("Review.Manage"))
+            {
+            <li class="pt-2 pb-1 mt-2">
+                <span class="px-4 text-xs font-semibold text-outline uppercase tracking-wider">Bán hàng</span>
+            </li>
+            }
+
             @if (Context.HasPermission("Product.View"))
             {
             <li>
@@ -130,16 +138,6 @@
                 </a>
             </li>
             }
-            @if (Context.HasPermission("Coupon.Manage"))
-            {
-            <li>
-                <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 @(ctrl == "Coupons" ? "bg-surface-container-high text-primary font-semibold" : "text-on-surface-variant hover:bg-surface-container-high")"
-                   asp-area="Admin" asp-controller="Coupons" asp-action="Index">
-                    <span class="material-symbols-outlined text-[20px]">local_offer</span>
-                    Khuyến mãi
-                </a>
-            </li>
-            }
             @if (Context.HasPermission("Review.Manage"))
             {
             <li>
@@ -150,8 +148,33 @@
                 </a>
             </li>
             }
+
+            @if (Context.HasPermission("Coupon.Manage"))
+            {
+            <li class="pt-2 pb-1 mt-2">
+                <span class="px-4 text-xs font-semibold text-outline uppercase tracking-wider">Khuyến mãi</span>
+            </li>
+            <li>
+                <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 @(ctrl == "Coupons" ? "bg-surface-container-high text-primary font-semibold" : "text-on-surface-variant hover:bg-surface-container-high")"
+                   asp-area="Admin" asp-controller="Coupons" asp-action="Index">
+                    <span class="material-symbols-outlined text-[20px]">local_offer</span>
+                    Mã giảm giá
+                </a>
+            </li>
+            <li>
+                <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 @(ctrl == "DiscountPrograms" ? "bg-surface-container-high text-primary font-semibold" : "text-on-surface-variant hover:bg-surface-container-high")"
+                   asp-area="Admin" asp-controller="DiscountPrograms" asp-action="Index">
+                    <span class="material-symbols-outlined text-[20px]">sell</span>
+                    Chương trình giảm giá
+                </a>
+            </li>
+            }
+
             @if (User.IsInRole("Admin") || Context.HasPermission("Account.Manage"))
             {
+            <li class="pt-2 pb-1 mt-2">
+                <span class="px-4 text-xs font-semibold text-outline uppercase tracking-wider">Hệ thống</span>
+            </li>
             <li>
                 <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 @(ctrl == "Accounts" ? "bg-surface-container-high text-primary font-semibold" : "text-on-surface-variant hover:bg-surface-container-high")"
                    asp-area="Admin" asp-controller="Accounts" asp-action="Index">

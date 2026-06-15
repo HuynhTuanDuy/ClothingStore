@@ -1,0 +1,46 @@
+@using ClothingStore.Models.ViewModels
+@model DiscountProgramEditViewModel
+@{
+    ViewData["Title"] = "Cập nhật chương trình giảm giá";
+}
+
+<div class="flex justify-between items-center mb-6">
+    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Cập nhật chương trình giảm giá</h2>
+    <a asp-action="Index" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-medium rounded-md transition-colors dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 shadow-sm">
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span> Quay lại
+    </a>
+</div>
+
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+    <div class="p-6">
+        <form asp-action="Edit" method="post" id="editForm">
+            <input type="hidden" asp-for="ProgramID" />
+            <input type="hidden" asp-for="RowVersion" />
+            <partial name="_Form" model="Model" />
+            <div class="mt-6 flex justify-end">
+                <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary-container text-white text-sm font-medium rounded-md transition-colors shadow-sm">
+                    <span class="material-symbols-outlined text-[18px]">save</span> Lưu thay đổi
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('editForm').addEventListener('submit', function(e) {
+            var isActive = document.getElementById('IsActive').checked;
+            var endDateStr = document.getElementById('EndDate').value;
+            if (isActive && endDateStr) {
+                var end = new Date(endDateStr);
+                var today = new Date();
+                today.setHours(0,0,0,0);
+                if (end <= today) {
+                    if (!confirm("Chương trình sẽ hết hiệu lực ngay sau khi lưu do ngày kết thúc đã qua hoặc là ngày hôm nay. Bạn có chắc chắn muốn tiếp tục?")) {
+                        e.preventDefault();
+                    }
+                }
+            }
+        });
+    </script>
+}

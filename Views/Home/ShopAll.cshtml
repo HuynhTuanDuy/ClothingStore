@@ -25,74 +25,82 @@
             
             <div class="mb-8" data-purpose="filter-category">
                 <h3 class="font-bold mb-3 uppercase tracking-wider text-sm">Danh mục</h3>
-                <ul class="space-y-2 text-brandGray">
-                    <li>
-                        <label class="flex items-center space-x-2 cursor-pointer hover:text-black transition-colors">
-                            <input type="radio" name="categoryId" value="" onchange="this.form.submit()" class="form-radio text-black border-gray-300 focus:ring-black h-3 w-3" @(!Model.CategoryID.HasValue ? "checked" : "") />
-                            <span>Tất cả</span>
-                        </label>
-                    </li>
+                <select name="categoryId" onchange="this.form.submit()" class="w-full border-gray-300 rounded text-sm text-gray-700 bg-white focus:border-black focus:ring-black">
+                    @if (!Model.CategoryID.HasValue)
+                    {
+                        <option value="" selected>Tất cả danh mục</option>
+                    }
+                    else
+                    {
+                        <option value="">Tất cả danh mục</option>
+                    }
+                    
                     @foreach (var cat in Model.Categories)
                     {
-                        <li>
-                            <label class="flex items-center space-x-2 cursor-pointer hover:text-black transition-colors">
-                                <input type="radio" name="categoryId" value="@cat.CategoryID" onchange="this.form.submit()" class="form-radio text-black border-gray-300 focus:ring-black h-3 w-3" @(Model.CategoryID == cat.CategoryID ? "checked" : "") />
-                                <span>@cat.CategoryName</span>
-                            </label>
-                        </li>
+                        if (Model.CategoryID == cat.CategoryID)
+                        {
+                            <option value="@cat.CategoryID" selected>@cat.CategoryName</option>
+                        }
+                        else
+                        {
+                            <option value="@cat.CategoryID">@cat.CategoryName</option>
+                        }
                     }
-                </ul>
+                </select>
             </div>
 
             <div class="mb-8" data-purpose="filter-size">
                 <h3 class="font-bold mb-3 uppercase tracking-wider text-sm">Kích cỡ</h3>
-                <ul class="space-y-2 text-brandGray">
-                    <li>
-                        <label class="flex items-center space-x-2 cursor-pointer hover:text-black transition-colors">
-                            <input type="radio" name="sizeId" value="" onchange="this.form.submit()" class="form-radio text-black border-gray-300 focus:ring-black h-3 w-3" @(!Model.SizeId.HasValue ? "checked" : "") />
-                            <span>Tất cả</span>
-                        </label>
-                    </li>
+                <select name="sizeId" onchange="this.form.submit()" class="w-full border-gray-300 rounded text-sm text-gray-700 bg-white focus:border-black focus:ring-black">
+                    @if (!Model.SizeId.HasValue)
+                    {
+                        <option value="" selected>Tất cả kích cỡ</option>
+                    }
+                    else
+                    {
+                        <option value="">Tất cả kích cỡ</option>
+                    }
+                    
                     @foreach (var size in Model.Sizes)
                     {
-                        <li>
-                            <label class="flex items-center space-x-2 cursor-pointer hover:text-black transition-colors">
-                                <input type="radio" name="sizeId" value="@size.SizeID" onchange="this.form.submit()" class="form-radio text-black border-gray-300 focus:ring-black h-3 w-3" @(Model.SizeId == size.SizeID ? "checked" : "") />
-                                <span>@size.SizeCode</span>
-                            </label>
-                        </li>
+                        if (Model.SizeId == size.SizeID)
+                        {
+                            <option value="@size.SizeID" selected>@size.SizeCode</option>
+                        }
+                        else
+                        {
+                            <option value="@size.SizeID">@size.SizeCode</option>
+                        }
                     }
-                </ul>
+                </select>
             </div>
 
             <div class="mb-8" data-purpose="filter-color">
                 <h3 class="font-bold mb-3 uppercase tracking-wider text-sm">Màu sắc</h3>
-                <ul class="space-y-3">
-                    <li>
-                        <label class="flex items-center space-x-2 cursor-pointer text-brandGray hover:text-black transition-colors">
-                            <input type="radio" name="colorId" value="" onchange="this.form.submit()" class="form-radio text-black border-gray-300 focus:ring-black h-3 w-3" @(!Model.ColorId.HasValue ? "checked" : "") />
-                            <span>Tất cả</span>
-                        </label>
-                    </li>
+                <select name="colorId" onchange="this.form.submit()" class="w-full border-gray-300 rounded text-sm text-gray-700 bg-white focus:border-black focus:ring-black">
+                    @if (!Model.ColorId.HasValue)
+                    {
+                        <option value="" selected>Tất cả màu sắc</option>
+                    }
+                    else
+                    {
+                        <option value="">Tất cả màu sắc</option>
+                    }
+                    
                     @foreach (var color in Model.Colors)
                     {
-                        <li>
-                            <label class="flex items-center space-x-2 cursor-pointer text-brandGray hover:text-black transition-colors">
-                                <input type="radio" name="colorId" value="@color.ColorID" onchange="this.form.submit()" class="form-radio text-black border-gray-300 focus:ring-black h-3 w-3" @(Model.ColorId == color.ColorID ? "checked" : "") />
-                                <span class="w-4 h-4 rounded-full border border-gray-200" style="background-color: @color.HexCode"></span>
-                                <span>@color.ColorName</span>
-                            </label>
-                        </li>
+                        if (Model.ColorId == color.ColorID)
+                        {
+                            <option value="@color.ColorID" selected>@color.ColorName</option>
+                        }
+                        else
+                        {
+                            <option value="@color.ColorID">@color.ColorName</option>
+                        }
                     }
-                </ul>
-            </div>
-            
-            <div class="mb-8" data-purpose="filter-sort">
-                <h3 class="font-bold mb-3 uppercase tracking-wider text-sm">Sắp xếp</h3>
-                <select name="sortBy" onchange="this.form.submit()" asp-for="SortBy" asp-items="Model.SortOptions" class="w-full border-gray-300 rounded text-sm text-gray-700 bg-white py-2 px-3 focus:ring-black">
-                    <option value="">Mặc định</option>
                 </select>
             </div>
+            
             
             <div class="pt-4 border-t border-gray-100">
                 <a href="@Url.Action("ShopAll", "Home")" class="inline-flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-white bg-black hover:bg-gray-800 transition-colors">
@@ -105,6 +113,22 @@
 
     <!-- BEGIN: ProductGrid -->
     <div class="flex-grow">
+        <!-- Sort Buttons -->
+        <div class="mb-6 flex flex-wrap items-center gap-2 text-sm">
+            <span class="font-medium mr-2">Sắp xếp theo:</span>
+            @{
+                var currentSort = string.IsNullOrEmpty(Model.SortBy) ? "relevance" : Model.SortBy;
+            }
+            @foreach(var opt in Model.SortOptions)
+            {
+                var isActive = currentSort == opt.Value;
+                <button type="submit" name="sortBy" value="@opt.Value" form="filter-form"
+                    class="px-3 py-1.5 border rounded transition-colors @(isActive ? "border-black bg-black text-white" : "border-gray-200 bg-white hover:border-gray-300 text-gray-600 hover:text-black")">
+                    @opt.Text
+                </button>
+            }
+        </div>
+
         @if (!Model.Products.Any())
         {
             <div class="text-center py-20 text-gray-500">
