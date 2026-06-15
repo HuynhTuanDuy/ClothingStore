@@ -261,18 +261,42 @@ public class OrderRepository(StoreDbContext dbContext) : IOrderRepository
             .CountAsync();
     }
 
-    public async Task<List<TopFailureReasonPoint>> GetTopFailureReasonsAsync(int count = 5)
+    public async Task<List<TopFailureReasonPoint>> GetTopFailureReasonsAsync(int? year = null, int count = 5)
     {
-        var grouped = await dbContext.Orders
+        var query = dbContext.Orders
             .Where(o => o.OrderStatus == OrderStatus.DeliveryFailed || o.OrderStatus == OrderStatus.Returned)
-            .Where(o => o.DeliveryFailureReason != null && o.DeliveryFailureReason != "")
-            .GroupBy(o => o.DeliveryFailureReason)
-            .Select(g => new { Reason = g.Key, Count = g.Count() })
+            .Where(o => o.DeliveryFailureReasonCode != null && o.DeliveryFailureReasonCode != "");
+
+        if (year.HasValue)
+        {
+            var start = new DateTime(year.Value, 1, 1);
+            var end = start.AddYears(1);
+            query = query.Where(o => o.OrderDate >= start && o.OrderDate < end);
+        }
+
+        var grouped = await query
+            .GroupBy(o => o.DeliveryFailureReasonCode)
+            .Select(g => new { ReasonCode = g.Key, Count = g.Count() })
             .OrderByDescending(x => x.Count)
             .Take(count)
             .ToListAsync();
 
-        return grouped.Select(x => new TopFailureReasonPoint(x.Reason!, x.Count)).ToList();
+        return grouped.Select(x => new TopFailureReasonPoint(
+            TranslateFailureReasonCode(x.ReasonCode!), x.Count)).ToList();
+    }
+
+    private string TranslateFailureReasonCode(string code)
+    {
+        return code switch {
+            "CustomerUnavailable" => "Khách không nghe máy/Không có nhà",
+            "CustomerRefused" => "Khách từ chối nhận",
+            "WrongAddress" => "Sai địa chỉ",
+            "CustomerRequestedReschedule" => "Khách hẹn giao lại sau",
+            "UnableToContact" => "Không liên lạc được nhiều lần",
+            "MaxAttemptsExceeded" => "Vượt quá số lần giao lại",
+            "Other" => "Khác",
+            _ => code
+        };
     }
 
     public async Task<List<LowStockProductPoint>> GetLowStockProductsAsync(int threshold = 5)

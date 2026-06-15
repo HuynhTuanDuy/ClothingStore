@@ -59,7 +59,9 @@ public class OrderController(
             OrderEmail     = order.OrderEmail,
             ShippingName   = order.ShippingRecipientName,
             ShippingPhone  = order.ShippingPhone,
-            ShippingAddress = order.ShippingFullAddress,
+            ShippingAddress = string.IsNullOrWhiteSpace(order.ShippingFullAddress)
+                ? $"{order.ShippingAddress}, {order.ShippingWard}, {order.ShippingDistrict}, {order.ShippingProvince}".Trim(',', ' ')
+                : order.ShippingFullAddress,
             PaymentMethod  = order.PaymentMethod,
             PaymentStatus  = order.PaymentStatus,
             OrderStatus    = order.OrderStatus,

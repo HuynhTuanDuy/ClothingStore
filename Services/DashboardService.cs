@@ -32,7 +32,7 @@ public class DashboardService(IOrderRepository orderRepository, StoreDbContext d
         var orderStatusCounts = await orderRepository.GetOrderStatusCountsAsync(selectedYear);
         var retryWaitingCount = await orderRepository.CountRetryWaitingOrdersAsync();
         var maxAttemptsExceededCount = await orderRepository.CountMaxAttemptsExceededOrdersAsync();
-        var topFailureReasons = await orderRepository.GetTopFailureReasonsAsync();
+        var topFailureReasons = await orderRepository.GetTopFailureReasonsAsync(selectedYear);
 
         // Top Searches with No Results
         var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);

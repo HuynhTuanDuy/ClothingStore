@@ -22,7 +22,7 @@ public interface IOrderRepository
     Task<int> TotalProductsSoldAsync();
     Task<int> CountRetryWaitingOrdersAsync();
     Task<int> CountMaxAttemptsExceededOrdersAsync();
-    Task<List<TopFailureReasonPoint>> GetTopFailureReasonsAsync(int count = 5);
+    Task<List<TopFailureReasonPoint>> GetTopFailureReasonsAsync(int? year = null, int count = 5);
     Task<List<LowStockProductPoint>> GetLowStockProductsAsync(int threshold = 5);
     Task<List<CategorySalesPoint>> GetSalesByCategoryAsync(int year);
     Task<List<OrderStatusCountPoint>> GetOrderStatusCountsAsync(int year);

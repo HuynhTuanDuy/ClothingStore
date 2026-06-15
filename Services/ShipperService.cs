@@ -81,7 +81,9 @@ public class ShipperService(StoreDbContext dbContext, IOrderRepository orderRepo
             OrderCode = o.OrderCode,
             CustomerName = o.Customer?.FullName ?? o.ShippingRecipientName,
             Phone = string.IsNullOrEmpty(o.ShippingPhone) ? (o.Customer?.Phone ?? "") : o.ShippingPhone,
-            Address = o.ShippingFullAddress,
+            Address = string.IsNullOrWhiteSpace(o.ShippingFullAddress) 
+                ? $"{o.ShippingAddress}, {o.ShippingWard}, {o.ShippingDistrict}, {o.ShippingProvince}".Trim(',', ' ') 
+                : o.ShippingFullAddress,
             FinalAmount = o.FinalAmount,
             Status = o.OrderStatus,
             AssignedAt = o.AssignedAt,
@@ -103,7 +105,9 @@ public class ShipperService(StoreDbContext dbContext, IOrderRepository orderRepo
             OrderCode = order.OrderCode,
             CustomerName = order.Customer?.FullName ?? order.ShippingRecipientName,
             Phone = string.IsNullOrEmpty(order.ShippingPhone) ? (order.Customer?.Phone ?? "") : order.ShippingPhone,
-            Address = order.ShippingFullAddress,
+            Address = string.IsNullOrWhiteSpace(order.ShippingFullAddress) 
+                ? $"{order.ShippingAddress}, {order.ShippingWard}, {order.ShippingDistrict}, {order.ShippingProvince}".Trim(',', ' ') 
+                : order.ShippingFullAddress,
             FinalAmount = order.FinalAmount,
             Status = order.OrderStatus,
             AssignedAt = order.AssignedAt,
