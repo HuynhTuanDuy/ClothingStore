@@ -183,65 +183,150 @@
         </script>
     </div>
 
-    <!-- Category Sales Pie Chart -->
-    <div class="bg-surface border border-outline-variant p-6">
-        <h3 class="text-lg font-semibold text-on-background mb-4">Sản phẩm theo danh mục</h3>
-        @if (Model.CategorySalesValues.Any() && Model.CategorySalesValues.Sum() > 0)
-        {
-            <div class="h-64 relative mt-4">
-                <canvas id="categorySalesChart"></canvas>
-            </div>
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    const ctxPie = document.getElementById('categorySalesChart');
-                    if (!ctxPie) return;
-                    
-                    new Chart(ctxPie, {
-                        type: 'pie',
-                        data: {
-                            labels: @Html.Raw(JsonSerializer.Serialize(Model.CategorySalesLabels)),
-                            datasets: [{
-                                data: @Html.Raw(JsonSerializer.Serialize(Model.CategorySalesValues)),
-                                backgroundColor: [
-                                    '#553722', '#8c6b5d', '#d9c5b2', '#f2e8dc', '#4ade80', '#f87171', '#fbbf24', '#60a5fa'
-                                ],
-                                borderWidth: 1,
-                                borderColor: '#ffffff'
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    position: 'right',
-                                    labels: {
-                                        boxWidth: 12,
-                                        font: { size: 12 }
-                                    }
-                                },
-                                tooltip: {
-                                    callbacks: {
-                                        label: function(context) {
-                                            const label = context.label || '';
-                                            const value = context.raw || 0;
-                                            return `${label}: ${value} sản phẩm`;
+    <!-- Pie Charts Row -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Category Sales Pie Chart -->
+        <div class="bg-surface border border-outline-variant p-6">
+            <h3 class="text-lg font-semibold text-on-background mb-4">Sản phẩm theo danh mục</h3>
+            @if (Model.CategorySalesValues.Any() && Model.CategorySalesValues.Sum() > 0)
+            {
+                <div class="h-64 relative mt-4">
+                    <canvas id="categorySalesChart"></canvas>
+                </div>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const ctxPie = document.getElementById('categorySalesChart');
+                        if (!ctxPie) return;
+                        
+                        new Chart(ctxPie, {
+                            type: 'pie',
+                            data: {
+                                labels: @Html.Raw(JsonSerializer.Serialize(Model.CategorySalesLabels)),
+                                datasets: [{
+                                    data: @Html.Raw(JsonSerializer.Serialize(Model.CategorySalesValues)),
+                                    backgroundColor: [
+                                        '#553722', '#8c6b5d', '#d9c5b2', '#f2e8dc', '#4ade80', '#f87171', '#fbbf24', '#60a5fa'
+                                    ],
+                                    borderWidth: 1,
+                                    borderColor: '#ffffff'
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        position: 'right',
+                                        labels: { boxWidth: 12, font: { size: 12 } }
+                                    },
+                                    tooltip: {
+                                        callbacks: {
+                                            label: function(context) {
+                                                return `${context.label || ''}: ${context.raw || 0} sản phẩm`;
+                                            }
                                         }
                                     }
                                 }
                             }
-                        }
+                        });
                     });
-                });
-            </script>
-        }
-        else
-        {
-            <div class="flex flex-col items-center justify-center h-40 text-on-surface-variant">
-                <span class="material-symbols-outlined text-4xl mb-2 opacity-30">pie_chart</span>
-                <p class="text-sm">Chưa có dữ liệu năm @Model.Year</p>
-            </div>
-        }
+                </script>
+            }
+            else
+            {
+                <div class="flex flex-col items-center justify-center h-40 text-on-surface-variant">
+                    <span class="material-symbols-outlined text-4xl mb-2 opacity-30">pie_chart</span>
+                    <p class="text-sm">Chưa có dữ liệu</p>
+                </div>
+            }
+        </div>
+
+        <!-- Order Status Pie Chart -->
+        <div class="bg-surface border border-outline-variant p-6">
+            <h3 class="text-lg font-semibold text-on-background mb-4">Tình trạng đơn hàng</h3>
+            @if (Model.OrderStatusValues.Any() && Model.OrderStatusValues.Sum() > 0)
+            {
+                <div class="h-64 relative mt-4">
+                    <canvas id="orderStatusChart"></canvas>
+                </div>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const ctxStatus = document.getElementById('orderStatusChart');
+                        if (!ctxStatus) return;
+
+                        const rawLabels = @Html.Raw(JsonSerializer.Serialize(Model.OrderStatusLabels));
+                        const translatedLabels = rawLabels.map(l => {
+                            switch(l) {
+                                case 'Pending': return 'Chờ xác nhận';
+                                case 'Confirmed': return 'Đã xác nhận';
+                                case 'Processing': return 'Đang xử lý';
+                                case 'Shipping': return 'Đang giao';
+                                case 'Delivered': return 'Đã giao';
+                                case 'DeliveredPendingCOD': return 'Giao thành công (Chờ thu tiền)';
+                                case 'DeliveryAttemptFailed': return 'Giao thất bại (Chờ thử lại)';
+                                case 'DeliveryFailed': return 'Giao thất bại (Hủy)';
+                                case 'Returned': return 'Đã hoàn trả';
+                                case 'Cancelled': return 'Đã hủy';
+                                default: return l;
+                            }
+                        });
+                        
+                        const bgColors = rawLabels.map(l => {
+                            switch(l) {
+                                case 'Pending': return '#fcd34d'; // amber-300
+                                case 'Confirmed': return '#60a5fa'; // blue-400
+                                case 'Processing': return '#c084fc'; // purple-400
+                                case 'Shipping': return '#2dd4bf'; // cyan-400
+                                case 'Delivered': return '#4ade80'; // green-400
+                                case 'DeliveredPendingCOD': return '#16a34a'; // green-600
+                                case 'DeliveryAttemptFailed': return '#fb923c'; // orange-400
+                                case 'DeliveryFailed': return '#ef4444'; // red-500
+                                case 'Returned': return '#64748b'; // slate-500
+                                case 'Cancelled': return '#f87171'; // red-400
+                                default: return '#cbd5e1';
+                            }
+                        });
+
+                        new Chart(ctxStatus, {
+                            type: 'doughnut',
+                            data: {
+                                labels: translatedLabels,
+                                datasets: [{
+                                    data: @Html.Raw(JsonSerializer.Serialize(Model.OrderStatusValues)),
+                                    backgroundColor: bgColors,
+                                    borderWidth: 1,
+                                    borderColor: '#ffffff'
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        position: 'right',
+                                        labels: { boxWidth: 12, font: { size: 12 } }
+                                    },
+                                    tooltip: {
+                                        callbacks: {
+                                            label: function(context) {
+                                                return `${context.label || ''}: ${context.raw || 0} đơn`;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    });
+                </script>
+            }
+            else
+            {
+                <div class="flex flex-col items-center justify-center h-40 text-on-surface-variant">
+                    <span class="material-symbols-outlined text-4xl mb-2 opacity-30">donut_large</span>
+                    <p class="text-sm">Chưa có dữ liệu</p>
+                </div>
+            }
+        </div>
     </div>
     </div> <!-- Close left column -->
 
@@ -287,31 +372,95 @@
     </div>
 </div>
 
-<!-- Top Failure Reasons -->
-<div class="mb-8 bg-surface border border-outline-variant p-6">
-    <h3 class="text-lg font-semibold text-on-background mb-4 flex items-center gap-2">
-        <span class="material-symbols-outlined text-error">report</span>
-        Top lý do giao hàng thất bại
-    </h3>
-    @if (Model.TopFailureReasons.Any())
-    {
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            @foreach (var reason in Model.TopFailureReasons)
-            {
-                <div class="p-4 border border-outline-variant/50 bg-error/5 rounded-lg flex items-center justify-between">
-                    <span class="font-medium text-on-surface-variant">@reason.Reason</span>
-                    <span class="font-bold text-error text-lg">@reason.Count</span>
-                </div>
-            }
-        </div>
-    }
-    else
-    {
-        <div class="flex flex-col items-center justify-center h-24 text-on-surface-variant">
-            <span class="material-symbols-outlined text-3xl mb-2 opacity-30">verified</span>
-            <p class="text-sm">Chưa có dữ liệu giao hàng thất bại.</p>
-        </div>
-    }
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+    <!-- Top Searches Overall -->
+    <div class="bg-surface border border-outline-variant p-6">
+        <h3 class="text-lg font-semibold text-on-background mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">manage_search</span>
+            Từ khóa phổ biến nhất
+        </h3>
+        @if (Model.TopSearches.Any())
+        {
+            <div class="space-y-4 max-h-72 overflow-y-auto pr-2 custom-scrollbar">
+                @foreach (var search in Model.TopSearches)
+                {
+                    <div class="p-3 border border-outline-variant/50 bg-primary/5 rounded-lg flex items-center justify-between">
+                        <div class="min-w-0 flex-1 mr-4">
+                            <span class="font-medium text-on-surface-variant truncate block" title="@search.Keyword">"@search.Keyword"</span>
+                            <div class="w-full bg-outline-variant/30 rounded-full h-1.5 mt-2">
+                                <div class="bg-primary h-1.5 rounded-full" style="width: @(search.Ctr)%"></div>
+                            </div>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <div class="font-bold text-primary text-base">@search.SearchCount</div>
+                            <div class="text-[11px] text-on-surface-variant">CTR: @search.Ctr%</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="flex flex-col items-center justify-center h-24 text-on-surface-variant">
+                <span class="material-symbols-outlined text-3xl mb-2 opacity-30">search</span>
+                <p class="text-sm">Chưa có dữ liệu tìm kiếm.</p>
+            </div>
+        }
+    </div>
+
+    <!-- Top Searches No Result -->
+    <div class="bg-surface border border-outline-variant p-6">
+        <h3 class="text-lg font-semibold text-on-background mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined text-amber-500">search_off</span>
+            Tìm kiếm không kết quả
+        </h3>
+        @if (Model.TopSearchesNoResult.Any())
+        {
+            <div class="space-y-4 max-h-72 overflow-y-auto pr-2 custom-scrollbar">
+                @foreach (var search in Model.TopSearchesNoResult)
+                {
+                    <div class="p-4 border border-outline-variant/50 bg-amber-50 rounded-lg flex items-center justify-between">
+                        <span class="font-medium text-on-surface-variant truncate mr-2" title="@search.Keyword">"@search.Keyword"</span>
+                        <span class="font-bold text-amber-600 text-lg shrink-0">@search.SearchCount</span>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="flex flex-col items-center justify-center h-24 text-on-surface-variant">
+                <span class="material-symbols-outlined text-3xl mb-2 opacity-30">done_all</span>
+                <p class="text-sm">Tất cả tìm kiếm đều có kết quả!</p>
+            </div>
+        }
+    </div>
+
+    <!-- Top Failure Reasons -->
+    <div class="bg-surface border border-outline-variant p-6">
+        <h3 class="text-lg font-semibold text-on-background mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined text-error">report</span>
+            Lý do giao hàng thất bại
+        </h3>
+        @if (Model.TopFailureReasons.Any())
+        {
+            <div class="space-y-4 max-h-72 overflow-y-auto pr-2 custom-scrollbar">
+                @foreach (var reason in Model.TopFailureReasons)
+                {
+                    <div class="p-4 border border-outline-variant/50 bg-error/5 rounded-lg flex items-center justify-between">
+                        <span class="font-medium text-on-surface-variant line-clamp-1 mr-2" title="@reason.Reason">@reason.Reason</span>
+                        <span class="font-bold text-error text-lg shrink-0">@reason.Count</span>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="flex flex-col items-center justify-center h-24 text-on-surface-variant">
+                <span class="material-symbols-outlined text-3xl mb-2 opacity-30">verified</span>
+                <p class="text-sm">Chưa có dữ liệu giao hàng thất bại.</p>
+            </div>
+        }
+    </div>
 </div>
 
 <!-- Recent Orders + Low Stock -->

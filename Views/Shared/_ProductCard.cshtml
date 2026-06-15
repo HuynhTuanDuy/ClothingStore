@@ -1,6 +1,6 @@
 @model ClothingStore.Models.ViewModels.ProductCardViewModel
 
-<article class="product-card group cursor-pointer" data-purpose="product-item" onclick="location.href='@Url.Action("Details", "Home", new { id = Model.ProductID })'">
+<article class="product-card group cursor-pointer" data-purpose="product-item" data-product-id="@Model.ProductID" onclick="location.href='@Url.Action("Details", "Home", new { id = Model.ProductID })'">
     <div class="relative mb-4 overflow-hidden" style="padding-bottom: 125%; background: #f1f1f1;">
         @if (!Model.HasStock)
         {

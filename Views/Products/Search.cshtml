@@ -75,7 +75,7 @@
         }
         else
         {
-            <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-x-4 md:gap-x-6 gap-y-10 md:gap-y-12" id="product-grid">
+            <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-x-4 md:gap-x-6 gap-y-10 md:gap-y-12" id="product-grid" data-search-log-id="@ViewBag.SearchLogId">
                 @foreach (var product in Model.Products.Items)
                 {
                     @await Html.PartialAsync("_ProductCard", product)
@@ -126,3 +126,28 @@
     <!-- END: ProductGrid -->
 </main>
 <!-- END: MainContent -->
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const grid = document.getElementById('product-grid');
+            if (grid) {
+                const searchLogId = grid.getAttribute('data-search-log-id');
+                if (searchLogId) {
+                    grid.addEventListener('click', function(e) {
+                        const productLink = e.target.closest('article[data-product-id]');
+                        if (productLink) {
+                            const productId = productLink.getAttribute('data-product-id');
+                            if (productId) {
+                                const formData = new FormData();
+                                formData.append('searchLogId', searchLogId);
+                                formData.append('productId', productId);
+                                navigator.sendBeacon('/Products/LogSearchClick', formData);
+                            }
+                        }
+                    });
+                }
+            }
+        });
+    </script>
+}

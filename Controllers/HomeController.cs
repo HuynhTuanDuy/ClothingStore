@@ -66,6 +66,7 @@ public class HomeController(IProductService productService, ICurrentCustomerServ
         return model is null ? NotFound() : View(model);
     }
 
+    [HttpGet("Products/Details/{slug}")]
     public async Task<IActionResult> ProductBySlug(string slug)
     {
         var model = await productService.GetProductBySlugAsync(slug);

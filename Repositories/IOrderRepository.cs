@@ -25,6 +25,7 @@ public interface IOrderRepository
     Task<List<TopFailureReasonPoint>> GetTopFailureReasonsAsync(int count = 5);
     Task<List<LowStockProductPoint>> GetLowStockProductsAsync(int threshold = 5);
     Task<List<CategorySalesPoint>> GetSalesByCategoryAsync(int year);
+    Task<List<OrderStatusCountPoint>> GetOrderStatusCountsAsync(int year);
     Task<Order?> GetOrderForGuestTrackingAsync(string orderCode, string phone);
     Task<List<Order>> GetOrdersByShipperAsync(int shipperId, string? status = null);
     Task<Order?> GetOrderDetailForShipperAsync(int orderId, int shipperId);

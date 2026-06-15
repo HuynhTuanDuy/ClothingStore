@@ -18,6 +18,7 @@ public record LowStockProductPoint(
     int TotalStock, List<LowStockPoint> Variants);
 public record CategorySalesPoint(string CategoryName, int TotalSold);
 public record TopFailureReasonPoint(string Reason, int Count);
+public record OrderStatusCountPoint(string Status, int Count);
 
 public class OrderRepository(StoreDbContext dbContext) : IOrderRepository
 {
@@ -332,6 +333,21 @@ public class OrderRepository(StoreDbContext dbContext) : IOrderRepository
             .Select(g => new CategorySalesPoint(g.Key, g.Sum(x => x.Quantity)))
             .OrderByDescending(x => x.TotalSold)
             .ToList();
+    }
+
+    public async Task<List<OrderStatusCountPoint>> GetOrderStatusCountsAsync(int year)
+    {
+        var start = new DateTime(year, 1, 1);
+        var end = start.AddYears(1);
+
+        var rows = await dbContext.Orders
+            .AsNoTracking()
+            .Where(x => x.OrderDate >= start && x.OrderDate < end)
+            .GroupBy(x => x.OrderStatus)
+            .Select(g => new { Status = g.Key, Count = g.Count() })
+            .ToListAsync();
+
+        return rows.Select(r => new OrderStatusCountPoint(r.Status, r.Count)).ToList();
     }
 
     public async Task<Order?> GetOrderForGuestTrackingAsync(string orderCode, string phone)

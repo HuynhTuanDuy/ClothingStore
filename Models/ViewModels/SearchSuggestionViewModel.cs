@@ -8,4 +8,5 @@ public class SearchSuggestionViewModel
     public string ThumbnailUrl { get; set; } = string.Empty;
     public decimal Price { get; set; }
     public decimal? OriginalPrice { get; set; }
+    public string CategoryName { get; set; } = string.Empty;
 }

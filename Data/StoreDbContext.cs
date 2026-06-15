@@ -42,6 +42,7 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
     public DbSet<ProductImage> ProductImages => Set<ProductImage>();
     public DbSet<ProductRelationship> ProductRelationships => Set<ProductRelationship>();
+    public DbSet<SearchLog> SearchLogs => Set<SearchLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -1,5 +1,7 @@
 @using ClothingStore.Services
+@using System.Security.Claims
 @inject ICartService CartService
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -270,11 +272,12 @@
             }
         });
 
-        // Search Autocomplete
+        // Search Autocomplete with LocalStorage & Trending
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('search-input-desktop');
             const searchSuggestions = document.getElementById('search-suggestions-desktop');
             const searchContainer = document.getElementById('search-container-desktop');
+            const searchForm = searchContainer.querySelector('form');
             
             if (!searchInput || !searchSuggestions || !searchContainer) return;
             
@@ -285,6 +288,28 @@
             const suggestionCache = new Map();
             const MAX_CACHE_SIZE = 20;
             let activeIndex = -1;
+            let trendingSearches = [];
+            
+            const currentUserId = '@(User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier) ?? "guest")';
+            const recentSearchesKey = `recentSearches_${currentUserId}`;
+            
+            // Save search to local storage on submit
+            searchForm.addEventListener('submit', function() {
+                const kw = searchInput.value.trim();
+                if (kw.length >= 2) {
+                    let recents = JSON.parse(localStorage.getItem(recentSearchesKey) || '[]');
+                    recents = recents.filter(x => x.toLowerCase() !== kw.toLowerCase());
+                    recents.unshift(kw);
+                    if (recents.length > 5) recents.pop();
+                    localStorage.setItem(recentSearchesKey, JSON.stringify(recents));
+                }
+            });
+
+            // Fetch trending searches once
+            fetch('/Products/Trending')
+                .then(res => res.json())
+                .then(data => { if(data.items) trendingSearches = data.items; })
+                .catch(err => console.error(err));
             
             function showDropdown() {
                 searchSuggestions.classList.remove('hidden');
@@ -299,6 +324,63 @@
                 return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
             }
             
+            function renderEmptyState() {
+                searchSuggestions.innerHTML = '';
+                
+                let recents = JSON.parse(localStorage.getItem(recentSearchesKey) || '[]');
+                
+                if (recents.length > 0) {
+                    const recentHeader = document.createElement('li');
+                    recentHeader.className = 'px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider bg-gray-50';
+                    recentHeader.textContent = 'Tìm kiếm gần đây';
+                    searchSuggestions.appendChild(recentHeader);
+                    
+                    recents.forEach((item, index) => {
+                        const li = document.createElement('li');
+                        li.className = 'border-b border-gray-50 last:border-b-0 group cursor-pointer hover:bg-gray-50 transition-colors';
+                        li.setAttribute('role', 'option');
+                        li.setAttribute('data-index', index);
+                        
+                        const a = document.createElement('a');
+                        a.href = `/Products/Search?keyword=${encodeURIComponent(item)}`;
+                        a.className = 'flex items-center px-4 py-2';
+                        a.innerHTML = `<span class="material-symbols-outlined text-gray-400 mr-3 text-lg">history</span><span class="text-sm text-gray-700">${item}</span>`;
+                        li.appendChild(a);
+                        searchSuggestions.appendChild(li);
+                    });
+                }
+                
+                if (trendingSearches.length > 0) {
+                    const trendHeader = document.createElement('li');
+                    trendHeader.className = 'px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider bg-gray-50';
+                    trendHeader.textContent = 'Tìm kiếm phổ biến';
+                    searchSuggestions.appendChild(trendHeader);
+                    
+                    trendingSearches.forEach((item, index) => {
+                        const li = document.createElement('li');
+                        li.className = 'border-b border-gray-50 last:border-b-0 group cursor-pointer hover:bg-gray-50 transition-colors';
+                        li.setAttribute('role', 'option');
+                        li.setAttribute('data-index', (recents.length || 0) + index);
+                        
+                        const a = document.createElement('a');
+                        a.href = `/Products/Search?keyword=${encodeURIComponent(item)}`;
+                        a.className = 'flex items-center px-4 py-2';
+                        a.innerHTML = `<span class="material-symbols-outlined text-brand-brown mr-3 text-lg">trending_up</span><span class="text-sm font-medium text-gray-900">${item}</span>`;
+                        li.appendChild(a);
+                        searchSuggestions.appendChild(li);
+                    });
+                }
+                
+                if (recents.length === 0 && trendingSearches.length === 0) {
+                    const li = document.createElement('li');
+                    li.className = 'px-4 py-3 text-sm text-gray-500 text-center empty';
+                    li.textContent = 'Nhập từ khóa để tìm kiếm';
+                    searchSuggestions.appendChild(li);
+                }
+                
+                showDropdown();
+            }
+
             function renderSuggestions(keyword, items) {
                 searchSuggestions.innerHTML = '';
                 
@@ -308,54 +390,80 @@
                     li.textContent = 'Không tìm thấy sản phẩm phù hợp';
                     searchSuggestions.appendChild(li);
                 } else {
-                    items.forEach((item, index) => {
-                        const li = document.createElement('li');
-                        li.className = 'border-b border-gray-50 last:border-b-0 group cursor-pointer';
-                        li.setAttribute('role', 'option');
-                        li.setAttribute('data-index', index);
-                        
-                        const a = document.createElement('a');
-                        a.href = `/Products/Details/${item.productSlug}`;
-                        a.className = 'flex items-center px-4 py-2 hover:bg-gray-50 transition-colors';
-                        
-                        // Thumbnail
-                        if (item.thumbnailUrl) {
-                            const imgContainer = document.createElement('div');
-                            imgContainer.className = 'flex-shrink-0 w-10 h-10 mr-3 overflow-hidden rounded-md border border-gray-100 bg-gray-50';
-                            const img = document.createElement('img');
-                            img.src = item.thumbnailUrl;
-                            img.alt = item.name;
-                            img.className = 'w-full h-full object-cover';
-                            imgContainer.appendChild(img);
-                            a.appendChild(imgContainer);
-                        }
-                        
-                        // Details
-                        const infoDiv = document.createElement('div');
-                        infoDiv.className = 'flex-grow min-w-0';
-                        
-                        const nameSpan = document.createElement('div');
-                        nameSpan.className = 'text-sm font-medium text-gray-900 truncate group-hover:text-brand-brown';
-                        nameSpan.textContent = item.name;
-                        infoDiv.appendChild(nameSpan);
-                        
-                        const priceSpan = document.createElement('div');
-                        priceSpan.className = 'text-xs text-brand-brown font-bold';
-                        priceSpan.textContent = formatCurrency(item.price);
-                        
-                        if (item.originalPrice) {
-                            const originalSpan = document.createElement('span');
-                            originalSpan.className = 'text-[10px] text-gray-400 line-through ml-2 font-normal';
-                            originalSpan.textContent = formatCurrency(item.originalPrice);
-                            priceSpan.appendChild(originalSpan);
-                        }
-                        
-                        infoDiv.appendChild(priceSpan);
-                        a.appendChild(infoDiv);
-                        
-                        li.appendChild(a);
-                        searchSuggestions.appendChild(li);
-                    });
+                    const categories = items.filter(x => x.productId === 0);
+                    const products = items.filter(x => x.productId > 0);
+
+                    if (categories.length > 0) {
+                        const catHeader = document.createElement('li');
+                        catHeader.className = 'px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider bg-gray-50';
+                        catHeader.textContent = 'Danh mục';
+                        searchSuggestions.appendChild(catHeader);
+
+                        categories.forEach((item, index) => {
+                            const li = document.createElement('li');
+                            li.className = 'border-b border-gray-50 group cursor-pointer hover:bg-gray-50 transition-colors';
+                            const a = document.createElement('a');
+                            a.href = `/Products/Search?keyword=${encodeURIComponent(item.name)}`;
+                            a.className = 'flex items-center px-4 py-2';
+                            a.innerHTML = `<span class="material-symbols-outlined text-gray-400 mr-3 text-lg">search</span><span class="text-sm font-medium text-gray-900 group-hover:text-brand-brown">${item.name}</span>`;
+                            li.appendChild(a);
+                            searchSuggestions.appendChild(li);
+                        });
+                    }
+
+                    if (products.length > 0) {
+                        const prodHeader = document.createElement('li');
+                        prodHeader.className = 'px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider bg-gray-50';
+                        prodHeader.textContent = 'Sản phẩm';
+                        searchSuggestions.appendChild(prodHeader);
+
+                        products.forEach((item, index) => {
+                            const li = document.createElement('li');
+                            li.className = 'border-b border-gray-50 last:border-b-0 group cursor-pointer';
+                            li.setAttribute('role', 'option');
+                            li.setAttribute('data-index', index);
+                            
+                            const a = document.createElement('a');
+                            a.href = `/Products/Details/${item.productSlug}`;
+                            a.className = 'flex items-center px-4 py-2 hover:bg-gray-50 transition-colors';
+                            
+                            if (item.thumbnailUrl) {
+                                const imgContainer = document.createElement('div');
+                                imgContainer.className = 'flex-shrink-0 w-10 h-10 mr-3 overflow-hidden rounded-md border border-gray-100 bg-gray-50';
+                                const img = document.createElement('img');
+                                img.src = item.thumbnailUrl;
+                                img.alt = item.name;
+                                img.className = 'w-full h-full object-cover';
+                                imgContainer.appendChild(img);
+                                a.appendChild(imgContainer);
+                            }
+                            
+                            const infoDiv = document.createElement('div');
+                            infoDiv.className = 'flex-grow min-w-0';
+                            
+                            const nameSpan = document.createElement('div');
+                            nameSpan.className = 'text-sm font-medium text-gray-900 truncate group-hover:text-brand-brown';
+                            nameSpan.textContent = item.name;
+                            infoDiv.appendChild(nameSpan);
+                            
+                            const priceSpan = document.createElement('div');
+                            priceSpan.className = 'text-xs text-brand-brown font-bold';
+                            priceSpan.textContent = formatCurrency(item.price);
+                            
+                            if (item.originalPrice) {
+                                const originalSpan = document.createElement('span');
+                                originalSpan.className = 'text-[10px] text-gray-400 line-through ml-2 font-normal';
+                                originalSpan.textContent = formatCurrency(item.originalPrice);
+                                priceSpan.appendChild(originalSpan);
+                            }
+                            
+                            infoDiv.appendChild(priceSpan);
+                            a.appendChild(infoDiv);
+                            
+                            li.appendChild(a);
+                            searchSuggestions.appendChild(li);
+                        });
+                    }
                     
                     // Add View All link
                     const viewAllLi = document.createElement('li');
@@ -388,10 +496,8 @@
                 activeIndex = -1;
                 
                 if (keyword.length < 2) {
-                    hideDropdown();
-                    if (abortController) {
-                        abortController.abort();
-                    }
+                    if (abortController) abortController.abort();
+                    renderEmptyState();
                     return;
                 }
                 
@@ -476,8 +582,15 @@
             
             // Focus and click outside
             searchInput.addEventListener('focus', function() {
-                if (this.value.trim().length >= 2 && lastKeyword === this.value.trim()) {
-                    showDropdown();
+                const keyword = this.value.trim();
+                if (keyword.length < 2) {
+                    renderEmptyState();
+                } else {
+                    if (suggestionCache.has(keyword.toLowerCase())) {
+                        renderSuggestions(keyword, suggestionCache.get(keyword.toLowerCase()));
+                    } else {
+                        showDropdown();
+                    }
                 }
             });
             

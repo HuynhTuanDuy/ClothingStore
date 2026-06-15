@@ -194,11 +194,29 @@ public class DashboardViewModel
     public IReadOnlyList<decimal> RevenueValues { get; set; } = [];
     public IReadOnlyList<string> CategorySalesLabels { get; set; } = [];
     public IReadOnlyList<int> CategorySalesValues { get; set; } = [];
+    public IReadOnlyList<string> OrderStatusLabels { get; set; } = [];
+    public IReadOnlyList<int> OrderStatusValues { get; set; } = [];
     public IReadOnlyList<TopProductViewModel> TopProducts { get; set; } = [];
     public IReadOnlyList<RecentOrderViewModel> RecentOrders { get; set; } = [];
     public IReadOnlyList<LowStockItemViewModel> LowStockItems { get; set; } = [];
     public IReadOnlyList<LowStockProductViewModel> LowStockProducts { get; set; } = [];
     public IReadOnlyList<TopFailureReasonViewModel> TopFailureReasons { get; set; } = [];
+    public IReadOnlyList<TopSearchNoResultViewModel> TopSearchesNoResult { get; set; } = [];
+    public IReadOnlyList<TopSearchViewModel> TopSearches { get; set; } = [];
+}
+
+public class TopSearchViewModel
+{
+    public string Keyword { get; set; } = string.Empty;
+    public int SearchCount { get; set; }
+    public int ClickCount { get; set; }
+    public double Ctr => SearchCount > 0 ? Math.Round((double)ClickCount / SearchCount * 100, 1) : 0;
+}
+
+public class TopSearchNoResultViewModel
+{
+    public string Keyword { get; set; } = string.Empty;
+    public int SearchCount { get; set; }
 }
 
 public class TopFailureReasonViewModel

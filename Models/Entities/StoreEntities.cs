@@ -732,3 +732,23 @@ public class ProductImage
     // Navigation
     public ProductVariant ProductVariant { get; set; } = null!;
 }
+
+[Table("SEARCHLOGS")]
+[Index(nameof(SearchedAt))]
+[Index(nameof(NormalizedKeyword))]
+[Index(nameof(ResultCount))]
+public class SearchLog
+{
+    [Key] public int SearchLogId { get; set; }
+    [MaxLength(255)] public string Keyword { get; set; } = string.Empty;
+    [MaxLength(255)] public string NormalizedKeyword { get; set; } = string.Empty;
+    public int? CustomerId { get; set; }
+    [MaxLength(50)] public string? IpAddress { get; set; }
+    public int ResultCount { get; set; }
+    public long ElapsedMilliseconds { get; set; }
+    public DateTime SearchedAt { get; set; } = DateTime.UtcNow;
+    
+    // Click Tracking
+    public int? ClickedProductId { get; set; }
+    public DateTime? ClickedAt { get; set; }
+}

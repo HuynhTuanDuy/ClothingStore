@@ -1,9 +1,11 @@
 using ClothingStore.Models.ViewModels;
 using ClothingStore.Repositories;
+using ClothingStore.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace ClothingStore.Services;
 
-public class DashboardService(IOrderRepository orderRepository) : IDashboardService
+public class DashboardService(IOrderRepository orderRepository, StoreDbContext dbContext) : IDashboardService
 {
     private const int LowStockThreshold = 5;
 
@@ -27,9 +29,49 @@ public class DashboardService(IOrderRepository orderRepository) : IDashboardServ
         var totalProductsSold = await orderRepository.TotalProductsSoldAsync();
         var lowStockProducts = await orderRepository.GetLowStockProductsAsync(LowStockThreshold);
         var categorySales = await orderRepository.GetSalesByCategoryAsync(selectedYear);
+        var orderStatusCounts = await orderRepository.GetOrderStatusCountsAsync(selectedYear);
         var retryWaitingCount = await orderRepository.CountRetryWaitingOrdersAsync();
         var maxAttemptsExceededCount = await orderRepository.CountMaxAttemptsExceededOrdersAsync();
         var topFailureReasons = await orderRepository.GetTopFailureReasonsAsync();
+
+        // Top Searches with No Results
+        var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
+        var topSearchesNoResult = await dbContext.SearchLogs
+            .Where(x => x.SearchedAt >= thirtyDaysAgo && x.ResultCount == 0 && x.Keyword != null && x.Keyword.Length >= 2)
+            .GroupBy(x => x.Keyword)
+            .Select(g => new TopSearchNoResultViewModel
+            {
+                Keyword = g.Key,
+                SearchCount = g.Count()
+            })
+            .OrderByDescending(x => x.SearchCount)
+            .Take(10)
+            .ToListAsync();
+
+        var rawTopSearches = await dbContext.SearchLogs
+            .Where(x => x.SearchedAt >= thirtyDaysAgo && x.Keyword != null && x.Keyword.Length >= 2)
+            .GroupBy(x => x.Keyword)
+            .Select(g => new
+            {
+                Keyword = g.Key,
+                SearchCount = g.Count(),
+                ClickCount = g.Count(x => x.ClickedProductId != null)
+            })
+            .OrderByDescending(x => x.SearchCount)
+            .Take(100)
+            .ToListAsync();
+
+        var topSearches = rawTopSearches
+            .Select(x => new TopSearchViewModel
+            {
+                Keyword = x.Keyword,
+                SearchCount = x.SearchCount,
+                ClickCount = x.ClickCount
+            })
+            .OrderByDescending(x => x.SearchCount)
+            .ThenByDescending(x => x.Ctr)
+            .Take(20)
+            .ToList();
 
         var monthlyValues = Enumerable.Range(1, 12)
             .Select(m => revenue.FirstOrDefault(x => x.Month == m)?.Revenue ?? 0m)
@@ -56,6 +98,8 @@ public class DashboardService(IOrderRepository orderRepository) : IDashboardServ
             RevenueValues    = monthlyValues,
             CategorySalesLabels = categorySales.Select(x => x.CategoryName).ToList(),
             CategorySalesValues = categorySales.Select(x => x.TotalSold).ToList(),
+            OrderStatusLabels   = orderStatusCounts.Select(x => x.Status).ToList(),
+            OrderStatusValues   = orderStatusCounts.Select(x => x.Count).ToList(),
             TopProducts      = topProducts.Select(x => new TopProductViewModel
             {
                 ProductName = x.ProductName,
@@ -98,7 +142,9 @@ public class DashboardService(IOrderRepository orderRepository) : IDashboardServ
             {
                 Reason = r.Reason,
                 Count = r.Count
-            }).ToList()
+            }).ToList(),
+            TopSearchesNoResult = topSearchesNoResult,
+            TopSearches = topSearches
         };
     }
 }

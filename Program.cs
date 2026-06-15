@@ -111,6 +111,9 @@ builder.Services.AddScoped<IAddressService, AddressService>();
 builder.Services.AddScoped<IAddressRecommendationService, AddressRecommendationService>();
 builder.Services.AddSingleton<IDateTimeService, DateTimeService>();
 
+// ── Background Services ───────────────────────────────────────
+builder.Services.AddHostedService<ClothingStore.BackgroundServices.SearchLogCleanupService>();
+
 var app = builder.Build();
 
 app.UseRequestLocalization(localizationOptions);

@@ -20,7 +20,7 @@ public record ProductFilter(
     string? SortBy = null
 );
 
-public class ProductRepository(StoreDbContext dbContext, IMemoryCache cache) : IProductRepository
+public class ProductRepository(StoreDbContext dbContext, IMemoryCache cache, ILogger<ProductRepository> logger) : IProductRepository
 {
     private static string? NormalizeUrl(string? url)
     {
@@ -41,20 +41,29 @@ public class ProductRepository(StoreDbContext dbContext, IMemoryCache cache) : I
         var t0 = tokens.Count > 0 ? tokens[0] : "";
         var t1 = tokens.Count > 1 ? tokens[1] : "";
         var t2 = tokens.Count > 2 ? tokens[2] : "";
-        var t3 = tokens.Count > 3 ? tokens[3] : "";
-        var t4 = tokens.Count > 4 ? tokens[4] : "";
-        var t5 = tokens.Count > 5 ? tokens[5] : "";
-        var t6 = tokens.Count > 6 ? tokens[6] : "";
-        var t7 = tokens.Count > 7 ? tokens[7] : "";
 
         var hasT0 = tokens.Count > 0;
         var hasT1 = tokens.Count > 1;
         var hasT2 = tokens.Count > 2;
-        var hasT3 = tokens.Count > 3;
-        var hasT4 = tokens.Count > 4;
-        var hasT5 = tokens.Count > 5;
-        var hasT6 = tokens.Count > 6;
-        var hasT7 = tokens.Count > 7;
+
+        var categoryQuery = dbContext.Categories.AsNoTracking().Where(c => c.IsActive);
+        if (hasT0)
+        {
+            categoryQuery = categoryQuery.Where(c => 
+                (hasT0 && c.CategoryName.Contains(t0)) ||
+                (hasT1 && c.CategoryName.Contains(t1)) ||
+                (hasT2 && c.CategoryName.Contains(t2))
+            );
+        }
+        var categories = await categoryQuery.Take(2).Select(c => new SearchSuggestionViewModel
+        {
+            ProductId = 0,
+            ProductSlug = "",
+            Name = c.CategoryName,
+            CategoryName = "Danh mục",
+            Price = 0,
+            OriginalPrice = null
+        }).ToListAsync();
 
         var query = dbContext.Products.AsNoTracking().Where(x => x.IsActive && x.ProductVariants.Any(v => v.StockQuantity > 0 && v.IsActive));
 
@@ -63,23 +72,10 @@ public class ProductRepository(StoreDbContext dbContext, IMemoryCache cache) : I
             query = query.Where(x => 
                 (hasT0 && ((x.SearchNormalizedName != null && x.SearchNormalizedName.Contains(t0)) || x.ProductVariants.Any(v => v.SKU.Contains(t0)) || x.Category.CategoryName.Contains(t0))) ||
                 (hasT1 && ((x.SearchNormalizedName != null && x.SearchNormalizedName.Contains(t1)) || x.ProductVariants.Any(v => v.SKU.Contains(t1)) || x.Category.CategoryName.Contains(t1))) ||
-                (hasT2 && ((x.SearchNormalizedName != null && x.SearchNormalizedName.Contains(t2)) || x.ProductVariants.Any(v => v.SKU.Contains(t2)) || x.Category.CategoryName.Contains(t2))) ||
-                (hasT3 && ((x.SearchNormalizedName != null && x.SearchNormalizedName.Contains(t3)) || x.ProductVariants.Any(v => v.SKU.Contains(t3)) || x.Category.CategoryName.Contains(t3))) ||
-                (hasT4 && ((x.SearchNormalizedName != null && x.SearchNormalizedName.Contains(t4)) || x.ProductVariants.Any(v => v.SKU.Contains(t4)) || x.Category.CategoryName.Contains(t4))) ||
-                (hasT5 && ((x.SearchNormalizedName != null && x.SearchNormalizedName.Contains(t5)) || x.ProductVariants.Any(v => v.SKU.Contains(t5)) || x.Category.CategoryName.Contains(t5))) ||
-                (hasT6 && ((x.SearchNormalizedName != null && x.SearchNormalizedName.Contains(t6)) || x.ProductVariants.Any(v => v.SKU.Contains(t6)) || x.Category.CategoryName.Contains(t6))) ||
-                (hasT7 && ((x.SearchNormalizedName != null && x.SearchNormalizedName.Contains(t7)) || x.ProductVariants.Any(v => v.SKU.Contains(t7)) || x.Category.CategoryName.Contains(t7)))
+                (hasT2 && ((x.SearchNormalizedName != null && x.SearchNormalizedName.Contains(t2)) || x.ProductVariants.Any(v => v.SKU.Contains(t2)) || x.Category.CategoryName.Contains(t2)))
             );
-
             query = query.OrderByDescending(x =>
-                (hasT0 ? ((x.SearchNormalizedName != null && x.SearchNormalizedName.StartsWith(t0) ? 100 : x.SearchNormalizedName != null && x.SearchNormalizedName.Contains(t0) ? 80 : 0) + (x.ProductVariants.Any(v => v.SKU.StartsWith(t0)) ? 60 : x.ProductVariants.Any(v => v.SKU.Contains(t0)) ? 50 : 0) + (x.Category.CategoryName.Contains(t0) ? 30 : 0)) : 0) +
-                (hasT1 ? ((x.SearchNormalizedName != null && x.SearchNormalizedName.StartsWith(t1) ? 100 : x.SearchNormalizedName != null && x.SearchNormalizedName.Contains(t1) ? 80 : 0) + (x.ProductVariants.Any(v => v.SKU.StartsWith(t1)) ? 60 : x.ProductVariants.Any(v => v.SKU.Contains(t1)) ? 50 : 0) + (x.Category.CategoryName.Contains(t1) ? 30 : 0)) : 0) +
-                (hasT2 ? ((x.SearchNormalizedName != null && x.SearchNormalizedName.StartsWith(t2) ? 100 : x.SearchNormalizedName != null && x.SearchNormalizedName.Contains(t2) ? 80 : 0) + (x.ProductVariants.Any(v => v.SKU.StartsWith(t2)) ? 60 : x.ProductVariants.Any(v => v.SKU.Contains(t2)) ? 50 : 0) + (x.Category.CategoryName.Contains(t2) ? 30 : 0)) : 0) +
-                (hasT3 ? ((x.SearchNormalizedName != null && x.SearchNormalizedName.StartsWith(t3) ? 100 : x.SearchNormalizedName != null && x.SearchNormalizedName.Contains(t3) ? 80 : 0) + (x.ProductVariants.Any(v => v.SKU.StartsWith(t3)) ? 60 : x.ProductVariants.Any(v => v.SKU.Contains(t3)) ? 50 : 0) + (x.Category.CategoryName.Contains(t3) ? 30 : 0)) : 0) +
-                (hasT4 ? ((x.SearchNormalizedName != null && x.SearchNormalizedName.StartsWith(t4) ? 100 : x.SearchNormalizedName != null && x.SearchNormalizedName.Contains(t4) ? 80 : 0) + (x.ProductVariants.Any(v => v.SKU.StartsWith(t4)) ? 60 : x.ProductVariants.Any(v => v.SKU.Contains(t4)) ? 50 : 0) + (x.Category.CategoryName.Contains(t4) ? 30 : 0)) : 0) +
-                (hasT5 ? ((x.SearchNormalizedName != null && x.SearchNormalizedName.StartsWith(t5) ? 100 : x.SearchNormalizedName != null && x.SearchNormalizedName.Contains(t5) ? 80 : 0) + (x.ProductVariants.Any(v => v.SKU.StartsWith(t5)) ? 60 : x.ProductVariants.Any(v => v.SKU.Contains(t5)) ? 50 : 0) + (x.Category.CategoryName.Contains(t5) ? 30 : 0)) : 0) +
-                (hasT6 ? ((x.SearchNormalizedName != null && x.SearchNormalizedName.StartsWith(t6) ? 100 : x.SearchNormalizedName != null && x.SearchNormalizedName.Contains(t6) ? 80 : 0) + (x.ProductVariants.Any(v => v.SKU.StartsWith(t6)) ? 60 : x.ProductVariants.Any(v => v.SKU.Contains(t6)) ? 50 : 0) + (x.Category.CategoryName.Contains(t6) ? 30 : 0)) : 0) +
-                (hasT7 ? ((x.SearchNormalizedName != null && x.SearchNormalizedName.StartsWith(t7) ? 100 : x.SearchNormalizedName != null && x.SearchNormalizedName.Contains(t7) ? 80 : 0) + (x.ProductVariants.Any(v => v.SKU.StartsWith(t7)) ? 60 : x.ProductVariants.Any(v => v.SKU.Contains(t7)) ? 50 : 0) + (x.Category.CategoryName.Contains(t7) ? 30 : 0)) : 0)
+                (hasT0 ? ((x.SearchNormalizedName != null && x.SearchNormalizedName.StartsWith(t0) ? 100 : x.SearchNormalizedName != null && x.SearchNormalizedName.Contains(t0) ? 80 : 0) + (x.ProductVariants.Any(v => v.SKU.StartsWith(t0)) ? 60 : x.ProductVariants.Any(v => v.SKU.Contains(t0)) ? 50 : 0) + (x.Category.CategoryName.Contains(t0) ? 30 : 0)) : 0)
             ).ThenByDescending(x => x.CreatedAt);
         }
         else
@@ -89,44 +85,55 @@ public class ProductRepository(StoreDbContext dbContext, IMemoryCache cache) : I
 
         var today = DateTime.Today;
 
-        return await query.Take(5).Select(x => new SearchSuggestionViewModel
+        var products = await query.Take(3).Select(x => new SearchSuggestionViewModel
         {
             ProductId = x.ProductID,
             ProductSlug = x.Slug,
             Name = x.ProductName,
+            CategoryName = x.Category.CategoryName,
             ThumbnailUrl = x.ProductVariants.Where(v => v.IsActive).SelectMany(v => v.ProductImages).OrderBy(i => i.DisplayOrder).Select(i => i.ImageURL).FirstOrDefault() ?? x.ThumbnailUrl,
             Price = x.ProductVariants.Where(v => v.IsActive).Min(v => (decimal)v.SellingPrice) * (x.DiscountProgram != null && x.DiscountProgram.IsActive && x.DiscountProgram.StartDate <= today && x.DiscountProgram.EndDate >= today ? (1m - x.DiscountProgram.DiscountPercent / 100m) : 1m),
             OriginalPrice = (x.DiscountProgram != null && x.DiscountProgram.IsActive && x.DiscountProgram.StartDate <= today && x.DiscountProgram.EndDate >= today) ? x.ProductVariants.Where(v => v.IsActive).Min(v => (decimal?)v.SellingPrice) : null
         }).ToListAsync();
+
+        var results = new List<SearchSuggestionViewModel>();
+        results.AddRange(categories);
+        results.AddRange(products);
+        return results;
     }
 
     public async Task<PagedResult<ProductCardViewModel>> SearchProductsAsync(ProductSearchFilter filter)
     {
         var query = dbContext.Products.AsNoTracking().Where(x => x.IsActive);
+        var today = DateTime.Today;
 
-        if (!string.IsNullOrWhiteSpace(filter.Keyword))
+        bool isRelevanceQuery = !string.IsNullOrWhiteSpace(filter.Keyword);
+        var hasT0=false; var hasT1=false; var hasT2=false; var hasT3=false; var hasT4=false; var hasT5=false; var hasT6=false; var hasT7=false;
+        string t0="", t1="", t2="", t3="", t4="", t5="", t6="", t7="";
+
+        if (isRelevanceQuery)
         {
             var kw = filter.Keyword?.Trim() ?? string.Empty;
             var normalizedKw = ClothingStore.Helpers.VietnameseStringHelper.NormalizeVietnamese(kw).ToLower();
             var tokens = normalizedKw.Split(' ', StringSplitOptions.RemoveEmptyEntries).Distinct().Take(8).ToList();
             
-            var t0 = tokens.Count > 0 ? tokens[0] : "";
-            var t1 = tokens.Count > 1 ? tokens[1] : "";
-            var t2 = tokens.Count > 2 ? tokens[2] : "";
-            var t3 = tokens.Count > 3 ? tokens[3] : "";
-            var t4 = tokens.Count > 4 ? tokens[4] : "";
-            var t5 = tokens.Count > 5 ? tokens[5] : "";
-            var t6 = tokens.Count > 6 ? tokens[6] : "";
-            var t7 = tokens.Count > 7 ? tokens[7] : "";
+            t0 = tokens.Count > 0 ? tokens[0] : "";
+            t1 = tokens.Count > 1 ? tokens[1] : "";
+            t2 = tokens.Count > 2 ? tokens[2] : "";
+            t3 = tokens.Count > 3 ? tokens[3] : "";
+            t4 = tokens.Count > 4 ? tokens[4] : "";
+            t5 = tokens.Count > 5 ? tokens[5] : "";
+            t6 = tokens.Count > 6 ? tokens[6] : "";
+            t7 = tokens.Count > 7 ? tokens[7] : "";
 
-            var hasT0 = tokens.Count > 0;
-            var hasT1 = tokens.Count > 1;
-            var hasT2 = tokens.Count > 2;
-            var hasT3 = tokens.Count > 3;
-            var hasT4 = tokens.Count > 4;
-            var hasT5 = tokens.Count > 5;
-            var hasT6 = tokens.Count > 6;
-            var hasT7 = tokens.Count > 7;
+            hasT0 = tokens.Count > 0;
+            hasT1 = tokens.Count > 1;
+            hasT2 = tokens.Count > 2;
+            hasT3 = tokens.Count > 3;
+            hasT4 = tokens.Count > 4;
+            hasT5 = tokens.Count > 5;
+            hasT6 = tokens.Count > 6;
+            hasT7 = tokens.Count > 7;
 
             query = query.Where(x => 
                 (hasT0 && ((x.SearchNormalizedName != null && x.SearchNormalizedName.Contains(t0)) || x.ProductVariants.Any(v => v.SKU.Contains(t0)) || x.Category.CategoryName.Contains(t0))) ||
@@ -138,30 +145,105 @@ public class ProductRepository(StoreDbContext dbContext, IMemoryCache cache) : I
                 (hasT6 && ((x.SearchNormalizedName != null && x.SearchNormalizedName.Contains(t6)) || x.ProductVariants.Any(v => v.SKU.Contains(t6)) || x.Category.CategoryName.Contains(t6))) ||
                 (hasT7 && ((x.SearchNormalizedName != null && x.SearchNormalizedName.Contains(t7)) || x.ProductVariants.Any(v => v.SKU.Contains(t7)) || x.Category.CategoryName.Contains(t7)))
             );
-
-            var isRelevanceSort = string.IsNullOrWhiteSpace(filter.Sort) || filter.Sort.ToLower() == "relevance";
-            if (isRelevanceSort)
-            {
-                query = query.OrderByDescending(x =>
-                    (hasT0 ? ((x.SearchNormalizedName != null && x.SearchNormalizedName.StartsWith(t0) ? 100 : x.SearchNormalizedName != null && x.SearchNormalizedName.Contains(t0) ? 80 : 0) + (x.ProductVariants.Any(v => v.SKU.StartsWith(t0)) ? 60 : x.ProductVariants.Any(v => v.SKU.Contains(t0)) ? 50 : 0) + (x.Category.CategoryName.Contains(t0) ? 30 : 0)) : 0) +
-                    (hasT1 ? ((x.SearchNormalizedName != null && x.SearchNormalizedName.StartsWith(t1) ? 100 : x.SearchNormalizedName != null && x.SearchNormalizedName.Contains(t1) ? 80 : 0) + (x.ProductVariants.Any(v => v.SKU.StartsWith(t1)) ? 60 : x.ProductVariants.Any(v => v.SKU.Contains(t1)) ? 50 : 0) + (x.Category.CategoryName.Contains(t1) ? 30 : 0)) : 0) +
-                    (hasT2 ? ((x.SearchNormalizedName != null && x.SearchNormalizedName.StartsWith(t2) ? 100 : x.SearchNormalizedName != null && x.SearchNormalizedName.Contains(t2) ? 80 : 0) + (x.ProductVariants.Any(v => v.SKU.StartsWith(t2)) ? 60 : x.ProductVariants.Any(v => v.SKU.Contains(t2)) ? 50 : 0) + (x.Category.CategoryName.Contains(t2) ? 30 : 0)) : 0) +
-                    (hasT3 ? ((x.SearchNormalizedName != null && x.SearchNormalizedName.StartsWith(t3) ? 100 : x.SearchNormalizedName != null && x.SearchNormalizedName.Contains(t3) ? 80 : 0) + (x.ProductVariants.Any(v => v.SKU.StartsWith(t3)) ? 60 : x.ProductVariants.Any(v => v.SKU.Contains(t3)) ? 50 : 0) + (x.Category.CategoryName.Contains(t3) ? 30 : 0)) : 0) +
-                    (hasT4 ? ((x.SearchNormalizedName != null && x.SearchNormalizedName.StartsWith(t4) ? 100 : x.SearchNormalizedName != null && x.SearchNormalizedName.Contains(t4) ? 80 : 0) + (x.ProductVariants.Any(v => v.SKU.StartsWith(t4)) ? 60 : x.ProductVariants.Any(v => v.SKU.Contains(t4)) ? 50 : 0) + (x.Category.CategoryName.Contains(t4) ? 30 : 0)) : 0) +
-                    (hasT5 ? ((x.SearchNormalizedName != null && x.SearchNormalizedName.StartsWith(t5) ? 100 : x.SearchNormalizedName != null && x.SearchNormalizedName.Contains(t5) ? 80 : 0) + (x.ProductVariants.Any(v => v.SKU.StartsWith(t5)) ? 60 : x.ProductVariants.Any(v => v.SKU.Contains(t5)) ? 50 : 0) + (x.Category.CategoryName.Contains(t5) ? 30 : 0)) : 0) +
-                    (hasT6 ? ((x.SearchNormalizedName != null && x.SearchNormalizedName.StartsWith(t6) ? 100 : x.SearchNormalizedName != null && x.SearchNormalizedName.Contains(t6) ? 80 : 0) + (x.ProductVariants.Any(v => v.SKU.StartsWith(t6)) ? 60 : x.ProductVariants.Any(v => v.SKU.Contains(t6)) ? 50 : 0) + (x.Category.CategoryName.Contains(t6) ? 30 : 0)) : 0) +
-                    (hasT7 ? ((x.SearchNormalizedName != null && x.SearchNormalizedName.StartsWith(t7) ? 100 : x.SearchNormalizedName != null && x.SearchNormalizedName.Contains(t7) ? 80 : 0) + (x.ProductVariants.Any(v => v.SKU.StartsWith(t7)) ? 60 : x.ProductVariants.Any(v => v.SKU.Contains(t7)) ? 50 : 0) + (x.Category.CategoryName.Contains(t7) ? 30 : 0)) : 0)
-                ).ThenByDescending(x => x.CreatedAt);
-            }
         }
 
         var sort = filter.Sort?.ToLower() ?? "relevance";
-        if (sort == "relevance" && string.IsNullOrWhiteSpace(filter.Keyword))
+        if (sort == "relevance" && !isRelevanceQuery)
         {
             sort = "newest";
         }
 
-        if (sort != "relevance")
+        int totalCount = 0;
+        List<int>? pagedProductIds = null;
+
+        if (sort == "relevance")
+        {
+            // TIER 1: Fetch Top 100 for Re-Ranking
+            var projectedTop = await query.Take(100).Select(x => new 
+            {
+                x.ProductID,
+                RelevanceScore = 
+                    (hasT0 ? ((x.SearchNormalizedName != null && x.SearchNormalizedName.StartsWith(t0) ? 100 : x.SearchNormalizedName != null && x.SearchNormalizedName.Contains(t0) ? 80 : 0) + (x.ProductVariants.Any(v => v.SKU.StartsWith(t0)) ? 60 : x.ProductVariants.Any(v => v.SKU.Contains(t0)) ? 50 : 0) + (x.Category.CategoryName.Contains(t0) ? 30 : 0)) : 0) +
+                    (hasT1 ? ((x.SearchNormalizedName != null && x.SearchNormalizedName.StartsWith(t1) ? 100 : x.SearchNormalizedName != null && x.SearchNormalizedName.Contains(t1) ? 80 : 0) + (x.ProductVariants.Any(v => v.SKU.StartsWith(t1)) ? 60 : x.ProductVariants.Any(v => v.SKU.Contains(t1)) ? 50 : 0) + (x.Category.CategoryName.Contains(t1) ? 30 : 0)) : 0) +
+                    (hasT2 ? ((x.SearchNormalizedName != null && x.SearchNormalizedName.StartsWith(t2) ? 100 : x.SearchNormalizedName != null && x.SearchNormalizedName.Contains(t2) ? 80 : 0) + (x.ProductVariants.Any(v => v.SKU.StartsWith(t2)) ? 60 : x.ProductVariants.Any(v => v.SKU.Contains(t2)) ? 50 : 0) + (x.Category.CategoryName.Contains(t2) ? 30 : 0)) : 0),
+                x.CategoryID,
+                x.Gender,
+                x.IsBestSeller,
+                HasDiscount = x.DiscountProgram != null && x.DiscountProgram.IsActive && x.DiscountProgram.StartDate <= today && x.DiscountProgram.EndDate >= today
+            }).ToListAsync();
+
+            // TIER 2: Preference Reranking
+            var preferredCategories = new HashSet<int>();
+            var preferredGenders = new HashSet<string>();
+            bool hasOrders = false;
+
+            try
+            {
+                if (filter.CustomerId.HasValue)
+                {
+                    var cacheKey = $"CustomerPref_{filter.CustomerId.Value}";
+                    if (!cache.TryGetValue(cacheKey, out (HashSet<int> cats, HashSet<string> gens)? prefs))
+                    {
+                        var orders = await dbContext.OrderDetails.AsNoTracking()
+                            .Include(od => od.ProductVariant.Product)
+                            .Where(od => od.Order.CustomerId == filter.CustomerId.Value && od.Order.OrderStatus == OrderStatus.Delivered)
+                            .ToListAsync();
+                        
+                        prefs = (new HashSet<int>(), new HashSet<string>());
+                        if (orders.Any())
+                        {
+                            foreach (var od in orders)
+                            {
+                                prefs.Value.cats.Add(od.ProductVariant.Product.CategoryID);
+                                if (!string.IsNullOrWhiteSpace(od.ProductVariant.Product.Gender))
+                                    prefs.Value.gens.Add(od.ProductVariant.Product.Gender);
+                            }
+                        }
+                        cache.Set(cacheKey, prefs, TimeSpan.FromMinutes(10));
+                    }
+                    
+                    preferredCategories = prefs.Value.cats;
+                    preferredGenders = prefs.Value.gens;
+                    hasOrders = preferredCategories.Any();
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Personalization failed for CustomerId: {CustomerId}", filter.CustomerId);
+                hasOrders = false;
+            }
+
+            var rankedIds = projectedTop.Select(x => {
+                double relevance = x.RelevanceScore;
+                double business = (x.IsBestSeller ? 20 : 0) + (x.HasDiscount ? 10 : 0);
+                double preference = 0;
+
+                if (hasOrders)
+                {
+                    if (preferredCategories.Contains(x.CategoryID)) preference += 25;
+                    if (!string.IsNullOrWhiteSpace(x.Gender) && preferredGenders.Contains(x.Gender)) preference += 20;
+
+                    return new { x.ProductID, FinalScore = (relevance * 0.7) + (preference * 0.2) + (business * 0.1) };
+                }
+                else
+                {
+                    // Cold Start
+                    return new { x.ProductID, FinalScore = (relevance * 0.85) + (business * 0.15) };
+                }
+            })
+            .OrderByDescending(x => x.FinalScore)
+            .ThenByDescending(x => x.ProductID)
+            .Select(x => x.ProductID)
+            .ToList();
+
+            totalCount = rankedIds.Count;
+            var totalPages = (int)Math.Ceiling((double)totalCount / filter.PageSize);
+            if (filter.Page > totalPages && totalPages > 0) filter.Page = totalPages;
+
+            pagedProductIds = rankedIds.Skip((filter.Page - 1) * filter.PageSize).Take(filter.PageSize).ToList();
+            query = dbContext.Products.AsNoTracking().Where(x => pagedProductIds.Contains(x.ProductID));
+        }
+        else
         {
             query = sort switch
             {
@@ -178,21 +260,15 @@ public class ProductRepository(StoreDbContext dbContext, IMemoryCache cache) : I
                 "bestselling" => query.OrderByDescending(x => x.IsBestSeller).ThenByDescending(x => x.CreatedAt),
                 _ => query.OrderByDescending(x => x.CreatedAt)
             };
+
+            totalCount = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalCount / filter.PageSize);
+            if (filter.Page > totalPages && totalPages > 0) filter.Page = totalPages;
+
+            query = query.Skip((filter.Page - 1) * filter.PageSize).Take(filter.PageSize);
         }
 
-        var totalCount = await query.CountAsync();
-
-        var totalPages = (int)Math.Ceiling((double)totalCount / filter.PageSize);
-        if (filter.Page > totalPages && totalPages > 0)
-        {
-            filter.Page = totalPages;
-        }
-
-        var pagedQuery = query.Skip((filter.Page - 1) * filter.PageSize).Take(filter.PageSize);
-
-        var today = DateTime.Today;
-
-        var projected = await pagedQuery.Select(x => new 
+        var projected = await query.Select(x => new 
         {
             x.ProductID,
             x.ProductName,
@@ -209,6 +285,11 @@ public class ProductRepository(StoreDbContext dbContext, IMemoryCache cache) : I
             x.IsBestSeller,
             Colors = x.ProductVariants.Where(v => v.IsActive).Select(v => v.Color).Where(c => c != null)
         }).ToListAsync();
+
+        if (pagedProductIds != null)
+        {
+            projected = projected.OrderBy(p => pagedProductIds.IndexOf(p.ProductID)).ToList();
+        }
 
         var items = projected.Select(x => new ProductCardViewModel
         {
