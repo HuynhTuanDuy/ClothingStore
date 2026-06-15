@@ -82,7 +82,7 @@
                                 if (order.NextDeliveryDate.HasValue)
                                 {
                                     var localDate = DateTimeService.ConvertUtcToLocal(order.NextDeliveryDate.Value);
-                                    displayDate = localDate.ToString("dd/MM/yyyy HH:mm");
+                                    displayDate = localDate.ToString("HH:mm dd/MM/yyyy");
                                 }
                             }
                             Hẹn lại: <strong>@displayDate</strong>

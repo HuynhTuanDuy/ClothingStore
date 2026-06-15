@@ -13,7 +13,7 @@
         </a>
         <div>
             <h1 class="text-2xl font-bold text-gray-900">Đơn hàng #@Model.OrderCode</h1>
-            <p class="text-sm text-gray-500 mt-0.5">Đặt ngày: @Model.OrderDateLocal.ToString("dd/MM/yyyy HH:mm")</p>
+            <p class="text-sm text-gray-500 mt-0.5">Đặt ngày: @Model.OrderDateLocal.ToString("HH:mm dd/MM/yyyy")</p>
         </div>
     </div>
     
@@ -247,7 +247,7 @@
                                             string displayDate = "Chưa rõ";
                                             if (Model.NextDeliveryDateLocal.HasValue)
                                             {
-                                                displayDate = Model.NextDeliveryDateLocal.Value.ToString("dd/MM/yyyy HH:mm");
+                                                displayDate = Model.NextDeliveryDateLocal.Value.ToString("HH:mm dd/MM/yyyy");
                                             }
                                         }
                                         <li><strong>Lịch hẹn:</strong> @displayDate</li>

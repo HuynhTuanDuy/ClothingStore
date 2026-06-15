@@ -4,6 +4,11 @@
     @Html.AntiForgeryToken()
     <div class="space-y-4">
         <div>
+            <label asp-for="AddressName" class="block text-sm font-medium text-gray-700 mb-1">Tên gợi nhớ (Tùy chọn)</label>
+            <input asp-for="AddressName" placeholder="Ví dụ: Nhà riêng, Công ty..." maxlength="50" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-brand-brown focus:border-brand-brown" />
+            <span asp-validation-for="AddressName" class="text-red-500 text-xs mt-1 block"></span>
+        </div>
+        <div>
             <label asp-for="RecipientName" class="block text-sm font-medium text-gray-700 mb-1">Tên người nhận</label>
             <input asp-for="RecipientName" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-brand-brown focus:border-brand-brown" />
             <span asp-validation-for="RecipientName" class="text-red-500 text-xs mt-1 block"></span>
@@ -23,20 +28,38 @@
         
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-                <label asp-for="Province" class="block text-sm font-medium text-gray-700 mb-1">Tỉnh/Thành phố</label>
-                <input asp-for="Province" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-brand-brown focus:border-brand-brown" />
-                <span asp-validation-for="Province" class="text-red-500 text-xs mt-1 block"></span>
+                <label asp-for="ProvinceId" class="block text-sm font-medium text-gray-700 mb-1">Tỉnh/Thành phố</label>
+                <select asp-for="ProvinceId" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-brand-brown focus:border-brand-brown addr-province" data-target="add_districtId">
+                    <option value="">-- Chọn --</option>
+                    @if (ViewBag.Provinces != null)
+                    {
+                        foreach (var p in (IEnumerable<ClothingStore.Models.Entities.Province>)ViewBag.Provinces)
+                        {
+                            <option value="@p.ProvinceId">@p.Name</option>
+                        }
+                    }
+                </select>
+                <span asp-validation-for="ProvinceId" class="text-red-500 text-xs mt-1 block"></span>
             </div>
             <div>
-                <label asp-for="District" class="block text-sm font-medium text-gray-700 mb-1">Quận/Huyện</label>
-                <input asp-for="District" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-brand-brown focus:border-brand-brown" />
-                <span asp-validation-for="District" class="text-red-500 text-xs mt-1 block"></span>
+                <label asp-for="DistrictId" class="block text-sm font-medium text-gray-700 mb-1">Quận/Huyện</label>
+                <select asp-for="DistrictId" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-brand-brown focus:border-brand-brown addr-district" id="add_districtId" data-target="add_wardId">
+                    <option value="">-- Chọn --</option>
+                </select>
+                <span asp-validation-for="DistrictId" class="text-red-500 text-xs mt-1 block"></span>
             </div>
             <div>
-                <label asp-for="Ward" class="block text-sm font-medium text-gray-700 mb-1">Phường/Xã</label>
-                <input asp-for="Ward" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-brand-brown focus:border-brand-brown" />
-                <span asp-validation-for="Ward" class="text-red-500 text-xs mt-1 block"></span>
+                <label asp-for="WardId" class="block text-sm font-medium text-gray-700 mb-1">Phường/Xã</label>
+                <select asp-for="WardId" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-brand-brown focus:border-brand-brown addr-ward" id="add_wardId">
+                    <option value="">-- Chọn --</option>
+                </select>
+                <span asp-validation-for="WardId" class="text-red-500 text-xs mt-1 block"></span>
             </div>
+        </div>
+        
+        <div>
+            <label asp-for="Note" class="block text-sm font-medium text-gray-700 mb-1">Ghi chú (Tòa nhà, Lầu...)</label>
+            <input asp-for="Note" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-brand-brown focus:border-brand-brown" />
         </div>
         
         <div class="flex items-center mt-2">

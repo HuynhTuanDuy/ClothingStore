@@ -149,7 +149,7 @@
                             <td class="px-6 py-6 font-body-md text-body-md font-semibold text-primary">
                                 @order.OrderCode
                             </td>
-                            <td class="px-6 py-6 font-body-sm text-body-sm text-on-surface-variant">@order.OrderDate.ToString("dd/MM/yyyy")</td>
+                            <td class="px-6 py-6 font-body-sm text-body-sm text-on-surface-variant">@order.OrderDate.AddHours(7).ToString("dd/MM/yyyy")</td>
                             <td class="px-6 py-6">
                                 <div class="flex items-center gap-3">
                                     <div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-secondary font-semibold text-xs shrink-0">@initial</div>

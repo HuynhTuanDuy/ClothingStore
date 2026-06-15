@@ -12,6 +12,7 @@ public class OrderTrackingController(
     ICartService cartService,
     IProductRepository productRepository,
     IMemoryCache memoryCache,
+    IDateTimeService dateTimeService,
     ILogger<OrderTrackingController> logger) : Controller
 {
     private const int MaxAttempts = 5;
@@ -19,9 +20,9 @@ public class OrderTrackingController(
 
     [HttpGet]
     [Route("order-tracking")]
-    public IActionResult Index([FromQuery] string? code)
+    public IActionResult Index([FromQuery] string? code, [FromQuery] string? phone)
     {
-        var model = new GuestOrderTrackingForm { OrderCode = code ?? "" };
+        var model = new GuestOrderTrackingForm { OrderCode = code ?? "", PhoneNumber = phone ?? "" };
         return View(model);
     }
 
@@ -63,7 +64,7 @@ public class OrderTrackingController(
             var result = new GuestOrderTrackingResult
             {
                 OrderCode = order.OrderCode,
-                OrderDate = order.OrderDate,
+                OrderDate = dateTimeService.ConvertUtcToLocal(order.OrderDate),
                 OrderStatus = order.OrderStatus,
                 PaymentMethod = order.PaymentMethod,
                 PaymentStatus = order.PaymentStatus,
@@ -91,7 +92,7 @@ public class OrderTrackingController(
                 Histories = order.StatusHistory.Select(sh => new GuestOrderTrackingHistory
                 {
                     Status = sh.NewStatus,
-                    ChangedAt = sh.ChangedAt ?? DateTime.UtcNow,
+                    ChangedAt = dateTimeService.ConvertUtcToLocal(sh.ChangedAt ?? DateTime.UtcNow),
                     Note = sh.Note
                 }).ToList()
             };

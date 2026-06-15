@@ -365,7 +365,7 @@
                                     <a asp-area="Admin" asp-controller="Orders" asp-action="Detail" asp-route-id="@o.OrderCode"
                                        class="text-primary hover:underline">@o.OrderCode</a>
                                 </td>
-                                <td class="py-3 px-3 text-on-surface-variant text-sm">@o.OrderDate.ToString("dd/MM HH:mm")</td>
+                                <td class="py-3 px-3 text-on-surface-variant text-sm">@o.OrderDate.AddHours(7).ToString("HH:mm dd/MM")</td>
                                 <td class="py-3 px-3 max-w-[120px] truncate">@o.CustomerName</td>
                                 <td class="py-3 px-3 font-semibold text-primary">@o.FinalAmount.ToString("N0")đ</td>
                                 <td class="py-3 pl-3 text-right">

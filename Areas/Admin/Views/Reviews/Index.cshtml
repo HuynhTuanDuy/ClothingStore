@@ -65,7 +65,7 @@
                                 }
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                @item.ReviewDate.ToString("dd/MM/yyyy ss:mm:HH")
+                                @item.ReviewDate.AddHours(7).ToString("HH:mm dd/MM/yyyy")
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 @if (item.IsApproved)
@@ -92,7 +92,7 @@
                                             </button>
                                         </form>
                                     }
-                                    <button type="button" onclick="showReviewDetails('@item.CustomerName', '@item.CustomerEmail', '@item.CustomerPhone', '@item.ProductName', @item.Rating, '@System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(item.Comment)', '@item.ReviewDate.ToString("dd/MM/yyyy ss:mm:HH")', [@Html.Raw(string.Join(",", item.Images.Select(i => $"'{i}'")))])" class="p-1 text-blue-600 hover:text-blue-900 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors" title="Xem chi tiết">
+                                    <button type="button" onclick="showReviewDetails('@item.CustomerName', '@item.CustomerEmail', '@item.CustomerPhone', '@item.ProductName', @item.Rating, '@System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(item.Comment)', '@item.ReviewDate.AddHours(7).ToString("HH:mm dd/MM/yyyy")', [@Html.Raw(string.Join(",", item.Images.Select(i => $"'{i}'")))])" class="p-1 text-blue-600 hover:text-blue-900 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors" title="Xem chi tiết">
                                         <span class="material-symbols-outlined text-[20px]">visibility</span>
                                     </button>
                                     <form asp-action="Delete" method="post" class="inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa đánh giá này?');">

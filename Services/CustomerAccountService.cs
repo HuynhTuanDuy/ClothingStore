@@ -27,7 +27,8 @@ public class CustomerAccountService(
     IOrderRepository orderRepository,
     IAccountRepository accountRepository,
     IUnitOfWork unitOfWork,
-    ILogger<CustomerAccountService> logger) : ICustomerAccountService
+    ILogger<CustomerAccountService> logger,
+    IAddressService addressService) : ICustomerAccountService
 {
     public async Task<CustomerDashboardViewModel?> GetDashboardAsync(int customerId)
     {
@@ -165,32 +166,59 @@ public class CustomerAccountService(
         var addressesCount = await dbContext.ShippingAddresses.CountAsync(a => a.CustomerId == customerId);
         bool isDefault = addressesCount == 0 || model.IsDefault;
 
-        if (isDefault && addressesCount > 0)
+        if (model.ProvinceId == null || model.DistrictId == null || model.WardId == null)
+            return (false, "Vui lòng chọn đầy đủ Tỉnh, Quận, Phường.");
+            
+        var province = await addressService.GetProvinceByIdAsync(model.ProvinceId.Value);
+        var district = await addressService.GetDistrictByIdAsync(model.DistrictId.Value);
+        var ward = await addressService.GetWardByIdAsync(model.WardId.Value);
+        
+        if (province == null || district == null || ward == null)
+            return (false, "Dữ liệu địa chỉ không hợp lệ.");
+            
+        if (district.ProvinceId != province.ProvinceId || ward.DistrictId != district.DistrictId)
+            return (false, "Dữ liệu phường/quận/tỉnh không khớp nhau.");
+
+        await using var transaction = await unitOfWork.BeginTransactionAsync();
+        try
         {
-            var defaults = await dbContext.ShippingAddresses.Where(a => a.CustomerId == customerId && a.IsDefault).ToListAsync();
-            foreach (var d in defaults)
+            if (isDefault && addressesCount > 0)
             {
-                d.IsDefault = false;
+                await dbContext.ShippingAddresses
+                    .Where(a => a.CustomerId == customerId && a.IsDefault)
+                    .ExecuteUpdateAsync(s => s.SetProperty(a => a.IsDefault, false));
             }
+
+            var newAddress = new ShippingAddress
+            {
+                CustomerId = customerId,
+                AddressName = string.IsNullOrWhiteSpace(model.AddressName) ? null : model.AddressName.Trim(),
+                RecipientName = model.RecipientName,
+                ReceiverPhone = model.ReceiverPhone,
+                AddressLine = model.AddressLine,
+                WardId = model.WardId,
+                DistrictId = model.DistrictId,
+                ProvinceId = model.ProvinceId,
+                Note = model.Note,
+                Ward = ward.Name,
+                District = district.Name,
+                Province = province.Name,
+                IsDefault = isDefault
+            };
+
+            await dbContext.ShippingAddresses.AddAsync(newAddress);
+            await unitOfWork.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            logger.LogInformation("Customer {CustomerId} added a new address.", customerId);
+            return (true, null);
         }
-
-        var newAddress = new ShippingAddress
+        catch (Exception ex)
         {
-            CustomerId = customerId,
-            RecipientName = model.RecipientName,
-            ReceiverPhone = model.ReceiverPhone,
-            AddressLine = model.AddressLine,
-            Ward = model.Ward,
-            District = model.District,
-            Province = model.Province,
-            IsDefault = isDefault
-        };
-
-        await dbContext.ShippingAddresses.AddAsync(newAddress);
-        await unitOfWork.SaveChangesAsync();
-        logger.LogInformation("Customer {CustomerId} added a new address.", customerId);
-
-        return (true, null);
+            await transaction.RollbackAsync();
+            logger.LogError(ex, "Error creating address for customer {CustomerId}", customerId);
+            return (false, "Có lỗi xảy ra khi thêm địa chỉ. Vui lòng thử lại.");
+        }
     }
 
     public async Task<(bool Success, string? Error)> UpdateAddressAsync(int customerId, AddressFormViewModel model)
@@ -202,29 +230,56 @@ public class CustomerAccountService(
             return (false, "Không tìm thấy địa chỉ.");
         }
 
-        if (model.IsDefault && !address.IsDefault)
-        {
-            var defaults = await dbContext.ShippingAddresses.Where(a => a.CustomerId == customerId && a.IsDefault).ToListAsync();
-            foreach (var d in defaults)
-            {
-                d.IsDefault = false;
-            }
-        }
-
-        address.RecipientName = model.RecipientName;
-        address.ReceiverPhone = model.ReceiverPhone;
-        address.AddressLine = model.AddressLine;
-        address.Ward = model.Ward;
-        address.District = model.District;
-        address.Province = model.Province;
+        if (model.ProvinceId == null || model.DistrictId == null || model.WardId == null)
+            return (false, "Vui lòng chọn đầy đủ Tỉnh, Quận, Phường.");
+            
+        var province = await addressService.GetProvinceByIdAsync(model.ProvinceId.Value);
+        var district = await addressService.GetDistrictByIdAsync(model.DistrictId.Value);
+        var ward = await addressService.GetWardByIdAsync(model.WardId.Value);
         
-        if (model.IsDefault)
-        {
-            address.IsDefault = true;
-        }
+        if (province == null || district == null || ward == null)
+            return (false, "Dữ liệu địa chỉ không hợp lệ.");
+            
+        if (district.ProvinceId != province.ProvinceId || ward.DistrictId != district.DistrictId)
+            return (false, "Dữ liệu phường/quận/tỉnh không khớp nhau.");
 
-        await unitOfWork.SaveChangesAsync();
-        return (true, null);
+        await using var transaction = await unitOfWork.BeginTransactionAsync();
+        try
+        {
+            if (model.IsDefault && !address.IsDefault)
+            {
+                await dbContext.ShippingAddresses
+                    .Where(a => a.CustomerId == customerId && a.IsDefault)
+                    .ExecuteUpdateAsync(s => s.SetProperty(a => a.IsDefault, false));
+            }
+
+            address.AddressName = string.IsNullOrWhiteSpace(model.AddressName) ? null : model.AddressName.Trim();
+            address.RecipientName = model.RecipientName;
+            address.ReceiverPhone = model.ReceiverPhone;
+            address.AddressLine = model.AddressLine;
+            address.WardId = model.WardId;
+            address.DistrictId = model.DistrictId;
+            address.ProvinceId = model.ProvinceId;
+            address.Note = model.Note;
+            address.Ward = ward.Name;
+            address.District = district.Name;
+            address.Province = province.Name;
+            
+            if (model.IsDefault)
+            {
+                address.IsDefault = true;
+            }
+
+            await unitOfWork.SaveChangesAsync();
+            await transaction.CommitAsync();
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            logger.LogError(ex, "Error updating address {AddressId} for customer {CustomerId}", model.AddressID, customerId);
+            return (false, "Có lỗi xảy ra khi cập nhật địa chỉ. Vui lòng thử lại.");
+        }
     }
 
     public async Task<(bool Success, string? Error)> DeleteAddressAsync(int customerId, int addressId)
@@ -256,15 +311,28 @@ public class CustomerAccountService(
 
     public async Task<(bool Success, string? Error)> SetDefaultAddressAsync(int customerId, int addressId)
     {
-        var addresses = await dbContext.ShippingAddresses.Where(a => a.CustomerId == customerId).ToListAsync();
-        if (!addresses.Any(a => a.AddressID == addressId)) return (false, "Không tìm thấy địa chỉ.");
+        var addressExists = await dbContext.ShippingAddresses.AnyAsync(a => a.CustomerId == customerId && a.AddressID == addressId);
+        if (!addressExists) return (false, "Không tìm thấy địa chỉ.");
 
-        foreach (var a in addresses)
+        await using var transaction = await unitOfWork.BeginTransactionAsync();
+        try
         {
-            a.IsDefault = a.AddressID == addressId;
-        }
+            await dbContext.ShippingAddresses
+                .Where(a => a.CustomerId == customerId)
+                .ExecuteUpdateAsync(s => s.SetProperty(a => a.IsDefault, false));
 
-        await unitOfWork.SaveChangesAsync();
-        return (true, null);
+            await dbContext.ShippingAddresses
+                .Where(a => a.CustomerId == customerId && a.AddressID == addressId)
+                .ExecuteUpdateAsync(s => s.SetProperty(a => a.IsDefault, true));
+
+            await transaction.CommitAsync();
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            logger.LogError(ex, "Error setting default address {AddressId} for customer {CustomerId}", addressId, customerId);
+            return (false, "Có lỗi xảy ra, vui lòng thử lại.");
+        }
     }
 }

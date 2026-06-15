@@ -16,7 +16,10 @@ public class CheckoutService(
     ICurrentCustomerService currentCustomerService,
     ICustomerAccountService customerAccountService,
     IHttpContextAccessor httpContextAccessor,
-    IMemoryCache memoryCache) : ICheckoutService
+    IMemoryCache memoryCache,
+    IAddressService addressService,
+    IAddressRecommendationService addressRecommendationService,
+    ILogger<CheckoutService> logger) : ICheckoutService
 {
     // Shipping fee policy
     private const decimal FreeShippingThreshold = 500_000m;
@@ -27,7 +30,8 @@ public class CheckoutService(
         var vm = new CheckoutViewModel
         {
             Input = input ?? new CheckoutInputModel(),
-            Cart  = await cartService.GetCartAsync()
+            Cart  = await cartService.GetCartAsync(),
+            Provinces = (await addressService.GetProvincesAsync()).ToList()
         };
 
         var customerId = currentCustomerService.GetCustomerId();
@@ -36,21 +40,48 @@ public class CheckoutService(
             vm.IsAuthenticated = true;
             vm.SavedAddresses = await customerAccountService.GetAddressesAsync(customerId.Value);
 
+            try
+            {
+                vm.SuggestedAddressId = await addressRecommendationService.GetSuggestedAddressAsync(customerId.Value);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to get suggested address for customer {CustomerId}", customerId.Value);
+                vm.SuggestedAddressId = null;
+            }
+
             // If it's a new request and no input was provided, try to pre-fill from default address
             if (input == null && vm.SavedAddresses.Any())
             {
-                var defaultAddr = vm.SavedAddresses.FirstOrDefault(a => a.IsDefault) ?? vm.SavedAddresses.First();
+                // Filter out legacy (unnormalized) addresses and try to find a default one
+                var validAddresses = vm.SavedAddresses.Where(a => a.ProvinceId != null).ToList();
+                if (validAddresses.Any())
+                {
+                    var defaultAddr = validAddresses.FirstOrDefault(a => a.IsDefault) ?? validAddresses.First();
                 vm.Input.ShippingRecipientName = defaultAddr.RecipientName;
                 vm.Input.ShippingPhone = defaultAddr.ReceiverPhone;
                 vm.Input.ShippingAddress = defaultAddr.AddressLine;
-                vm.Input.ShippingWard = defaultAddr.Ward;
-                vm.Input.ShippingDistrict = defaultAddr.District;
-                vm.Input.ShippingProvince = defaultAddr.Province;
+                vm.Input.ProvinceId = defaultAddr.ProvinceId;
+                vm.Input.DistrictId = defaultAddr.DistrictId;
+                vm.Input.WardId = defaultAddr.WardId;
+                vm.Input.DeliveryNote = defaultAddr.Note;
+                vm.Input.ShippingAddressId = defaultAddr.AddressID;
                 
                 var profile = await customerAccountService.GetProfileAsync(customerId.Value);
                 if (profile != null)
                 {
                     vm.Input.OrderEmail = profile.Email;
+                }
+                }
+                else
+                {
+                    var profile = await customerAccountService.GetProfileAsync(customerId.Value);
+                    if (profile != null)
+                    {
+                        vm.Input.ShippingRecipientName = profile.FullName;
+                        vm.Input.ShippingPhone = profile.Phone;
+                        vm.Input.OrderEmail = profile.Email;
+                    }
                 }
             }
             else if (input == null)
@@ -116,6 +147,31 @@ public class CheckoutService(
         var vat = Math.Max(0m, (subTotal - discountAmount) * 0.1m);
         var finalAmount = subTotal + shipping - discountAmount + vat;
 
+        // ── Address Validation & Snapshot ────────────────────────────
+        if (input.ProvinceId == null || input.DistrictId == null || input.WardId == null)
+            return PlaceOrderResult.Failure("Vui lòng chọn đầy đủ Tỉnh, Quận, Phường.");
+            
+        var province = await addressService.GetProvinceByIdAsync(input.ProvinceId.Value);
+        var district = await addressService.GetDistrictByIdAsync(input.DistrictId.Value);
+        var ward = await addressService.GetWardByIdAsync(input.WardId.Value);
+        
+        if (province == null || district == null || ward == null)
+            return PlaceOrderResult.Failure("Địa chỉ giao hàng không còn được hỗ trợ. Vui lòng chọn lại địa chỉ.");
+            
+        if (district.ProvinceId != province.ProvinceId || ward.DistrictId != district.DistrictId)
+            return PlaceOrderResult.Failure("Dữ liệu phường/quận/tỉnh không khớp nhau.");
+            
+        var addrParts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(input.ShippingAddress))
+            addrParts.Add(input.ShippingAddress.Trim());
+        addrParts.Add(ward.Name);
+        addrParts.Add(district.Name);
+        addrParts.Add(province.Name);
+
+        string fullAddress = string.Join(", ", addrParts);
+        if (!string.IsNullOrWhiteSpace(input.DeliveryNote))
+            fullAddress += $". Ghi chú: {input.DeliveryNote.Trim()}";
+
         // ── Build order code (LOW-02 FIX) ────────────────────────────
         var orderCode = GenerateOrderCode();
 
@@ -127,9 +183,12 @@ public class CheckoutService(
             ShippingRecipientName = input.ShippingRecipientName.Trim(),
             ShippingPhone        = input.ShippingPhone.Trim(),
             ShippingAddress      = input.ShippingAddress.Trim(),
-            ShippingWard         = input.ShippingWard.Trim(),
-            ShippingDistrict     = input.ShippingDistrict.Trim(),
-            ShippingProvince     = input.ShippingProvince.Trim(),
+            ShippingWard         = ward.Name,
+            ShippingDistrict     = district.Name,
+            ShippingProvince     = province.Name,
+            ShippingFullAddress  = fullAddress,
+            ShippingAddressId    = input.ShippingAddressId,
+            DeliveryNote         = input.DeliveryNote?.Trim(),
             PaymentMethod        = string.IsNullOrWhiteSpace(input.PaymentMethod) ? PaymentMethod.COD : input.PaymentMethod,
             PaymentStatus        = PaymentStatus.Unpaid,
             OrderStatus          = OrderStatus.Pending,

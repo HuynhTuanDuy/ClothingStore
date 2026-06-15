@@ -59,6 +59,9 @@ public class AddressFormViewModel
 {
     public int AddressID { get; set; }
     
+    [MaxLength(50, ErrorMessage = "Tên gợi nhớ không được vượt quá 50 ký tự.")]
+    public string? AddressName { get; set; }
+    
     [Required(ErrorMessage = "Vui lòng nhập Tên người nhận.")]
     public string RecipientName { get; set; } = string.Empty;
     
@@ -70,13 +73,15 @@ public class AddressFormViewModel
     public string AddressLine { get; set; } = string.Empty;
     
     [Required(ErrorMessage = "Vui lòng chọn Phường/Xã.")]
-    public string Ward { get; set; } = string.Empty;
+    public int? WardId { get; set; }
     
     [Required(ErrorMessage = "Vui lòng chọn Quận/Huyện.")]
-    public string District { get; set; } = string.Empty;
+    public int? DistrictId { get; set; }
     
     [Required(ErrorMessage = "Vui lòng chọn Tỉnh/Thành phố.")]
-    public string Province { get; set; } = string.Empty;
+    public int? ProvinceId { get; set; }
+    
+    public string? Note { get; set; }
     
     public bool IsDefault { get; set; }
 }

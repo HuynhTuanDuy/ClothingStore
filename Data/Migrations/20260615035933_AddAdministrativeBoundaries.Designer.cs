@@ -4,16 +4,19 @@ using ClothingStore.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace ClothingStore.Migrations
+namespace ClothingStore.Data.Migrations
 {
     [DbContext(typeof(StoreDbContext))]
-    partial class StoreDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260615035933_AddAdministrativeBoundaries")]
+    partial class AddAdministrativeBoundaries
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -783,9 +786,6 @@ namespace ClothingStore.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("ShippingAddressId")
-                        .HasColumnType("int");
-
                     b.Property<string>("ShippingDistrict")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -838,10 +838,6 @@ namespace ClothingStore.Migrations
 
                     b.HasIndex("OrderStatus", "OrderDate")
                         .HasDatabaseName("IX_Orders_OrderStatus");
-
-                    b.HasIndex(new[] { "CustomerId", "OrderDate" }, "IX_Orders_CustomerId_OrderDate");
-
-                    b.HasIndex(new[] { "ShippingAddressId" }, "IX_Orders_ShippingAddressId");
 
                     b.ToTable("ORDERS", t =>
                         {
@@ -1326,10 +1322,6 @@ namespace ClothingStore.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("AddressName")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
                     b.Property<int>("CustomerId")
                         .HasColumnType("int");
 
@@ -1342,12 +1334,6 @@ namespace ClothingStore.Migrations
 
                     b.Property<bool>("IsDefault")
                         .HasColumnType("bit");
-
-                    b.Property<decimal?>("Latitude")
-                        .HasColumnType("numeric(9,6)");
-
-                    b.Property<decimal?>("Longitude")
-                        .HasColumnType("numeric(9,6)");
 
                     b.Property<string>("Note")
                         .HasColumnType("nvarchar(max)");

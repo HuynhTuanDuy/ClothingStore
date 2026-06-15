@@ -216,7 +216,7 @@
                                 <span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded font-medium border border-gray-200">Bị ẩn</span>
                             }
                         </td>
-                        <td class="py-3 px-2 text-sm text-on-surface-variant">@p.CreatedAt?.ToString("dd/MM/yyyy")</td>
+                        <td class="py-3 px-2 text-sm text-on-surface-variant">@p.CreatedAt?.AddHours(7).ToString("HH:mm dd/MM/yyyy")</td>
                         <td class="py-3 px-4 text-right">
                             <div class="flex items-center justify-end gap-2">
                                 <a asp-action="Edit" asp-route-id="@p.ProductID" class="text-on-surface-variant hover:text-primary transition-colors" title="Sửa"><span class="material-symbols-outlined text-[20px]">edit</span></a>

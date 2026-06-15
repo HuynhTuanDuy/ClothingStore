@@ -34,7 +34,10 @@
                 }
                 
                 <div class="mb-4 pr-16">
-                    <h3 class="font-semibold text-gray-900">@address.RecipientName</h3>
+                    <h3 class="font-bold text-brand-brown text-base mb-1">
+                        @(string.IsNullOrWhiteSpace(address.AddressName) ? $"📍 Địa chỉ #{address.AddressID}" : $"{(address.AddressName.Contains("Nhà", StringComparison.OrdinalIgnoreCase) ? "🏠" : address.AddressName.Contains("Công ty", StringComparison.OrdinalIgnoreCase) ? "🏢" : "📍")} {address.AddressName}")
+                    </h3>
+                    <h4 class="font-semibold text-gray-900">@address.RecipientName</h4>
                     <p class="text-sm text-gray-600 mt-1">@address.ReceiverPhone</p>
                     <p class="text-sm text-gray-600 mt-2">@address.AddressLine</p>
                     <p class="text-sm text-gray-600">@address.Ward, @address.District, @address.Province</p>
@@ -42,7 +45,7 @@
                 
                 <div class="flex items-center gap-3 border-t border-gray-100 pt-4 mt-auto">
                     <button type="button" 
-                            onclick="openEditModal(@address.AddressID, '@address.RecipientName', '@address.ReceiverPhone', '@address.AddressLine', '@address.Ward', '@address.District', '@address.Province', @(address.IsDefault ? "true" : "false"))"
+                            onclick="openEditModal(@address.AddressID, '@Html.Raw(address.AddressName?.Replace("'", "\\'"))', '@Html.Raw(address.RecipientName.Replace("'", "\\'"))', '@address.ReceiverPhone', '@Html.Raw(address.AddressLine.Replace("'", "\\'"))', '@address.WardId', '@address.DistrictId', '@address.ProvinceId', '@Html.Raw(address.Note?.Replace("'", "\\'") ?? "")', @(address.IsDefault ? "true" : "false"))"
                             class="text-sm font-medium text-blue-600 hover:text-blue-800">
                         Chỉnh sửa
                     </button>
@@ -118,6 +121,10 @@ else
                 <input type="hidden" id="edit_AddressID" name="AddressID" />
                 <div class="space-y-4">
                     <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tên gợi nhớ (Tùy chọn)</label>
+                        <input type="text" id="edit_AddressName" name="AddressName" placeholder="Ví dụ: Nhà riêng, Công ty..." maxlength="50" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-brand-brown focus:border-brand-brown" />
+                    </div>
+                    <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Tên người nhận</label>
                         <input type="text" id="edit_RecipientName" name="RecipientName" required class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-brand-brown focus:border-brand-brown" />
                     </div>
@@ -132,16 +139,33 @@ else
                     <div class="grid grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Tỉnh/Thành</label>
-                            <input type="text" id="edit_Province" name="Province" required class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-brand-brown focus:border-brand-brown" />
+                            <select id="edit_Province" name="ProvinceId" required class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-brand-brown focus:border-brand-brown addr-province" data-target="edit_District">
+                                <option value="">-- Chọn --</option>
+                                @if (ViewBag.Provinces != null)
+                                {
+                                    foreach (var p in (IEnumerable<ClothingStore.Models.Entities.Province>)ViewBag.Provinces)
+                                    {
+                                        <option value="@p.ProvinceId">@p.Name</option>
+                                    }
+                                }
+                            </select>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Quận/Huyện</label>
-                            <input type="text" id="edit_District" name="District" required class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-brand-brown focus:border-brand-brown" />
+                            <select id="edit_District" name="DistrictId" required class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-brand-brown focus:border-brand-brown addr-district" data-target="edit_Ward">
+                                <option value="">-- Chọn --</option>
+                            </select>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Phường/Xã</label>
-                            <input type="text" id="edit_Ward" name="Ward" required class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-brand-brown focus:border-brand-brown" />
+                            <select id="edit_Ward" name="WardId" required class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-brand-brown focus:border-brand-brown addr-ward">
+                                <option value="">-- Chọn --</option>
+                            </select>
                         </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Ghi chú (Tòa nhà, Lầu...)</label>
+                        <input type="text" id="edit_Note" name="Note" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-brand-brown focus:border-brand-brown" />
                     </div>
                     <div class="flex items-center mt-2">
                         <input type="checkbox" id="edit_IsDefault" name="IsDefault" value="true" class="h-4 w-4 text-brand-brown border-gray-300 rounded" />
@@ -160,15 +184,97 @@ else
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        function openEditModal(id, name, phone, line, ward, district, province, isDefault) {
+        // Cấu hình AJAX Address
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.addr-province').forEach(el => {
+                el.addEventListener('change', async function() {
+                    const provinceId = this.value;
+                    const targetId = this.getAttribute('data-target');
+                    if (!targetId) return;
+                    const districtSelect = document.getElementById(targetId);
+                    const wardSelect = document.getElementById(districtSelect.getAttribute('data-target'));
+                    
+                    districtSelect.innerHTML = '<option value="">-- Chọn --</option>';
+                    if(wardSelect) wardSelect.innerHTML = '<option value="">-- Chọn --</option>';
+
+                    if (provinceId) {
+                        const res = await fetch(`/Address/Districts?provinceId=${provinceId}`);
+                        const data = await res.json();
+                        data.forEach(d => {
+                            const opt = document.createElement('option');
+                            opt.value = d.districtId;
+                            opt.textContent = d.name;
+                            districtSelect.appendChild(opt);
+                        });
+                    }
+                });
+            });
+
+            document.querySelectorAll('.addr-district').forEach(el => {
+                el.addEventListener('change', async function() {
+                    const districtId = this.value;
+                    const targetId = this.getAttribute('data-target');
+                    if (!targetId) return;
+                    const wardSelect = document.getElementById(targetId);
+                    
+                    wardSelect.innerHTML = '<option value="">-- Chọn --</option>';
+
+                    if (districtId) {
+                        const res = await fetch(`/Address/Wards?districtId=${districtId}`);
+                        const data = await res.json();
+                        data.forEach(w => {
+                            const opt = document.createElement('option');
+                            opt.value = w.wardId;
+                            opt.textContent = w.name;
+                            wardSelect.appendChild(opt);
+                        });
+                    }
+                });
+            });
+        });
+
+        async function openEditModal(id, addressName, name, phone, line, ward, district, province, note, isDefault) {
             document.getElementById('edit_AddressID').value = id;
+            document.getElementById('edit_AddressName').value = addressName || '';
             document.getElementById('edit_RecipientName').value = name;
             document.getElementById('edit_ReceiverPhone').value = phone;
             document.getElementById('edit_AddressLine').value = line;
-            document.getElementById('edit_Ward').value = ward;
-            document.getElementById('edit_District').value = district;
-            document.getElementById('edit_Province').value = province;
+            document.getElementById('edit_Note').value = note || '';
             document.getElementById('edit_IsDefault').checked = isDefault;
+            
+            // Set Province and trigger change
+            const pSelect = document.getElementById('edit_Province');
+            pSelect.value = province;
+            
+            // Fetch Districts manually for modal
+            const districtSelect = document.getElementById('edit_District');
+            const wardSelect = document.getElementById('edit_Ward');
+            districtSelect.innerHTML = '<option value="">-- Chọn --</option>';
+            wardSelect.innerHTML = '<option value="">-- Chọn --</option>';
+
+            if (province) {
+                const resD = await fetch(`/Address/Districts?provinceId=${province}`);
+                const dataD = await resD.json();
+                dataD.forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d.districtId;
+                    opt.textContent = d.name;
+                    districtSelect.appendChild(opt);
+                });
+                districtSelect.value = district;
+
+                if (district) {
+                    const resW = await fetch(`/Address/Wards?districtId=${district}`);
+                    const dataW = await resW.json();
+                    dataW.forEach(w => {
+                        const opt = document.createElement('option');
+                        opt.value = w.wardId;
+                        opt.textContent = w.name;
+                        wardSelect.appendChild(opt);
+                    });
+                    wardSelect.value = ward;
+                }
+            }
             
             document.getElementById('editAddressModal').classList.remove('hidden');
         }

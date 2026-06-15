@@ -51,7 +51,7 @@ else
                                         }
                                     }
                                 </div>
-                                <span class="text-sm text-gray-500">@review.ReviewDate.ToString("dd/MM/yyyy")</span>
+                                <span class="text-sm text-gray-500">@review.ReviewDate.AddHours(7).ToString("HH:mm dd/MM/yyyy")</span>
                             </div>
                         </div>
                         <button type="button" onclick="openEditReviewModal(@review.ReviewID, @review.Rating, '@System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(review.Comment)')" class="px-4 py-2 text-sm font-medium text-brand-brown bg-brand-cream hover:bg-brand-brown hover:text-white rounded-md transition-colors flex items-center gap-1">

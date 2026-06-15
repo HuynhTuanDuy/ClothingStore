@@ -32,7 +32,7 @@
         var statusColor = category.IsActive ? "bg-green-100 text-green-800 border-green-200" : "bg-gray-100 text-gray-800 border-gray-200";
         var statusText = category.IsActive ? "Hoạt động" : "Không hoạt động";
         var parentText = isRoot ? "Danh mục gốc" : $"Thuộc: {category.ParentCategory?.CategoryName}";
-        var createdAt = category.CreatedAt?.ToString("dd/MM/yyyy") ?? "N/A";
+        var createdAt = category.CreatedAt?.AddHours(7).ToString("HH:mm dd/MM/yyyy") ?? "N/A";
 
         <div class="category-card bg-surface border border-outline-variant rounded-lg p-6 hover:border-primary transition-all duration-300 relative overflow-hidden group flex flex-col" data-id="@category.CategoryID" data-parent-id="@(category.ParentCategoryID?.ToString() ?? "")" data-active="@(category.IsActive ? "true" : "false")">
             

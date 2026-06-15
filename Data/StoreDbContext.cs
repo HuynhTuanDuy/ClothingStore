@@ -21,6 +21,9 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
     public DbSet<CartItem> CartItems => Set<CartItem>();
     public DbSet<Coupon> Coupons => Set<Coupon>();
     public DbSet<ShippingAddress> ShippingAddresses => Set<ShippingAddress>();
+    public DbSet<Province> Provinces => Set<Province>();
+    public DbSet<District> Districts => Set<District>();
+    public DbSet<Ward> Wards => Set<Ward>();
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<CouponUsage> CouponUsages => Set<CouponUsage>();
     public DbSet<OrderDetail> OrderDetails => Set<OrderDetail>();
@@ -231,6 +234,37 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
             .HasOne(x => x.Customer)
             .WithMany(x => x.ShippingAddresses)
             .HasForeignKey(x => x.CustomerId);
+
+        modelBuilder.Entity<ShippingAddress>()
+            .HasOne<Province>()
+            .WithMany()
+            .HasForeignKey(x => x.ProvinceId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ShippingAddress>()
+            .HasOne<District>()
+            .WithMany()
+            .HasForeignKey(x => x.DistrictId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ShippingAddress>()
+            .HasOne<Ward>()
+            .WithMany()
+            .HasForeignKey(x => x.WardId)
+            .OnDelete(DeleteBehavior.Restrict);
+            
+        // ── ADMINISTRATIVE BOUNDARIES ────────────────────────────────
+        modelBuilder.Entity<District>()
+            .HasOne(x => x.Province)
+            .WithMany(x => x.Districts)
+            .HasForeignKey(x => x.ProvinceId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Ward>()
+            .HasOne(x => x.District)
+            .WithMany(x => x.Wards)
+            .HasForeignKey(x => x.DistrictId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // ── ORDERS ───────────────────────────────────────────────────
         modelBuilder.Entity<Order>()

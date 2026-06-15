@@ -11,7 +11,8 @@ public class CustomerAccountController(
     ICustomerAccountService customerAccountService,
     ICurrentCustomerService currentCustomerService,
     IAuthService authService,
-    ILogger<CustomerAccountController> logger) : Controller
+    ILogger<CustomerAccountController> logger,
+    IAddressService addressService) : Controller
 {
     private int GetCustomerId() => currentCustomerService.GetCustomerId() ?? 0;
     private int GetAccountId() => currentCustomerService.GetUserId() ?? 0;
@@ -147,6 +148,7 @@ public class CustomerAccountController(
         if (customerId == 0) return RedirectToAction("Login", "Account");
 
         var addresses = await customerAccountService.GetAddressesAsync(customerId);
+        ViewBag.Provinces = await addressService.GetProvincesAsync();
         return View(addresses);
     }
 

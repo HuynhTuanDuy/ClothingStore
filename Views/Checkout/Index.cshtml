@@ -157,6 +157,14 @@
 
         <form asp-action="PlaceOrder" method="post" id="checkoutForm">
             @Html.AntiForgeryToken()
+            <input type="hidden" name="ShippingAddressId" id="shippingAddressId" value="@Model.Input.ShippingAddressId" />
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-sm">
+                    <h4 class="font-bold mb-2">Đã có lỗi xảy ra:</h4>
+                    <div asp-validation-summary="All" class="text-sm list-disc pl-4"></div>
+                </div>
+            }
             <div class="flex flex-col lg:flex-row gap-gutter lg:gap-16">
                 <!-- Left Column: Form & Payment -->
                 <div class="w-full lg:w-7/12 flex flex-col gap-12">
@@ -177,6 +185,27 @@
                     <section>
                         <h2 class="font-headline-md text-headline-md mb-6 text-[#1b1c1c]">Thông tin giao hàng</h2>
                         
+                        @if (Model.IsAuthenticated && Model.SavedAddresses.Any(a => a.ProvinceId == null))
+                        {
+                            <div class="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-sm mb-4 text-sm flex items-start gap-3">
+                                <span class="material-symbols-outlined mt-0.5" style="font-variation-settings: 'FILL' 0, 'wght' 300;">warning</span>
+                                <p><strong>Lưu ý:</strong> Một số địa chỉ cũ của bạn chưa được chuẩn hóa theo hệ thống mới. Vui lòng cập nhật lại địa chỉ trong <a href="@Url.Action("Addresses", "CustomerAccount")" class="text-primary underline">Sổ địa chỉ</a> để tiếp tục sử dụng.</p>
+                            </div>
+                        }
+
+                        @if (Model.IsAuthenticated && Model.SuggestedAddressId.HasValue && Model.SuggestedAddressId != Model.Input.ShippingAddressId)
+                        {
+                            <div id="suggestedAddressBanner" class="bg-blue-50 border border-blue-200 text-blue-800 p-4 rounded-sm mb-4 text-sm flex items-start gap-3">
+                                <span class="material-symbols-outlined mt-0.5" style="font-variation-settings: 'FILL' 1, 'wght' 300;">recommend</span>
+                                <div>
+                                    <p><strong>Gợi ý:</strong> Địa chỉ được đề xuất dựa trên tần suất nhận hàng của bạn.</p>
+                                    <button type="button" class="text-blue-600 underline font-medium mt-1" onclick="document.getElementById('savedAddressSelect').value='@Model.SuggestedAddressId'; document.getElementById('savedAddressSelect').dispatchEvent(new Event('change')); document.getElementById('suggestedAddressBanner').style.display='none';">
+                                        Sử dụng địa chỉ này
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                        
                         @if (Model.IsAuthenticated && Model.SavedAddresses.Any())
                         {
                             <div class="mb-6">
@@ -185,18 +214,28 @@
                                     <option value="">-- Nhập địa chỉ mới --</option>
                                     @foreach (var addr in Model.SavedAddresses)
                                     {
-                                        var isSelected = (addr.AddressLine == Model.Input.ShippingAddress && addr.Province == Model.Input.ShippingProvince);
-                                        if (isSelected)
+                                        if (addr.ProvinceId == null)
                                         {
-                                            <option value="@addr.AddressID" data-name="@addr.RecipientName" data-phone="@addr.ReceiverPhone" data-address="@addr.AddressLine" data-ward="@addr.Ward" data-district="@addr.District" data-province="@addr.Province" selected>
-                                                @addr.RecipientName - @addr.ReceiverPhone, @addr.FullAddress
+                                            <option value="" disabled>
+                                                [Chưa chuẩn hóa] @addr.RecipientName - @addr.FullAddress
                                             </option>
                                         }
                                         else
                                         {
-                                            <option value="@addr.AddressID" data-name="@addr.RecipientName" data-phone="@addr.ReceiverPhone" data-address="@addr.AddressLine" data-ward="@addr.Ward" data-district="@addr.District" data-province="@addr.Province">
-                                                @addr.RecipientName - @addr.ReceiverPhone, @addr.FullAddress
-                                            </option>
+                                            var isSelected = (addr.AddressID == Model.Input.ShippingAddressId) || (Model.Input.ShippingAddressId == null && addr.IsDefault);
+                                            var alias = string.IsNullOrWhiteSpace(addr.AddressName) ? $"📍 Địa chỉ #{addr.AddressID}" : $"{(addr.AddressName.Contains("Nhà", StringComparison.OrdinalIgnoreCase) ? "🏠" : addr.AddressName.Contains("Công ty", StringComparison.OrdinalIgnoreCase) ? "🏢" : "📍")} {addr.AddressName}";
+                                            if (isSelected)
+                                            {
+                                                <option value="@addr.AddressID" data-name="@addr.RecipientName" data-phone="@addr.ReceiverPhone" data-address="@addr.AddressLine" data-ward="@addr.WardId" data-district="@addr.DistrictId" data-province="@addr.ProvinceId" data-note="@addr.Note" selected>
+                                                    @alias - @addr.RecipientName - @addr.ReceiverPhone, @addr.FullAddress
+                                                </option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@addr.AddressID" data-name="@addr.RecipientName" data-phone="@addr.ReceiverPhone" data-address="@addr.AddressLine" data-ward="@addr.WardId" data-district="@addr.DistrictId" data-province="@addr.ProvinceId" data-note="@addr.Note">
+                                                    @alias - @addr.RecipientName - @addr.ReceiverPhone, @addr.FullAddress
+                                                </option>
+                                            }
                                         }
                                     }
                                 </select>
@@ -243,32 +282,52 @@
                                 <span id="err-streetDetail" class="text-red-500 text-sm mt-1 block"></span>
                             </div>
 
-                            <!-- Row 2: Xã / Khu phố -->
-                            <div>
-                                <label class="block text-xs text-on-surface-variant uppercase tracking-wider mb-1" for="ward">Xã / Khu phố / Phường</label>
-                                 <input class="input-minimal font-body-md text-body-md text-on-background placeholder:text-outline" 
-                                        id="ward" name="ShippingWard" value="@(Model.Input.ShippingWard == "N/A" ? "" : Model.Input.ShippingWard)" 
-                                        placeholder="VD: Xã Tân Hội, Khu phố 3" type="text" 
-                                        data-val="true" data-val-required="Vui lòng nhập xã / khu phố.">
-                                 <span id="err-ward" class="text-red-500 text-sm mt-1 block"></span>
-                            </div>
-
-                            <!-- Row 3: Thành phố / Tỉnh (2 cột) -->
+                            <!-- Row 2: Tỉnh/Thành phố & Quận/Huyện -->
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div>
-                                    <label class="block text-xs text-on-surface-variant uppercase tracking-wider mb-1" for="district">Huyện / Thành phố trực thuộc <span class="text-gray-400 normal-case">(nếu có)</span></label>
-                                     <input class="input-minimal font-body-md text-body-md text-on-background placeholder:text-outline" 
-                                            id="district" name="ShippingDistrict" value="@(Model.Input.ShippingDistrict == "N/A" ? "" : Model.Input.ShippingDistrict)" 
-                                            placeholder="VD: TP. Thủ Đức, Huyện Nhà Bè"
-                                            type="text">
+                                    <label class="block text-xs text-on-surface-variant uppercase tracking-wider mb-1" for="provinceId">Tỉnh / Thành phố</label>
+                                    <select class="w-full bg-transparent border-b border-outline py-2 font-body-md text-[#1b1c1c] focus:outline-none focus:border-primary transition-colors" 
+                                            id="provinceId" name="ProvinceId" data-val="true" data-val-required="Vui lòng chọn tỉnh / thành phố.">
+                                        <option value="">Chọn Tỉnh / Thành phố</option>
+                                        @foreach (var p in Model.Provinces)
+                                        {
+                                            if (Model.Input.ProvinceId == p.ProvinceId)
+                                            {
+                                                <option value="@p.ProvinceId" selected>@p.Name</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@p.ProvinceId">@p.Name</option>
+                                            }
+                                        }
+                                    </select>
+                                    <span id="err-province" class="text-red-500 text-sm mt-1 block"></span>
                                 </div>
                                 <div>
-                                    <label class="block text-xs text-on-surface-variant uppercase tracking-wider mb-1" for="province">Tỉnh / Thành phố</label>
-                                     <input class="input-minimal font-body-md text-body-md text-on-background placeholder:text-outline" 
-                                            id="province" name="ShippingProvince" value="@(Model.Input.ShippingProvince == "N/A" ? "" : Model.Input.ShippingProvince)" 
-                                            placeholder="VD: TP. Hồ Chí Minh, Hà Nội" type="text" 
-                                            data-val="true" data-val-required="Vui lòng nhập tỉnh / thành phố.">
-                                     <span id="err-province" class="text-red-500 text-sm mt-1 block"></span>
+                                    <label class="block text-xs text-on-surface-variant uppercase tracking-wider mb-1" for="districtId">Quận / Huyện</label>
+                                    <select class="w-full bg-transparent border-b border-outline py-2 font-body-md text-[#1b1c1c] focus:outline-none focus:border-primary transition-colors" 
+                                            id="districtId" name="DistrictId" data-val="true" data-val-required="Vui lòng chọn quận / huyện.">
+                                        <option value="">Chọn Quận / Huyện</option>
+                                    </select>
+                                    <span id="err-district" class="text-red-500 text-sm mt-1 block"></span>
+                                </div>
+                            </div>
+                            
+                            <!-- Row 3: Phường/Xã & Ghi chú -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div>
+                                    <label class="block text-xs text-on-surface-variant uppercase tracking-wider mb-1" for="wardId">Xã / Phường</label>
+                                    <select class="w-full bg-transparent border-b border-outline py-2 font-body-md text-[#1b1c1c] focus:outline-none focus:border-primary transition-colors" 
+                                            id="wardId" name="WardId" data-val="true" data-val-required="Vui lòng chọn xã / phường.">
+                                        <option value="">Chọn Xã / Phường</option>
+                                    </select>
+                                    <span id="err-ward" class="text-red-500 text-sm mt-1 block"></span>
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-on-surface-variant uppercase tracking-wider mb-1" for="deliveryNote">Ghi chú giao hàng</label>
+                                    <input class="input-minimal font-body-md text-body-md text-on-background placeholder:text-outline w-full border-b border-outline py-2 focus:outline-none focus:border-primary" 
+                                           id="deliveryNote" name="DeliveryNote" value="@Model.Input.DeliveryNote" 
+                                           placeholder="Ghi chú (Tòa nhà, Hướng dẫn...)" type="text">
                                 </div>
                             </div>
 
@@ -437,8 +496,9 @@
             { id: 'phone',        errId: 'err-phone',        msg: 'Vui lòng nhập số điện thoại.' },
             { id: 'email',        errId: 'err-email',        msg: 'Vui lòng nhập email.' },
             { id: 'streetDetail', errId: 'err-streetDetail', msg: 'Vui lòng nhập số nhà, tên đường.' },
-            { id: 'ward',         errId: 'err-ward',         msg: 'Vui lòng nhập xã / khu phố / phường.' },
-            { id: 'province',     errId: 'err-province',     msg: 'Vui lòng nhập tỉnh / thành phố.' },
+            { id: 'wardId',       errId: 'err-ward',         msg: 'Vui lòng chọn xã / khu phố / phường.' },
+            { id: 'districtId',   errId: 'err-district',     msg: 'Vui lòng chọn quận / huyện.' },
+            { id: 'provinceId',   errId: 'err-province',     msg: 'Vui lòng chọn tỉnh / thành phố.' },
         ];
 
         // Attach live clear-error on input
@@ -458,26 +518,151 @@
         // Address Select Logic
         const savedAddressSelect = document.getElementById('savedAddressSelect');
         if (savedAddressSelect) {
-            savedAddressSelect.addEventListener('change', function() {
+            savedAddressSelect.addEventListener('change', async function() {
                 const opt = this.options[this.selectedIndex];
                 if (opt.value) {
+                    document.getElementById('shippingAddressId').value = opt.value;
                     document.getElementById('fullName').value = opt.getAttribute('data-name');
                     document.getElementById('phone').value = opt.getAttribute('data-phone');
                     document.getElementById('streetDetail').value = opt.getAttribute('data-address');
-                    document.getElementById('ward').value = opt.getAttribute('data-ward');
-                    document.getElementById('district').value = opt.getAttribute('data-district');
-                    document.getElementById('province').value = opt.getAttribute('data-province');
+                    
+                    const provinceId = opt.getAttribute('data-province');
+                    const districtId = opt.getAttribute('data-district');
+                    const wardId = opt.getAttribute('data-ward');
+                    const note = opt.getAttribute('data-note') || '';
+                    document.getElementById('deliveryNote').value = note;
+                    
+                    // Set Province
+                    const pSelect = document.getElementById('provinceId');
+                    pSelect.value = provinceId;
+                    pSelect.dispatchEvent(new Event('input'));
+                    
+                    // Fetch Districts
+                    const dSelect = document.getElementById('districtId');
+                    const wSelect = document.getElementById('wardId');
+                    dSelect.innerHTML = '<option value="">Chọn Quận / Huyện</option>';
+                    wSelect.innerHTML = '<option value="">Chọn Xã / Phường</option>';
+                    
+                    if (provinceId) {
+                        const dRes = await fetch(`/Address/Districts?provinceId=${provinceId}`);
+                        const dData = await dRes.json();
+                        dData.forEach(d => {
+                            const option = document.createElement('option');
+                            option.value = d.districtId;
+                            option.textContent = d.name;
+                            dSelect.appendChild(option);
+                        });
+                        dSelect.value = districtId;
+                        dSelect.dispatchEvent(new Event('input'));
+                        
+                        if (districtId) {
+                            const wRes = await fetch(`/Address/Wards?districtId=${districtId}`);
+                            const wData = await wRes.json();
+                            wData.forEach(w => {
+                                const option = document.createElement('option');
+                                option.value = w.wardId;
+                                option.textContent = w.name;
+                                wSelect.appendChild(option);
+                            });
+                            wSelect.value = wardId;
+                            wSelect.dispatchEvent(new Event('input'));
+                        }
+                    }
                     
                     // Trigger input event to clear validation errors
-                    ['fullName', 'phone', 'streetDetail', 'ward', 'district', 'province'].forEach(id => {
+                    ['fullName', 'phone', 'streetDetail'].forEach(id => {
                         document.getElementById(id).dispatchEvent(new Event('input'));
                     });
                 } else {
-                    ['fullName', 'phone', 'streetDetail', 'ward', 'district', 'province'].forEach(id => {
-                        document.getElementById(id).value = '';
-                    });
+                    document.getElementById('shippingAddressId').value = '';
+                    document.getElementById('fullName').value = '';
+                    document.getElementById('phone').value = '';
+                    document.getElementById('streetDetail').value = '';
+                    document.getElementById('provinceId').value = '';
+                    document.getElementById('districtId').innerHTML = '<option value="">Chọn Quận / Huyện</option>';
+                    document.getElementById('wardId').innerHTML = '<option value="">Chọn Xã / Phường</option>';
+                    document.getElementById('deliveryNote').value = '';
                 }
             });
+        }
+        
+        // Administrative Boundaries AJAX Logic
+        const provinceSelect = document.getElementById('provinceId');
+        const districtSelect = document.getElementById('districtId');
+        const wardSelect = document.getElementById('wardId');
+
+        provinceSelect.addEventListener('change', function() {
+            const provinceId = this.value;
+            districtSelect.innerHTML = '<option value="">Chọn Quận / Huyện</option>';
+            wardSelect.innerHTML = '<option value="">Chọn Xã / Phường</option>';
+
+            if (provinceId) {
+                fetch(`/Address/Districts?provinceId=${provinceId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        data.forEach(d => {
+                            const option = document.createElement('option');
+                            option.value = d.districtId;
+                            option.textContent = d.name;
+                            districtSelect.appendChild(option);
+                        });
+                    });
+            }
+        });
+
+        districtSelect.addEventListener('change', function() {
+            const districtId = this.value;
+            wardSelect.innerHTML = '<option value="">Chọn Xã / Phường</option>';
+
+            if (districtId) {
+                fetch(`/Address/Wards?districtId=${districtId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        data.forEach(w => {
+                            const option = document.createElement('option');
+                            option.value = w.wardId;
+                            option.textContent = w.name;
+                            wardSelect.appendChild(option);
+                        });
+                    });
+            }
+        });
+        
+        // Pre-load administrative boundaries on page load if pre-filled
+        const initialProvinceId = '@Model.Input.ProvinceId';
+        const initialDistrictId = '@Model.Input.DistrictId';
+        const initialWardId = '@Model.Input.WardId';
+
+        if (initialProvinceId) {
+            fetch(`/Address/Districts?provinceId=${initialProvinceId}`)
+                .then(res => res.json())
+                .then(data => {
+                    data.forEach(d => {
+                        const option = document.createElement('option');
+                        option.value = d.districtId;
+                        option.textContent = d.name;
+                        if (d.districtId == initialDistrictId) {
+                            option.selected = true;
+                        }
+                        districtSelect.appendChild(option);
+                    });
+                    
+                    if (initialDistrictId) {
+                        fetch(`/Address/Wards?districtId=${initialDistrictId}`)
+                            .then(res => res.json())
+                            .then(data => {
+                                data.forEach(w => {
+                                    const option = document.createElement('option');
+                                    option.value = w.wardId;
+                                    option.textContent = w.name;
+                                    if (w.wardId == initialWardId) {
+                                        option.selected = true;
+                                    }
+                                    wardSelect.appendChild(option);
+                                });
+                            });
+                    }
+                });
         }
 
         // Leaflet Map Logic

@@ -31,7 +31,7 @@
                             #@order.OrderCode
                         </td>
                         <td class="py-4 px-4 text-sm text-gray-600">
-                            @order.OrderDate.ToString("dd/MM/yyyy ss:mm:HH")
+                            @order.OrderDate.AddHours(7).ToString("HH:mm dd/MM/yyyy")
                         </td>
                         <td class="py-4 px-4 text-sm font-medium text-gray-800">
                             @order.FinalAmount.ToString("N0")₫

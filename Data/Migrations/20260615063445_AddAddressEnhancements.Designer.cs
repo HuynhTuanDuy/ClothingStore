@@ -4,16 +4,19 @@ using ClothingStore.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace ClothingStore.Migrations
+namespace ClothingStore.Data.Migrations
 {
     [DbContext(typeof(StoreDbContext))]
-    partial class StoreDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260615063445_AddAddressEnhancements")]
+    partial class AddAddressEnhancements
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -838,10 +841,6 @@ namespace ClothingStore.Migrations
 
                     b.HasIndex("OrderStatus", "OrderDate")
                         .HasDatabaseName("IX_Orders_OrderStatus");
-
-                    b.HasIndex(new[] { "CustomerId", "OrderDate" }, "IX_Orders_CustomerId_OrderDate");
-
-                    b.HasIndex(new[] { "ShippingAddressId" }, "IX_Orders_ShippingAddressId");
 
                     b.ToTable("ORDERS", t =>
                         {

@@ -18,11 +18,15 @@ public class CheckoutViewModel
     
     // New properties
     public bool IsAuthenticated { get; set; }
+    public int? SuggestedAddressId { get; set; }
     public List<ClothingStore.Models.Entities.ShippingAddress> SavedAddresses { get; set; } = new();
+    public List<ClothingStore.Models.Entities.Province> Provinces { get; set; } = new();
 }
 
 public class CheckoutInputModel
 {
+    public int? ShippingAddressId { get; set; }
+
     [Required(ErrorMessage = "Vui lòng nhập email.")]
     [EmailAddress(ErrorMessage = "Email không hợp lệ.")]
     public string OrderEmail { get; set; } = string.Empty;
@@ -39,17 +43,16 @@ public class CheckoutInputModel
     [StringLength(255)]
     public string ShippingAddress { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Vui lòng nhập phường/xã.")]
-    [StringLength(50)]
-    public string ShippingWard { get; set; } = string.Empty;
+    [Required(ErrorMessage = "Vui lòng chọn phường/xã.")]
+    public int? WardId { get; set; }
 
-    [Required(ErrorMessage = "Vui lòng nhập quận/huyện.")]
-    [StringLength(50)]
-    public string ShippingDistrict { get; set; } = string.Empty;
+    [Required(ErrorMessage = "Vui lòng chọn quận/huyện.")]
+    public int? DistrictId { get; set; }
 
-    [Required(ErrorMessage = "Vui lòng nhập tỉnh/thành phố.")]
-    [StringLength(50)]
-    public string ShippingProvince { get; set; } = string.Empty;
+    [Required(ErrorMessage = "Vui lòng chọn tỉnh/thành phố.")]
+    public int? ProvinceId { get; set; }
+
+    public string? DeliveryNote { get; set; }
 
     [Required(ErrorMessage = "Vui lòng chọn phương thức thanh toán.")]
     public string PaymentMethod { get; set; } = "COD";

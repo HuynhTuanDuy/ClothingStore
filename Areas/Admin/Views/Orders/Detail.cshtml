@@ -47,7 +47,7 @@
         </a>
         <div>
             <h3 class="font-headline-lg text-[32px] leading-[40px] font-semibold text-primary">Đơn hàng #@Model.OrderCode</h3>
-            <p class="font-body-md text-on-surface-variant mt-1">@Model.OrderDate.ToString("dd/MM/yyyy ss:mm:HH")</p>
+            <p class="font-body-md text-on-surface-variant mt-1">@Model.OrderDate.AddHours(7).ToString("HH:mm dd/MM/yyyy")</p>
         </div>
     </div>
     <div class="flex gap-3">
@@ -159,7 +159,7 @@
 
                             <div class="relative pl-6">
                                 <div class="absolute w-3 h-3 @historyDotClass rounded-full -left-[7px] top-1.5 border-2 border-surface-container-lowest"></div>
-                                <div class="font-body-sm text-on-surface-variant mb-1">@h.ChangedAt?.ToString("dd/MM/yyyy ss:mm:HH")</div>
+                                <div class="font-body-sm text-on-surface-variant mb-1">@(h.ChangedAt?.AddHours(7).ToString("HH:mm dd/MM/yyyy"))</div>
                                 @if (h.OldStatus != h.NewStatus || string.IsNullOrEmpty(h.OldStatus))
                                 {
                                     <p class="font-body-md font-medium text-on-surface mb-1">

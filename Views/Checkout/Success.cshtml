@@ -32,11 +32,22 @@
     </div>
     
     <div class="flex flex-col sm:flex-row gap-4 justify-center">
-        <a asp-controller="OrderTracking" asp-action="Index" asp-route-code="@Model.OrderCode" 
-           class="inline-flex items-center justify-center gap-2 bg-black text-white px-8 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors">
-            <span class="material-symbols-outlined text-[20px]">local_shipping</span>
-            Tra cứu đơn hàng
-        </a>
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <a asp-controller="CustomerAccount" asp-action="OrderDetail" asp-route-orderCode="@Model.OrderCode" 
+               class="inline-flex items-center justify-center gap-2 bg-black text-white px-8 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors">
+                <span class="material-symbols-outlined text-[20px]">inventory_2</span>
+                Quản lý đơn hàng
+            </a>
+        }
+        else
+        {
+            <a asp-controller="OrderTracking" asp-action="Index" asp-route-code="@Model.OrderCode" asp-route-phone="@Model.ShippingPhone"
+               class="inline-flex items-center justify-center gap-2 bg-black text-white px-8 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors">
+                <span class="material-symbols-outlined text-[20px]">local_shipping</span>
+                Tra cứu đơn hàng
+            </a>
+        }
         <a asp-controller="Home" asp-action="Index" 
            class="inline-flex items-center justify-center gap-2 border border-black text-black bg-white px-8 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors">
             <span class="material-symbols-outlined text-[20px]">storefront</span>

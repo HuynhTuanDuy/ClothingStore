@@ -149,7 +149,7 @@
                         </td>
                         <td class="px-6 py-5">
                             <div class="font-body-sm @(isExpired ? "text-outline" : "text-on-surface-variant")">
-                                @item.StartDate.ToLocalTime().ToString("dd/MM/yyyy") - @item.EndDate.ToLocalTime().ToString("dd/MM/yyyy")
+                                @item.StartDate.AddHours(7).ToString("HH:mm dd/MM/yyyy") - @item.EndDate.AddHours(7).ToString("HH:mm dd/MM/yyyy")
                             </div>
                         </td>
                         <td class="px-6 py-5">

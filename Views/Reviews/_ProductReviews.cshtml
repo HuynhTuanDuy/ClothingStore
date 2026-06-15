@@ -15,7 +15,7 @@ else
                 <div class="flex justify-between items-start mb-3">
                     <div>
                         <span class="font-semibold text-[#553722] text-sm">@review.CustomerName</span>
-                        <span class="text-xs text-gray-400 ml-2">@review.ReviewDate.ToString("dd/MM/yyyy")</span>
+                        <span class="text-xs text-gray-400 ml-2">@review.ReviewDate.AddHours(7).ToString("HH:mm dd/MM/yyyy")</span>
                     </div>
                     <div class="flex text-yellow-400 text-sm">
                         @for (int i = 1; i <= 5; i++)

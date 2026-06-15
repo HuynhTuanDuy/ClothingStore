@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace ClothingStore.Models.Entities;
 
@@ -404,13 +405,20 @@ public class Coupon
 public class ShippingAddress
 {
     [Key] public int AddressID { get; set; }
+    [MaxLength(50)] public string? AddressName { get; set; }
     public string RecipientName { get; set; } = string.Empty;
     public string ReceiverPhone { get; set; } = string.Empty;
     public string AddressLine { get; set; } = string.Empty;
     public string Ward { get; set; } = string.Empty;
     public string District { get; set; } = string.Empty;
     public string Province { get; set; } = string.Empty;
+    public int? ProvinceId { get; set; }
+    public int? DistrictId { get; set; }
+    public int? WardId { get; set; }
+    public string? Note { get; set; }
     public bool IsDefault { get; set; }
+    [Column(TypeName = "numeric(9,6)")] public decimal? Latitude { get; set; }
+    [Column(TypeName = "numeric(9,6)")] public decimal? Longitude { get; set; }
     public int CustomerId { get; set; }
 
     // Navigation
@@ -419,10 +427,14 @@ public class ShippingAddress
     // Helper
     [NotMapped]
     public string FullAddress =>
-        $"{AddressLine}, {Ward}, {District}, {Province}";
+        string.IsNullOrWhiteSpace(AddressLine) 
+            ? $"{Ward}, {District}, {Province}{(string.IsNullOrWhiteSpace(Note) ? "" : $". Ghi chú: {Note}")}".Trim(',', ' ')
+            : $"{AddressLine}, {Ward}, {District}, {Province}{(string.IsNullOrWhiteSpace(Note) ? "" : $". Ghi chú: {Note}")}".Trim(',', ' ');
 }
 
 [Table("ORDERS")]
+[Index(nameof(CustomerId), nameof(OrderDate), IsUnique = false, Name = "IX_Orders_CustomerId_OrderDate")]
+[Index(nameof(ShippingAddressId), IsUnique = false, Name = "IX_Orders_ShippingAddressId")]
 public class Order
 {
     [Key] public int OrderID { get; set; }
@@ -431,12 +443,15 @@ public class Order
     public DateTime OrderDate { get; set; }
     public string OrderEmail { get; set; } = string.Empty;
     // Snapshot address
+    public int? ShippingAddressId { get; set; }
     public string ShippingRecipientName { get; set; } = string.Empty;
     public string ShippingPhone { get; set; } = string.Empty;
     public string ShippingAddress { get; set; } = string.Empty;
     public string ShippingWard { get; set; } = string.Empty;
     public string ShippingDistrict { get; set; } = string.Empty;
     public string ShippingProvince { get; set; } = string.Empty;
+    public string ShippingFullAddress { get; set; } = string.Empty;
+    public string? DeliveryNote { get; set; }
     // Finance & status
     public string PaymentStatus { get; set; } = Entities.PaymentStatus.Unpaid;
     public string PaymentMethod { get; set; } = string.Empty;
@@ -472,9 +487,8 @@ public class Order
     public Account? AssignedShipper { get; set; }
 
     // Helper
-    [NotMapped]
-    public string ShippingFullAddress =>
-        $"{ShippingAddress}, {ShippingWard}, {ShippingDistrict}, {ShippingProvince}";
+    // Full address is now stored in DB via ShippingFullAddress so we don't strictly need this, but keeping it for compatibility if needed.
+    // We can just rely on the stored field.
 }
 
 [Table("COUPONUSAGES")]

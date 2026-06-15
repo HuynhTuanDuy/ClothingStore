@@ -5,7 +5,7 @@
 
 <div class="mb-6">
     <h1 class="text-2xl font-bold text-gray-900">Tổng quan giao hàng</h1>
-    <p class="text-sm text-gray-500 mt-1">Cập nhật lúc @DateTime.Now.ToString("HH:mm - dd/MM/yyyy")</p>
+    <p class="text-sm text-gray-500 mt-1">Cập nhật lúc @DateTime.UtcNow.AddHours(7).ToString("HH:mm dd/MM/yyyy")</p>
 </div>
 
 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">

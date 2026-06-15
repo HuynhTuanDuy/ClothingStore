@@ -107,6 +107,8 @@ builder.Services.AddScoped<ICustomerAccountService, CustomerAccountService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<IShipperService, ShipperService>();
+builder.Services.AddScoped<IAddressService, AddressService>();
+builder.Services.AddScoped<IAddressRecommendationService, AddressRecommendationService>();
 builder.Services.AddSingleton<IDateTimeService, DateTimeService>();
 
 var app = builder.Build();
@@ -115,6 +117,13 @@ app.UseRequestLocalization(localizationOptions);
 
 // Seed data
 await ClothingStore.Data.TestAccountSeeder.SeedAsync(app.Services);
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<StoreDbContext>();
+    var env = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
+    await ClothingStore.Data.AddressSeeder.SeedAsync(dbContext, env);
+}
 
 // ── Pipeline ──────────────────────────────────────────────────
 if (!app.Environment.IsDevelopment())
